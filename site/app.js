@@ -94,6 +94,7 @@ function updateContactLinks() {
     'mailto:' + CONFIG.email + '?subject=' + encodeURIComponent('Booking inquiry — Upper View');
   document.querySelectorAll('.uv-mail').forEach((a) => (a.href = mail));
   document.querySelectorAll('.uv-wa').forEach((a) => (a.href = waHref(false)));
+  document.querySelectorAll('.uv-map').forEach((a) => (a.href = CONFIG.mapsUrl));
   const fm = $('#uv-footmail');
   if (fm) fm.textContent = CONFIG.email;
   $('#uv-addr-en').textContent = CONFIG.addressEn;
