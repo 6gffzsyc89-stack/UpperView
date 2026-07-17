@@ -58,9 +58,14 @@ For Upper View:
 - **WhatsApp deep link format (official click-to-chat):** `https://wa.me/<number>?text=<url-encoded message>` — number in international format, digits only (no +, spaces, or dashes). On a phone this launches the WhatsApp app; on desktop it opens WhatsApp Web. Example: `https://wa.me/66XXXXXXXXX?text=Hello%20Upper%20View!%20I%27d%20like%20to%20inquire%20about%20a%20booking.`
 - **Andy will supply the WhatsApp number** — build it as an easily editable config value.
 
-## Image generation (Higgsfield)
+## Image generation (Higgsfield — you drive it)
 
-The 142 real photos are the primary image library. Where the design needs imagery that doesn't exist in the shoot (e.g. specific spa/gym/food shots, background textures, lifestyle fillers), **do not pull images from W Hotels, Nobu, or any other site** — list the gaps instead. Andy will generate original images with Higgsfield (connected to Claude Code) to fill them. Emulate W Hotels/Nobu layout, typography feel, and interaction patterns only — never copy their photos, logos, or trademarked elements.
+You have direct access to Higgsfield via its MCP connector. Use it to generate any imagery the design needs beyond the photo library: the hero video, ambience/lifestyle fill shots, textures, and backgrounds.
+
+Rules:
+- The 142 real photos remain the primary library for anything depicting the actual property — rooms, villas, views, the café. **Never use AI-generated images to represent real rooms or spaces guests will book** — that misrepresents the product. AI imagery is for mood, ambience, texture, and the hero video only.
+- **Do not pull images from W Hotels, Nobu, Locke, or any other site** — emulate their layout, typography feel, and interaction patterns only; never their photos, logos, or trademarked elements.
+- Higgsfield generation costs credits. Confirm with Andy before any large batch (more than a handful of images, or any video generation).
 
 ## Practical notes for studying the reference sites
 
