@@ -34,6 +34,30 @@ The site opens with a full-screen hero video. Andy is generating it with Higgsfi
 - Spa, **by appointment** (main building)
 - **Stomping Grounds** — the hotel's café, serving trendy French-Thai fusion café food: cruffles, pancakes, salads, juices, and smoothies
 
+## Feature specifications (verified against the live reference sites, 2026-07-17)
+
+### 1. Persistent Reserve button + booking panel (mimic Nobu exactly)
+
+Verified live on nobuhotels.com:
+
+- **Desktop:** "RESERVE" button fixed top-right of the header, visible at all times. Clicking it slides a panel in **from the right edge** (covering roughly the right third of the screen, page content remains visible behind it). Panel heading: "Reserve Today". Fields, stacked vertically with thin underline styling: Location (hotel picker — **omit for Upper View, single property**), Arrival (check-in date), Departure (check-out date), Rooms & Guests, Promo code. Full-width black "CHECK AVAILABILITY" button at the bottom.
+- **Mobile:** the Reserve button becomes a **full-width sticky bar pinned to the bottom of the viewport**, persisting over all content while scrolling. This is the single most important conversion element on the site.
+- **On submit:** Nobu opens its booking engine in a **new tab** (reservations.nobuhotels.com — a branded skin of the SynXis/Sabre booking engine, passing hotel code, chain code, dates, and guests as URL parameters).
+- **For Upper View:** build the same panel UI. The Check Availability handoff target depends on which booking engine/channel manager the hotel uses — **open question for Andy** (e.g. SiteMinder, Cloudbeds, Little Hotelier, Beds24, or direct-inquiry-only). Design the panel so the handoff is a swappable link/integration.
+
+### 2. Persistent "Need Help?" contact tab (Locke-style, wired to email + WhatsApp)
+
+Reference: lockeliving.com uses a **vertical tab fixed to the right edge of the viewport** that persists while scrolling (as of 2026-07-17 their desktop tab is labeled "Sign up & save" — replicate the pattern, not the label).
+
+For Upper View:
+
+- A vertical **"Need Help?"** tab fixed to the right edge, persistent during scroll, on every page.
+- Clicking it opens a small panel with two contact options:
+  1. **Email** — mailto link or short inquiry form
+  2. **WhatsApp** — opens WhatsApp with a pre-filled booking inquiry aimed at the hotel's WhatsApp number
+- **WhatsApp deep link format (official click-to-chat):** `https://wa.me/<number>?text=<url-encoded message>` — number in international format, digits only (no +, spaces, or dashes). On a phone this launches the WhatsApp app; on desktop it opens WhatsApp Web. Example: `https://wa.me/66XXXXXXXXX?text=Hello%20Upper%20View!%20I%27d%20like%20to%20inquire%20about%20a%20booking.`
+- **Andy will supply the WhatsApp number** — build it as an easily editable config value.
+
 ## Priorities, in order
 
 1. Mobile booking conversion — persistent Reserve Now button, frictionless path to booking
