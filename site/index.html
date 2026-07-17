@@ -1,0 +1,379 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Upper View · Boutique Hotel · Koh Samui</title>
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<meta name="description" content="Upper View — a boutique hotel high above Koh Samui. Eight mini villas with private rooftop decks, three studios, rooftop pool, gym, spa and the Stomping Grounds café.">
+<link rel="icon" href="brand/logo-icon-green.png">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Archivo:wght@400;500;600&family=Noto+Sans+Thai:wght@400;500&display=swap" rel="stylesheet">
+<style>
+html { scroll-behavior: smooth; }
+body { margin: 0; background: #4F6446; color: #F7F0E9; font-family: 'Archivo','Noto Sans Thai',sans-serif; font-size: 15px; line-height: 1.65; -webkit-font-smoothing: antialiased; }
+a { color: #F7F0E9; text-decoration: none; }
+a:hover { color: #E0D9CE; }
+img { display: block; }
+::selection { background: #E0D9CE; color: #3D4C36; }
+input, select, button, textarea { font-family: 'Archivo','Noto Sans Thai',sans-serif; }
+input:focus, select:focus { outline: none; border-bottom-color: #A9B8A0 !important; }
+@keyframes uvHeroZoom { from { transform: scale(1.02); } to { transform: scale(1.1); } }
+@keyframes uvCue { 0% { transform: translateY(-100%); } 55% { transform: translateY(100%); } 100% { transform: translateY(100%); } }
+[data-gal]::-webkit-scrollbar { display: none; }
+.uv-cta-cream:hover { background: #4F6446 !important; color: #F7F0E9 !important; }
+.uv-cta-green:hover { background: #F7F0E9 !important; color: #3D4C36 !important; }
+.uv-cta-ghost:hover { background: #4F6446 !important; border-color: #4F6446 !important; }
+select option { background: #3D4C36; color: #F7F0E9; }
+
+/* ----- state-driven styles (replaces DC runtime bindings) ----- */
+#uv-header { background: linear-gradient(180deg, rgba(17,17,17,.5), rgba(17,17,17,0)); border-bottom: 1px solid rgba(247,240,233,0); }
+body.scrolled #uv-header { border-bottom: 1px solid rgba(247,240,233,.08); }
+body.scrolled #uv-header, body.menu-open #uv-header, body.reserve-open #uv-header { background: #3D4C36; }
+#uv-menu { opacity: 0; visibility: hidden; }
+body.menu-open #uv-menu { opacity: 1; visibility: visible; }
+#uv-menu nav { transform: translateY(22px); }
+body.menu-open #uv-menu nav { transform: translateY(0); }
+.uv-bar1, .uv-bar2 { transform: none; }
+body.menu-open .uv-bar1 { transform: translateY(3.75px) rotate(45deg); }
+body.menu-open .uv-bar2 { transform: translateY(-3.75px) rotate(-45deg); width: 22px !important; }
+#uv-panel { transform: translateX(110%); visibility: hidden; }
+body.reserve-open #uv-panel { transform: translateX(0); visibility: visible; }
+#uv-overlay { opacity: 0; pointer-events: none; }
+body.reserve-open #uv-overlay { opacity: 1; pointer-events: auto; }
+#uv-helppanel { transform: translate(calc(100% + 80px), -50%); }
+body.help-open #uv-helppanel { transform: translate(0, -50%); }
+html[dir="rtl"] #uv-panel { right: auto !important; left: 0 !important; border-left: none !important; border-right: 1px solid rgba(247,240,233,.12); transform: translateX(-110%); }
+html[dir="rtl"] body.reserve-open #uv-panel { transform: translateX(0); }
+html[dir="rtl"] #uv-helptab { right: auto !important; left: 0 !important; }
+html[dir="rtl"] #uv-helppanel { right: auto !important; left: 48px !important; transform: translate(calc(-100% - 80px), -50%); }
+html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
+.uv-dd-list { opacity: 0; visibility: hidden; }
+.uv-dd.open .uv-dd-list { opacity: 1; visibility: visible; transform: translateY(0) !important; }
+.uv-dd.open .uv-chev { transform: rotate(180deg); }
+#uv-mobilebar { display: none; }
+#uv-reserve-desk { display: inline-flex; }
+@media (max-width: 768px) {
+  #uv-mobilebar { display: flex; }
+  body.reserve-open #uv-mobilebar { display: none; }
+  #uv-reserve-desk { display: none; }
+}
+</style>
+</head>
+<body>
+
+<header id="uv-header" style="position:fixed;top:0;left:0;right:0;z-index:97;display:flex;align-items:center;justify-content:space-between;height:76px;padding:0 clamp(16px,3vw,32px);transition:background .5s ease, border-color .5s ease">
+  <button id="uv-menubtn" aria-label="Menu" style="display:flex;flex-direction:column;gap:6px;width:44px;height:44px;justify-content:center;align-items:flex-start;background:none;border:none;cursor:pointer;padding:10px">
+    <span class="uv-bar1" style="display:block;width:22px;height:1.5px;background:#F7F0E9;transition:transform .35s cubic-bezier(.22,1,.36,1)"></span>
+    <span class="uv-bar2" style="display:block;width:14px;height:1.5px;background:#F7F0E9;transition:transform .35s cubic-bezier(.22,1,.36,1),width .35s cubic-bezier(.22,1,.36,1)"></span>
+  </button>
+  <a href="#top" id="uv-logolink" style="position:absolute;left:50%;transform:translateX(-50%);display:block">
+    <img src="brand/logo-lockup-cream.png" alt="Upper View — Boutique Hotel, Koh Samui" style="height:60px;width:auto;display:block">
+  </a>
+  <div style="display:flex;align-items:center;gap:10px">
+    <div class="uv-dd" id="uv-dd-header" data-langdd style="position:relative">
+      <button aria-haspopup="listbox" class="uv-dd-btn" style="display:flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(247,240,233,.35);color:#F7F0E9;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:11px 12px;cursor:pointer"><span class="uv-dd-label">English</span><span class="uv-chev" style="font-size:9px;color:rgba(247,240,233,.7);display:inline-block;transition:transform .3s">▾</span></button>
+      <div class="uv-dd-list" style="position:absolute;top:calc(100% + 8px);right:0;min-width:172px;background:#3D4C36;border:1px solid rgba(247,240,233,.25);box-shadow:0 18px 50px rgba(0,0,0,.4);z-index:60;transform:translateY(-6px);transition:opacity .3s ease,transform .3s cubic-bezier(.22,1,.36,1),visibility .3s;max-height:min(420px,62vh);overflow-y:auto"></div>
+    </div>
+    <button data-i18n="reserve" id="uv-reserve-desk" class="uv-cta-cream uv-open-reserve" style="align-items:center;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:13px 26px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
+  </div>
+</header>
+
+<section id="top" style="position:relative;min-height:100svh;overflow:hidden;display:flex;align-items:flex-end">
+  <img src="photos/upper-view-008.jpg" alt="The view over the Gulf of Thailand from Upper View" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;animation:uvHeroZoom 26s ease-out forwards">
+  <div id="uv-herovids" style="position:absolute;inset:0">
+    <video id="uv-vidA" autoplay muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:1;transition:opacity .9s ease"></video>
+    <video id="uv-vidB" muted playsinline preload="auto" style="position:absolute;inset:0;width:100%;height:100%;object-fit:cover;opacity:0;transition:opacity .9s ease"></video>
+  </div>
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(17,17,17,.5) 0%, rgba(17,17,17,.08) 38%, rgba(17,17,17,.62) 100%)"></div>
+  <div style="position:relative;width:100%;max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,40px) clamp(110px,16vh,160px)">
+    <p data-i18n="hero_k" style="margin:0 0 18px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:rgba(247,240,233,.75)">Boutique Hotel · Koh Samui</p>
+    <h1 data-i18n="hero_t" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;font-size:clamp(40px,9vw,104px);line-height:1.02;letter-spacing:.01em">Above it all</h1>
+    <p data-i18n="hero_s" style="margin:22px 0 34px;max-width:520px;font-size:15px;line-height:1.7;color:rgba(247,240,233,.85)">Eight mini villas and three studios on the heights of Koh Samui — with a morning sea view you won’t forget.</p>
+    <button data-i18n="hero_cta" class="uv-cta-ghost uv-open-reserve" style="background:transparent;color:#F7F0E9;border:1px solid rgba(247,240,233,.55);cursor:pointer;padding:16px 34px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,border-color .3s,color .3s">Reserve your stay</button>
+  </div>
+  <div style="position:absolute;bottom:0;left:50%;width:1px;height:72px;background:rgba(247,240,233,.25);overflow:hidden">
+    <span style="position:absolute;left:0;top:0;width:1px;height:100%;background:#F7F0E9;animation:uvCue 2.6s cubic-bezier(.65,0,.35,1) infinite"></span>
+  </div>
+</section>
+
+<section style="background:#F7F0E9;color:#111111;padding:clamp(88px,12vw,150px) clamp(20px,4vw,40px)">
+  <div style="max-width:760px;margin:0 auto;text-align:center;display:flex;flex-direction:column;align-items:center;gap:22px">
+    <img data-reveal src="brand/logo-icon-green.png" alt="" style="height:64px;width:auto">
+    <p data-i18n="intro_l" data-reveal data-delay="60" style="margin:0;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#4F6446;font-weight:500">The Upper View Experience</p>
+    <h2 data-i18n="intro_t" data-reveal data-delay="120" style="margin:0;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.2vw,44px);line-height:1.14">A magical escape at the top of Koh Samui</h2>
+    <p data-i18n="intro_b" data-reveal data-delay="180" style="margin:0;max-width:560px;color:rgba(17,17,17,.68)">Indochine soul, modern craft, attention to every detail. A boutique hideaway dedicated to your happiness, high above the Gulf of Thailand.</p>
+  </div>
+  <div style="max-width:860px;margin:clamp(56px,8vw,90px) auto 0;display:grid;grid-template-columns:repeat(3,1fr);gap:24px;text-align:center">
+    <div data-reveal style="border-top:1px solid rgba(17,17,17,.15);padding-top:26px">
+      <div style="font-family:'Jost',sans-serif;font-weight:300;font-size:clamp(40px,6vw,64px);line-height:1">8</div>
+      <div data-i18n="s_villas" style="margin-top:10px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(17,17,17,.55)">Mini Villas</div>
+    </div>
+    <div data-reveal data-delay="90" style="border-top:1px solid rgba(17,17,17,.15);padding-top:26px">
+      <div style="font-family:'Jost',sans-serif;font-weight:300;font-size:clamp(40px,6vw,64px);line-height:1">3</div>
+      <div data-i18n="s_studios" style="margin-top:10px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(17,17,17,.55)">Studio Rooms</div>
+    </div>
+    <div data-reveal data-delay="180" style="border-top:1px solid rgba(17,17,17,.15);padding-top:26px">
+      <div style="font-family:'Jost',sans-serif;font-weight:300;font-size:clamp(40px,6vw,64px);line-height:1">50<span style="font-size:.5em">+</span>50</div>
+      <div data-i18n="s_deck" style="margin-top:10px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(17,17,17,.55)">m² villa + private rooftop deck</div>
+    </div>
+  </div>
+</section>
+
+<section style="background:#4F6446;padding:clamp(88px,12vw,150px) 0 0">
+  <div style="max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,40px) clamp(48px,6vw,72px)">
+    <p data-i18n="view_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#E0D9CE;font-weight:500">The View</p>
+    <h2 data-i18n="view_t" data-reveal data-delay="80" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05;max-width:12em">Wake to the whole gulf</h2>
+    <p data-i18n="view_b" data-reveal data-delay="160" style="margin:24px 0 0;max-width:520px;color:rgba(247,240,233,.85)">Every villa, studio and sun lounger faces the same panorama — the north coast, Koh Phangan on the horizon, and the longest view on Samui.</p>
+  </div>
+  <div style="overflow:hidden">
+    <img data-reveal="img" src="photos/upper-view-010.jpg" alt="Panorama over the bay and Koh Phangan" loading="lazy" style="width:100%;height:clamp(380px,74vh,720px);object-fit:cover">
+  </div>
+</section>
+
+<section id="stay" style="background:#F7F0E9;color:#111111;padding:clamp(88px,12vw,150px) clamp(20px,4vw,40px)">
+  <div style="max-width:1180px;margin:0 auto">
+    <p data-i18n="stay_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#4F6446;font-weight:500">Stay</p>
+    <h2 data-i18n="stay_t" data-reveal data-delay="80" style="margin:0 0 clamp(40px,6vw,72px);color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">Villas &amp; studios</h2>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(32px,5vw,72px);align-items:start">
+      <article style="display:flex;flex-direction:column;gap:0">
+        <div style="overflow:hidden">
+          <img data-reveal="img" src="photos/upper-view-092.jpg" alt="Mini Villa bedroom with rattan coffered ceiling" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+        </div>
+        <h3 data-i18n="v_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Mini Villas</h3>
+        <p data-i18n="v_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">8 villas · 50 m² · private 50 m² rooftop deck</p>
+        <p data-i18n="v_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Fifty square metres of calm — rattan-coffered ceilings, a freestanding tub facing the sea, and your own rooftop deck the same size again, one flight up.</p>
+        <div style="position:relative">
+        <button aria-label="Previous" data-galprev="vgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
+        <button aria-label="Next" data-galnext="vgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
+        <div id="vgal" data-gal style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none">
+          <img src="photos/upper-view-097.jpg" alt="Villa freestanding bathtub with sea view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-084.jpg" alt="Villa bed and bathtub" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-081.jpg" alt="Villa vanity and rattan detail" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-089.jpg" alt="Villa bedroom and lounge" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-133.jpg" alt="Private rooftop deck at dusk" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-070.jpg" alt="Brass villa signage" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+        </div>
+        </div>
+      </article>
+      <article style="display:flex;flex-direction:column;gap:0">
+        <div style="overflow:hidden">
+          <img data-reveal="img" src="photos/upper-view-038.jpg" alt="Studio room in the main building" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover">
+        </div>
+        <h3 data-i18n="st_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Studio Rooms</h3>
+        <p data-i18n="st_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">3 studios · 40–60 m² · main building</p>
+        <p data-i18n="st_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Warm timber studios in the main house — kitchenette, balcony bathtub, and the morning view from bed.</p>
+        <div style="position:relative">
+        <button aria-label="Previous" data-galprev="sgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
+        <button aria-label="Next" data-galnext="sgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
+        <div id="sgal" data-gal style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none">
+          <img src="photos/upper-view-055.jpg" alt="Balcony jacuzzi with a view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-041.jpg" alt="Studio terrace lounge" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-052.jpg" alt="Studio balcony seat with fresh drinks" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-044.jpg" alt="Studio bed" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+          <img src="photos/upper-view-056.jpg" alt="Studio marble bathroom and tub" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+        </div>
+        </div>
+      </article>
+    </div>
+
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(28px,4vw,64px);align-items:center;margin-top:clamp(56px,8vw,100px)">
+      <div style="overflow:hidden">
+        <img data-reveal="img" src="photos/upper-view-077.jpg" alt="Private rooftop deck with fringed umbrella and sun loungers" loading="lazy" style="width:100%;aspect-ratio:16/10;object-fit:cover">
+      </div>
+      <div>
+        <h3 data-i18n="v_deck_t" data-reveal style="margin:0 0 14px;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(22px,3vw,34px);line-height:1.1">Your own rooftop</h3>
+        <p data-i18n="v_deck_b" data-reveal data-delay="90" style="margin:0 0 26px;max-width:420px;color:rgba(17,17,17,.68)">Sun loungers, a fringed umbrella, and nothing between you and the horizon.</p>
+        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
+      </div>
+    </div>
+  </div>
+</section>
+
+<section id="pool" style="position:relative;background:#4F6446">
+  <div style="overflow:hidden">
+    <img data-reveal="img" src="photos/upper-view-005.jpg" alt="Rooftop lap pool facing the sea" loading="lazy" style="width:100%;height:clamp(480px,92vh,820px);object-fit:cover">
+  </div>
+  <div style="position:absolute;inset:0;background:linear-gradient(180deg, rgba(17,17,17,.15), rgba(17,17,17,.05) 45%, rgba(17,17,17,.72))"></div>
+  <div style="position:absolute;left:0;right:0;bottom:0;max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,40px) clamp(48px,7vw,84px)">
+    <p data-i18n="pool_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:rgba(247,240,233,.8);font-weight:500">The Pool</p>
+    <h2 data-i18n="pool_t" data-reveal data-delay="80" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">One line to the horizon</h2>
+    <p data-i18n="pool_b" data-reveal data-delay="160" style="margin:20px 0 0;max-width:480px;color:rgba(247,240,233,.85)">The rooftop lap pool runs the full length of the main house. Swim toward Koh Phangan, stay for the sunset.</p>
+  </div>
+</section>
+
+<section id="cafe" style="background:#F7F0E9;color:#111111;padding:clamp(88px,12vw,150px) clamp(20px,4vw,40px)">
+  <div style="max-width:1180px;margin:0 auto">
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(28px,5vw,72px);align-items:end;margin-bottom:clamp(36px,5vw,56px)">
+      <div>
+        <p data-i18n="cafe_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#4F6446;font-weight:500">Eat &amp; Drink</p>
+        <h2 data-i18n="cafe_t" data-reveal data-delay="80" style="margin:0;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">Stomping Grounds</h2>
+      </div>
+      <div>
+        <p data-i18n="cafe_b" data-reveal style="margin:0 0 16px;max-width:440px;color:rgba(17,17,17,.68)">Our all-day café pairs French technique with Thai brightness, served against the view.</p>
+        <p data-i18n="cafe_menu" data-reveal data-delay="80" style="margin:0 0 10px;font-family:'Jost','Noto Sans Thai',sans-serif;font-size:clamp(14px,1.7vw,17px);font-weight:500;letter-spacing:.16em;text-transform:uppercase;color:#4F6446">Croffles · Pancakes · Sandwiches · Pasta · Salads · Coffee · Cold-pressed juices · Smoothies</p>
+        <p data-i18n="cafe_note" data-reveal data-delay="140" style="margin:0;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:rgba(17,17,17,.5)">In the main house · Guests &amp; visitors welcome</p>
+      </div>
+    </div>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
+      <div style="overflow:hidden;grid-column:1 / -1">
+        <img data-reveal="img" src="photos/upper-view-002.jpg" alt="Stomping Grounds café interior with sea view" loading="lazy" style="width:100%;height:clamp(260px,52vh,520px);object-fit:cover">
+      </div>
+      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-012.jpg" alt="Arched shelving and café tables" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
+      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-022.jpg" alt="Fresh fruit against the bay view" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
+      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-118.jpg" alt="Café at dusk" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
+    </div>
+  </div>
+</section>
+
+<section id="wellness" style="background:#4F6446;padding:clamp(88px,12vw,150px) clamp(20px,4vw,40px)">
+  <div style="max-width:1180px;margin:0 auto">
+    <p data-i18n="well_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#E0D9CE;font-weight:500">Wellness</p>
+    <h2 data-i18n="well_t" data-reveal data-delay="80" style="margin:0 0 clamp(40px,6vw,72px);font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">Move, then unwind</h2>
+    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(28px,4vw,64px)">
+      <article>
+        <div style="overflow:hidden">
+          <img data-reveal="img" src="photos/upper-view-102.jpg" alt="The gym in the main building" loading="lazy" style="width:100%;aspect-ratio:16/10;object-fit:cover">
+        </div>
+        <h3 data-i18n="gym_t" style="margin:24px 0 10px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px)">The Gym</h3>
+        <p data-i18n="gym_b" style="margin:0;max-width:440px;color:rgba(247,240,233,.85)">A full strength and cardio floor in the main building, open to guests around the clock of your stay.</p>
+      </article>
+      <article>
+        <div style="overflow:hidden">
+          <img data-reveal="img" src="photos/upper-view-056.jpg" alt="Bath and towels — spa treatments by appointment" loading="lazy" style="width:100%;aspect-ratio:16/10;object-fit:cover">
+        </div>
+        <div style="display:flex;align-items:center;gap:14px;margin:24px 0 10px">
+          <h3 data-i18n="spa_t" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px)">The Spa</h3>
+          <span data-i18n="spa_tag" style="border:1px solid rgba(224,217,206,.5);color:#E0D9CE;font-size:9.5px;letter-spacing:.22em;text-transform:uppercase;padding:6px 12px">By appointment</span>
+        </div>
+        <p data-i18n="spa_b" style="margin:0;max-width:440px;color:rgba(247,240,233,.85)">Massage and wellness rituals in the main building.</p>
+      </article>
+    </div>
+  </div>
+</section>
+
+<section id="gallery" style="background:#4F6446;padding:0 0 clamp(88px,12vw,150px)">
+  <div style="max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,40px)">
+    <div style="margin-bottom:26px">
+      <p data-i18n="gal_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#E0D9CE;font-weight:500">The Property</p>
+      <h2 data-i18n="gal_t" data-reveal data-delay="80" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">A look around</h2>
+    </div>
+  </div>
+  <div style="position:relative">
+  <button aria-label="Previous" data-galprev="ggal" style="position:absolute;left:clamp(16px,3vw,32px);top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
+  <button aria-label="Next" data-galnext="ggal" style="position:absolute;right:clamp(16px,3vw,32px);top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
+  <div id="ggal" data-gal style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 clamp(20px,4vw,40px);scrollbar-width:none">
+    <img src="photos/upper-view-010.jpg" alt="Panorama over the bay" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-005.jpg" alt="Rooftop lap pool" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-002.jpg" alt="Stomping Grounds café" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-072.jpg" alt="Rooftop deck with umbrella" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-100.jpg" alt="Main building corridor" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-131.jpg" alt="Villa stairs at night" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-118.jpg" alt="Café at dusk" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-140.jpg" alt="Pool and café exterior" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-135.jpg" alt="Aerial of the property" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-022.jpg" alt="Fresh fruit against the view" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+  </div>
+  </div>
+</section>
+
+<section id="findus" style="background:#4F6446;padding:0 clamp(20px,4vw,40px) clamp(88px,12vw,150px)">
+  <div style="max-width:1180px;margin:0 auto;display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(28px,4vw,64px);align-items:center;border-top:1px solid rgba(247,240,233,.1);padding-top:clamp(56px,8vw,96px)">
+    <div style="overflow:hidden">
+      <img data-reveal="img" src="photos/upper-view-138.jpg" alt="Aerial of Upper View on the hillside" loading="lazy" style="width:100%;aspect-ratio:16/11;object-fit:cover">
+    </div>
+    <div>
+      <p data-i18n="loc_l" data-reveal style="margin:0 0 14px;font-size:11px;letter-spacing:.34em;text-transform:uppercase;color:#E0D9CE;font-weight:500">Find Us</p>
+      <h2 data-i18n="loc_t" data-reveal data-delay="80" style="margin:0 0 16px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,3.8vw,42px);line-height:1.08">High on the north coast</h2>
+      <p data-i18n="loc_b" data-reveal data-delay="140" style="margin:0 0 28px;max-width:440px;color:rgba(247,240,233,.85)">Minutes above the beaches, bars and airport of Samui’s north shore — and a world away from all of it.</p>
+      <div data-reveal data-delay="180" style="border-top:1px solid rgba(247,240,233,.12);padding-top:22px;display:flex;flex-direction:column;gap:6px">
+        <p data-i18n="addr_t" style="margin:0 0 4px;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(247,240,233,.45)">Address</p>
+        <p id="uv-addr-en" style="margin:0;color:rgba(247,240,233,.85)"></p>
+        <p id="uv-addr-th" style="margin:0;color:rgba(247,240,233,.85);font-family:'Archivo','Noto Sans Thai',sans-serif"></p>
+        <p id="uv-addr-note" style="margin:6px 0 0;font-size:11px;font-style:italic;color:rgba(247,240,233,.6);display:none"></p>
+      </div>
+      <div data-reveal data-delay="220" style="display:flex;flex-wrap:wrap;gap:12px;margin-top:26px">
+        <a data-i18n="act_email" class="uv-mail" href="#" style="border:1px solid rgba(247,240,233,.35);padding:14px 26px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:border-color .3s,color .3s">Email us</a>
+        <a data-i18n="act_wa" class="uv-wa" href="#" target="_blank" rel="noopener" style="background:#F7F0E9;color:#3D4C36;padding:14px 26px;font-size:11px;letter-spacing:.24em;text-transform:uppercase;transition:background .3s">WhatsApp us</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer style="background:#4F6446;border-top:1px solid rgba(247,240,233,.15);padding:clamp(64px,9vw,110px) clamp(20px,4vw,40px) 140px;text-align:center">
+  <div style="max-width:900px;margin:0 auto;display:flex;flex-direction:column;align-items:center;gap:28px">
+    <img src="brand/logo-lockup-cream.png" alt="Upper View — Boutique Hotel, Koh Samui" style="height:110px;width:auto;opacity:.95">
+    <a class="uv-mail" href="#" id="uv-footmail" style="color:rgba(247,240,233,.7);letter-spacing:.06em"></a>
+    <p data-i18n="foot_rights" style="margin:0;font-size:11px;letter-spacing:.14em;color:rgba(247,240,233,.6)">© 2026 Upper View · upperviewsamui.com</p>
+  </div>
+</footer>
+
+<div id="uv-menu" style="position:fixed;inset:0;z-index:96;background:#3D4C36;transition:opacity .45s ease,visibility .45s ease;display:flex;flex-direction:column;justify-content:center;padding:96px clamp(24px,7vw,90px) 48px;overflow-y:auto">
+  <nav style="display:flex;flex-direction:column;gap:clamp(8px,1.6vh,18px);transition:transform .55s cubic-bezier(.22,1,.36,1) .06s">
+    <a data-i18n="nav_stay" href="#stay" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Villas &amp; Studios</a>
+    <a data-i18n="nav_pool" href="#pool" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">The Pool</a>
+    <a data-i18n="nav_cafe" href="#cafe" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Stomping Grounds</a>
+    <a data-i18n="nav_well" href="#wellness" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Wellness</a>
+    <a data-i18n="nav_gal" href="#gallery" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Gallery</a>
+    <a data-i18n="nav_loc" href="#findus" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Find Us</a>
+  </nav>
+  <button data-i18n="hero_cta" class="uv-cta-cream uv-open-reserve" style="margin-top:clamp(24px,5vh,44px);align-self:flex-start;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:17px 40px;font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve your stay</button>
+  <div style="margin-top:clamp(24px,5vh,44px);display:flex;flex-direction:column;gap:10px;max-width:280px">
+    <p data-i18n="foot_lang" style="margin:0;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(247,240,233,.5)">Language</p>
+    <div class="uv-dd" id="uv-dd-menu" data-langdd style="position:relative">
+      <button aria-haspopup="listbox" class="uv-dd-btn" style="display:flex;align-items:center;justify-content:space-between;width:100%;gap:10px;background:transparent;border:1px solid rgba(247,240,233,.35);color:#F7F0E9;font-size:11px;letter-spacing:.14em;text-transform:uppercase;padding:13px 14px;cursor:pointer"><span class="uv-dd-label">English</span><span class="uv-chev" style="font-size:9px;color:rgba(247,240,233,.7);display:inline-block;transition:transform .3s">▾</span></button>
+      <div class="uv-dd-list" style="position:absolute;bottom:calc(100% + 8px);left:0;right:0;background:#334129;border:1px solid rgba(247,240,233,.25);box-shadow:0 18px 50px rgba(0,0,0,.4);z-index:60;transform:translateY(6px);transition:opacity .3s ease,transform .3s cubic-bezier(.22,1,.36,1),visibility .3s;max-height:min(380px,52vh);overflow-y:auto"></div>
+    </div>
+  </div>
+</div>
+
+<div id="uv-overlay" style="position:fixed;inset:0;z-index:99;background:rgba(17,17,17,.55);transition:opacity .45s ease"></div>
+
+<aside id="uv-panel" aria-label="Reserve Today" style="position:fixed;top:0;right:0;bottom:0;z-index:100;width:min(430px,100vw);background:#3D4C36;border-left:1px solid rgba(247,240,233,.12);transition:transform .5s cubic-bezier(.22,1,.36,1),visibility .5s;display:flex;flex-direction:column;padding:0;overflow-y:auto">
+  <div style="display:flex;align-items:center;justify-content:space-between;padding:18px clamp(24px,6vw,36px);border-bottom:1px solid rgba(247,240,233,.08)">
+    <img src="brand/logo-icon-cream.png" alt="" style="height:30px;width:auto;opacity:.9">
+    <button data-i18n="close" id="uv-close" aria-label="Close" style="background:none;border:none;color:rgba(247,240,233,.6);cursor:pointer;font-size:11px;letter-spacing:.24em;text-transform:uppercase;padding:10px">Close</button>
+  </div>
+  <div style="padding:clamp(28px,5vh,44px) clamp(24px,6vw,36px) 40px;display:flex;flex-direction:column;gap:26px">
+    <h2 data-i18n="p_title" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,3.6vh,32px);line-height:1.05">Reserve Today</h2>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label data-i18n="p_arr" for="uv-arr" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Arrival</label>
+      <input id="uv-arr" type="date" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;color-scheme:dark;border-radius:0">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label data-i18n="p_dep" for="uv-dep" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Departure</label>
+      <input id="uv-dep" type="date" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;color-scheme:dark;border-radius:0">
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label data-i18n="p_gst" for="uv-gst" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Guests</label>
+      <select id="uv-gst" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;color-scheme:dark;border-radius:0;appearance:none;cursor:pointer">
+        <option value="1">1</option><option value="2" selected>2</option><option value="3">3</option>
+        <option value="4">4</option><option value="5">5</option><option value="6">6</option>
+      </select>
+    </div>
+    <div style="display:flex;flex-direction:column;gap:8px">
+      <label data-i18n="p_promo" for="uv-promo" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Promo code</label>
+      <input id="uv-promo" type="text" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
+    </div>
+    <button data-i18n="p_cta" id="uv-check" class="uv-cta-cream" style="margin-top:8px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px;width:100%;font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Check availability</button>
+    <p data-i18n="p_note" style="margin:-8px 0 0;font-size:12px;color:rgba(247,240,233,.45);text-align:center">Your request continues to our reservations team.</p>
+  </div>
+</aside>
+
+<button data-i18n="help_tab" id="uv-helptab" style="position:fixed;right:0;top:52%;z-index:94;transform:translateY(-50%);writing-mode:vertical-rl;background:#F7F0E9;color:#3D4C36;box-shadow:0 4px 18px rgba(0,0,0,.25);border:none;cursor:pointer;padding:18px 11px;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;font-weight:500">Need Help?</button>
+<div id="uv-helppanel" style="position:fixed;right:48px;top:52%;z-index:93;width:min(300px,calc(100vw - 72px));background:#F7F0E9;color:#111111;padding:28px;transition:transform .5s cubic-bezier(.22,1,.36,1);box-shadow:0 18px 60px rgba(0,0,0,.4)">
+  <h3 data-i18n="help_t" style="margin:0 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:19px">We’re here</h3>
+  <p data-i18n="help_b" style="margin:0 0 20px;font-size:13.5px;color:rgba(17,17,17,.65)">Questions about dates, transfers or the villas — message us any time.</p>
+  <div style="display:flex;flex-direction:column;gap:10px">
+    <a data-i18n="act_email" class="uv-mail" href="#" style="display:block;text-align:center;border:1px solid rgba(17,17,17,.3);color:#111111;padding:13px 18px;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase">Email us</a>
+    <a data-i18n="act_wa" class="uv-wa" href="#" target="_blank" rel="noopener" style="display:block;text-align:center;background:#4F6446;color:#F7F0E9;padding:13px 18px;font-size:10.5px;letter-spacing:.24em;text-transform:uppercase">WhatsApp us</a>
+  </div>
+</div>
+
+<button id="uv-mobilebar" class="uv-cta-cream uv-open-reserve" style="position:fixed;left:0;right:0;bottom:0;z-index:95;align-items:center;justify-content:center;gap:10px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px calc(19px + env(safe-area-inset-bottom));font-size:12px;letter-spacing:.32em;text-transform:uppercase;font-weight:600;box-shadow:0 -8px 30px rgba(0,0,0,.35);transition:background .3s,color .3s">
+  <span data-i18n="reserve">Reserve</span>
+</button>
+
+<script type="module" src="app.js"></script>
+</body>
+</html>
