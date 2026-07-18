@@ -33,7 +33,7 @@ en: {
   help_tab:'Need Help?', help_t:'We’re here', help_b:'Questions about dates, transfers or the villas — message us any time.', act_email:'Email us', act_wa:'WhatsApp us', act_map:'Google Maps',
   p_title:'Reserve Today', p_arr:'Arrival', p_dep:'Departure', p_gst:'Guests', p_promo:'Promo code', p_cta:'Check availability', p_note:'Your request continues to our reservations team.',
   foot_tag:'Boutique Hotel · Koh Samui', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Gallery', gal_l:'The Property', gal_t:'A look around', foot_lang:'Language',
-  wa_msg:'Hello Upper View! I’d like to inquire about a booking.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 th: {
   nav_stay:'วิลล่าและสตูดิโอ', nav_pool:'สระว่ายน้ำ', nav_cafe:'Stomping Grounds', nav_well:'เวลเนส', nav_loc:'ที่ตั้ง',
@@ -52,7 +52,7 @@ th: {
   help_tab:'ต้องการความช่วยเหลือ?', help_t:'เรายินดีช่วยเสมอ', help_b:'สอบถามวันเข้าพัก รถรับส่ง หรือวิลล่า — ส่งข้อความหาเราได้ตลอดเวลา', act_email:'อีเมล', act_wa:'WhatsApp', act_map:'เปิดแผนที่',
   p_title:'จองวันนี้', p_arr:'เช็คอิน', p_dep:'เช็คเอาท์', p_gst:'ผู้เข้าพัก', p_promo:'รหัสโปรโมชั่น', p_cta:'เช็คห้องว่าง', p_note:'คำขอของคุณจะส่งต่อไปยังทีมสำรองห้องพัก',
   foot_tag:'บูทีคโฮเทล · เกาะสมุย', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'แกลเลอรี', gal_l:'ภาพบรรยากาศ', gal_t:'ชมรอบ ๆ โรงแรม', foot_lang:'ภาษา',
-  wa_msg:'สวัสดีค่ะ/ครับ Upper View! ต้องการสอบถามเรื่องการจองห้องพัก',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 zh: {
   nav_stay:'别墅与客房', nav_pool:'泳池', nav_cafe:'Stomping Grounds', nav_well:'康体', nav_loc:'位置',
@@ -71,7 +71,7 @@ zh: {
   help_tab:'需要帮助？', help_t:'随时为您服务', help_b:'关于日期、接送或别墅的任何问题，欢迎随时联系。', act_email:'发送邮件', act_wa:'WhatsApp 联系', act_map:'查看地图',
   p_title:'立即预订', p_arr:'入住', p_dep:'退房', p_gst:'人数', p_promo:'优惠码', p_cta:'查询空房', p_note:'您的请求将转至我们的预订团队。',
   foot_tag:'精品酒店 · 苏梅岛', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'图库', gal_l:'酒店风采', gal_t:'环顾四周', foot_lang:'语言',
-  wa_msg:'您好 Upper View！我想咨询预订事宜。',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 tw: {
   nav_stay:'別墅與客房', nav_pool:'泳池', nav_cafe:'Stomping Grounds', nav_well:'康體', nav_loc:'位置',
@@ -90,7 +90,7 @@ tw: {
   help_tab:'需要幫助？', help_t:'隨時為您服務', help_b:'關於日期、接送或別墅的任何問題，歡迎隨時聯繫。', act_email:'發送郵件', act_wa:'WhatsApp 聯繫', act_map:'查看地圖',
   p_title:'立即預訂', p_arr:'入住', p_dep:'退房', p_gst:'人數', p_promo:'優惠碼', p_cta:'查詢空房', p_note:'您的請求將轉至我們的預訂團隊。',
   foot_tag:'精品酒店 · 蘇美島', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'圖庫', gal_l:'酒店風采', gal_t:'環顧四周', foot_lang:'語言',
-  wa_msg:'您好 Upper View！我想諮詢預訂事宜。',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 fr: {
   nav_stay:'Villas & Studios', nav_pool:'La Piscine', nav_cafe:'Stomping Grounds', nav_well:'Bien-être', nav_loc:'Nous trouver',
@@ -109,7 +109,7 @@ fr: {
   help_tab:'Besoin d’aide ?', help_t:'Nous sommes là', help_b:'Dates, transferts ou villas — écrivez-nous à tout moment.', act_email:'Nous écrire', act_wa:'WhatsApp', act_map:'Voir la carte',
   p_title:'Réserver', p_arr:'Arrivée', p_dep:'Départ', p_gst:'Voyageurs', p_promo:'Code promo', p_cta:'Vérifier les disponibilités', p_note:'Votre demande est transmise à notre équipe de réservation.',
   foot_tag:'Hôtel Boutique · Koh Samui', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Galerie', gal_l:'La propriété', gal_t:'Un tour du domaine', foot_lang:'Langue',
-  wa_msg:'Bonjour Upper View ! Je souhaite me renseigner pour une réservation.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 es: {
   nav_stay:'Villas y Estudios', nav_pool:'La Piscina', nav_cafe:'Stomping Grounds', nav_well:'Bienestar', nav_loc:'Cómo llegar',
@@ -128,7 +128,7 @@ es: {
   help_tab:'¿Necesita ayuda?', help_t:'Estamos aquí', help_b:'Fechas, traslados o villas: escríbanos cuando quiera.', act_email:'Escríbanos', act_wa:'WhatsApp', act_map:'Ver mapa',
   p_title:'Reservar hoy', p_arr:'Llegada', p_dep:'Salida', p_gst:'Huéspedes', p_promo:'Código promocional', p_cta:'Consultar disponibilidad', p_note:'Su solicitud pasa a nuestro equipo de reservas.',
   foot_tag:'Hotel Boutique · Koh Samui', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Galería', gal_l:'La propiedad', gal_t:'Un recorrido', foot_lang:'Idioma',
-  wa_msg:'¡Hola Upper View! Quisiera consultar sobre una reserva.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 ru: {
   nav_stay:'Виллы и студии', nav_pool:'Бассейн', nav_cafe:'Stomping Grounds', nav_well:'Веллнес', nav_loc:'Как добраться',
@@ -147,7 +147,7 @@ ru: {
   help_tab:'Нужна помощь?', help_t:'Мы на связи', help_b:'Даты, трансферы или виллы — пишите нам в любое время.', act_email:'Написать', act_wa:'WhatsApp', act_map:'Открыть карту',
   p_title:'Бронирование', p_arr:'Заезд', p_dep:'Выезд', p_gst:'Гости', p_promo:'Промокод', p_cta:'Проверить наличие', p_note:'Ваш запрос передаётся команде бронирования.',
   foot_tag:'Бутик-отель · Ко Самуи', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Галерея', gal_l:'Отель', gal_t:'Взгляд вокруг', foot_lang:'Язык',
-  wa_msg:'Здравствуйте, Upper View! Хочу узнать о бронировании.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 de: {
   nav_stay:'Villen & Studios', nav_pool:'Der Pool', nav_cafe:'Stomping Grounds', nav_well:'Wellness', nav_loc:'Anfahrt',
@@ -166,7 +166,7 @@ de: {
   help_tab:'Fragen?', help_t:'Wir sind da', help_b:'Termine, Transfers oder Villen — schreiben Sie uns jederzeit.', act_email:'E-Mail', act_wa:'WhatsApp', act_map:'Karte öffnen',
   p_title:'Heute reservieren', p_arr:'Anreise', p_dep:'Abreise', p_gst:'Gäste', p_promo:'Promocode', p_cta:'Verfügbarkeit prüfen', p_note:'Ihre Anfrage geht an unser Reservierungsteam.',
   foot_tag:'Boutique-Hotel · Koh Samui', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Galerie', gal_l:'Das Anwesen', gal_t:'Ein Rundgang', foot_lang:'Sprache',
-  wa_msg:'Hallo Upper View! Ich möchte eine Buchung anfragen.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 pl: {
   nav_stay:'Wille i studia', nav_pool:'Basen', nav_cafe:'Stomping Grounds', nav_well:'Wellness', nav_loc:'Dojazd',
@@ -185,7 +185,7 @@ pl: {
   help_tab:'Potrzebujesz pomocy?', help_t:'Jesteśmy tu', help_b:'Terminy, transfery czy wille — napisz do nas o każdej porze.', act_email:'Napisz e-mail', act_wa:'WhatsApp', act_map:'Zobacz mapę',
   p_title:'Zarezerwuj dziś', p_arr:'Przyjazd', p_dep:'Wyjazd', p_gst:'Goście', p_promo:'Kod promocyjny', p_cta:'Sprawdź dostępność', p_note:'Twoje zapytanie trafi do naszego zespołu rezerwacji.',
   foot_tag:'Hotel butikowy · Koh Samui', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'Galeria', gal_l:'Obiekt', gal_t:'Spacer po hotelu', foot_lang:'Język',
-  wa_msg:'Dzień dobry Upper View! Chciał(a)bym zapytać o rezerwację.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 he: {
   nav_stay:'וילות וסטודיו', nav_pool:'הבריכה', nav_cafe:'Stomping Grounds', nav_well:'ספא וכושר', nav_loc:'איך מגיעים',
@@ -204,6 +204,6 @@ he: {
   help_tab:'צריכים עזרה?', help_t:'אנחנו כאן', help_b:'תאריכים, הסעות או וילות — כתבו לנו בכל שעה.', act_email:'אימייל', act_wa:'וואטסאפ', act_map:'פתחו מפה',
   p_title:'הזמינו היום', p_arr:'הגעה', p_dep:'עזיבה', p_gst:'אורחים', p_promo:'קוד קופון', p_cta:'בדיקת זמינות', p_note:'הבקשה תועבר לצוות ההזמנות שלנו.',
   foot_tag:'מלון בוטיק · קו סמוי', foot_rights:'© 2026 Upper View · upperviewsamui.com', nav_gal:'גלריה', gal_l:'המלון', gal_t:'סיור במקום', foot_lang:'שפה',
-  wa_msg:'שלום Upper View! אשמח לברר לגבי הזמנה.',
+  wa_msg:'Hi, I\'d like to make a booking at UPPERVIEW Koh Samui.',
 },
 };
