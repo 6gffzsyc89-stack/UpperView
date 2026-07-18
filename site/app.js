@@ -13,7 +13,7 @@ const HERO_CLIPS_MOBILE = [
   'video/f6ff953b.mp4',
   'video/bd08641e.mp4',
   'video/1ec444cd.mp4',
-  'video/214ba793.mp4',
+  // villa bedroom clip (214ba793) removed: AI artifact — phantom door in a solid wall
   'video/ca9c8f2b.mp4',
   'video/f844445e.mp4',
 ];
@@ -231,7 +231,8 @@ document.addEventListener('click', (e) => {
 function scrollGal(el, dir) {
   if (!el) return;
   const rtl = document.documentElement.dir === 'rtl' ? -1 : 1;
-  el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * 0.75), behavior: 'smooth' });
+  const factor = window.innerWidth <= 768 ? 1 : 0.75;
+  el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * factor), behavior: 'smooth' });
 }
 document.querySelectorAll('[data-galprev]').forEach((b) =>
   b.addEventListener('click', () => scrollGal(document.getElementById(b.dataset.galprev), -1))
