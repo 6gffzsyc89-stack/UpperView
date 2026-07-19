@@ -13,7 +13,8 @@ const HERO_CLIPS_MOBILE = [
   'video/f6ff953b.mp4',
   'video/bd08641e.mp4',
   'video/1ec444cd.mp4',
-  // villa bedroom clip (214ba793) removed: AI artifact — phantom door in a solid wall
+  // villa bedroom regenerated from real photo 092 (214ba793 had a phantom-door artifact)
+  'video/dcac0ba3.mp4',
   'video/ca9c8f2b.mp4',
   'video/f844445e.mp4',
 ];
