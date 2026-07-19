@@ -7,7 +7,7 @@ const HERO_CLIPS_DESKTOP = [
   'video/b80faa2a.mp4',
   'video/5bf44a07.mp4',
   'video/dd8f5635.mp4',
-  'video/97446b9c.mp4',
+  'video/976d6cf4.mp4',
 ];
 const HERO_CLIPS_MOBILE = [
   'video/f6ff953b.mp4',
@@ -16,7 +16,7 @@ const HERO_CLIPS_MOBILE = [
   // villa bedroom regenerated from real photo 092 (214ba793 had a phantom-door artifact)
   'video/dcac0ba3.mp4',
   'video/ca9c8f2b.mp4',
-  'video/f844445e.mp4',
+  'video/9b230ee6.mp4',
 ];
 
 const state = {
