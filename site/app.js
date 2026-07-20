@@ -232,8 +232,9 @@ document.addEventListener('click', (e) => {
 function scrollGal(el, dir) {
   if (!el) return;
   const rtl = document.documentElement.dir === 'rtl' ? -1 : 1;
-  const factor = window.innerWidth <= 768 ? 1 : 0.75;
-  el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * factor), behavior: 'smooth' });
+  // room galleries page one full photo; the property gallery keeps peek-ahead on desktop
+  const full = el.id !== 'ggal' || window.innerWidth <= 768;
+  el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * (full ? 1 : 0.75)), behavior: 'smooth' });
 }
 document.querySelectorAll('[data-galprev]').forEach((b) =>
   b.addEventListener('click', () => scrollGal(document.getElementById(b.dataset.galprev), -1))

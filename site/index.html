@@ -52,12 +52,12 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
 .uv-dd.open .uv-chev { transform: rotate(180deg); }
 #uv-mobilebar { display: none; }
 #uv-reserve-desk { display: inline-flex; }
+/* room galleries: page one full, uncropped 3:2 photo per step (all screens) */
+#vgal img, #sgal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
 @media (max-width: 768px) {
   #uv-mobilebar { display: flex; }
   body.reserve-open #uv-mobilebar { display: none; }
   #uv-reserve-desk { display: none; }
-  /* room galleries: page one full, uncropped 3:2 photo per swipe */
-  #vgal img, #sgal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
 }
 </style>
 </head>
