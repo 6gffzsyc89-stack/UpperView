@@ -2,21 +2,20 @@
 import { CONFIG, LANGS, I18N } from './i18n.js';
 
 const HERO_CLIPS_DESKTOP = [
-  'video/ef4dd4f6.mp4',
-  'video/84ee8c89.mp4',
-  'video/b80faa2a.mp4',
-  'video/5bf44a07.mp4',
-  'video/dd8f5635.mp4',
-  'video/976d6cf4.mp4',
+  'video/fd143a0f.mp4', // entrance (original take)
+  'video/cd8c6355.mp4', // cafe (original take)
+  'video/454e0f8f.mp4', // coconut/loungers (original take)
+  'video/a701c2f0.mp4', // villa bedroom (regen from real photo, no door)
+  'video/c5dcdd2d.mp4', // rooftop deck (original take)
+  'video/976d6cf4.mp4', // aerial (regen from real drone photo, 8 villas)
 ];
 const HERO_CLIPS_MOBILE = [
-  'video/f6ff953b.mp4',
-  'video/bd08641e.mp4',
-  'video/1ec444cd.mp4',
-  // villa bedroom regenerated from real photo 092 (214ba793 had a phantom-door artifact)
-  'video/dcac0ba3.mp4',
-  'video/ca9c8f2b.mp4',
-  'video/9b230ee6.mp4',
+  'video/37fc725b.mp4', // entrance (original take)
+  'video/ecf30afc.mp4', // cafe (original take)
+  'video/64a52140.mp4', // coconut/loungers (original take)
+  'video/dcac0ba3.mp4', // villa bedroom (regen from real photo, no door)
+  'video/85f4fddb.mp4', // rooftop deck (original take)
+  'video/9b230ee6.mp4', // aerial (regen from real drone photo, 8 villas)
 ];
 
 const state = {
