@@ -228,11 +228,39 @@ document.addEventListener('click', (e) => {
 });
 
 /* ---------- galleries ---------- */
+// Room galleries loop endlessly: the photo set is duplicated once, and when
+// the scroll position crosses into the duplicate set it is silently shifted
+// back by one set width — identical pixels, so the jump is invisible.
+function setupLoop(id) {
+  const el = document.getElementById(id);
+  if (!el) return;
+  const n = el.children.length;
+  [...el.children].forEach((s) => el.appendChild(s.cloneNode(true)));
+  el._setWidth = () => el.children[n].offsetLeft - el.children[0].offsetLeft;
+  el.addEventListener(
+    'scroll',
+    () => {
+      const b = el._setWidth();
+      if (b <= 0) return;
+      const sign = el.scrollLeft < 0 ? -1 : 1;
+      const pos = Math.abs(el.scrollLeft);
+      if (pos >= b) el.scrollLeft = sign * (pos - b);
+    },
+    { passive: true }
+  );
+}
+setupLoop('vgal');
+setupLoop('sgal');
+
 function scrollGal(el, dir) {
   if (!el) return;
   const rtl = document.documentElement.dir === 'rtl' ? -1 : 1;
   // room galleries page one full photo; the property gallery keeps peek-ahead on desktop
   const full = el.id !== 'ggal' || window.innerWidth <= 768;
+  if (el._setWidth && dir < 0 && Math.abs(el.scrollLeft) <= 2) {
+    // wrap backwards: jump to the identical duplicate set, then glide one back
+    el.scrollLeft = rtl * el._setWidth();
+  }
   el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * (full ? 1 : 0.75)), behavior: 'smooth' });
 }
 document.querySelectorAll('[data-galprev]').forEach((b) =>
