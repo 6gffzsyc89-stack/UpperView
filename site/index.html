@@ -76,7 +76,10 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
       <button aria-haspopup="listbox" class="uv-dd-btn" style="display:flex;align-items:center;gap:10px;background:transparent;border:1px solid rgba(247,240,233,.35);color:#F7F0E9;font-size:10.5px;letter-spacing:.14em;text-transform:uppercase;padding:11px 12px;cursor:pointer"><span class="uv-dd-label">English</span><span class="uv-chev" style="font-size:9px;color:rgba(247,240,233,.7);display:inline-block;transition:transform .3s">▾</span></button>
       <div class="uv-dd-list" style="position:absolute;top:calc(100% + 8px);right:0;min-width:172px;background:#3D4C36;border:1px solid rgba(247,240,233,.25);box-shadow:0 18px 50px rgba(0,0,0,.4);z-index:60;transform:translateY(-6px);transition:opacity .3s ease,transform .3s cubic-bezier(.22,1,.36,1),visibility .3s;max-height:min(420px,62vh);overflow-y:auto"></div>
     </div>
-    <button data-i18n="reserve" id="uv-reserve-desk" class="uv-cta-cream uv-open-reserve" style="align-items:center;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:13px 26px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
+    <button id="uv-reserve-desk" class="uv-cta-cream uv-open-reserve" style="flex-direction:column;align-items:center;gap:3px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:9px 24px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">
+      <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:8.5px;letter-spacing:.2em">Opening January 2027</span>
+      <span data-i18n="reserve">Reserve</span>
+    </button>
   </div>
 </header>
 
@@ -92,8 +95,8 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
     <h1 data-i18n="hero_t" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;font-size:clamp(40px,9vw,104px);line-height:1.02;letter-spacing:.01em">Above it all</h1>
     <p data-i18n="hero_s" style="margin:22px 0 34px;max-width:520px;font-size:15px;line-height:1.7;color:rgba(247,240,233,.85)">Eight mini villas and three studios on the heights of Koh Samui — with a morning sea view you won’t forget.</p>
     <button class="uv-cta-ghost uv-open-reserve" style="display:inline-flex;flex-direction:column;align-items:center;gap:5px;background:transparent;color:#F7F0E9;border:1px solid rgba(247,240,233,.55);cursor:pointer;padding:14px 34px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,border-color .3s,color .3s">
+      <span data-i18n="opening_tag" class="uv-opening" style="display:none">Opening January 2027</span>
       <span data-i18n="hero_cta">Reserve your stay</span>
-      <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:9px;letter-spacing:.3em;color:rgba(247,240,233,.75);font-weight:400">Opening January 2027</span>
     </button>
   </div>
   <div style="position:absolute;bottom:0;left:50%;width:1px;height:72px;background:rgba(247,240,233,.25);overflow:hidden">
@@ -169,7 +172,10 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
         </div>
         <h3 data-i18n="v_deck_t" style="margin:24px 0 10px;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(22px,3vw,34px);line-height:1.1">Your own rooftop</h3>
         <p data-i18n="v_deck_b" style="margin:0 0 22px;max-width:420px;color:rgba(17,17,17,.68)">Sun loungers, a fringed umbrella, and nothing between you and the horizon.</p>
-        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
+        <button class="uv-cta-green uv-open-reserve" style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:12px 28px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">
+          <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:8.5px;letter-spacing:.2em">Opening January 2027</span>
+          <span data-i18n="reserve">Reserve</span>
+        </button>
       </article>
       <article style="display:flex;flex-direction:column;gap:0">
         <div data-reveal style="position:relative">
@@ -191,7 +197,10 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
         <h3 data-i18n="st_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Studio Rooms</h3>
         <p data-i18n="st_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">3 studios &middot; 40&ndash;60 m&sup2; &middot; main building</p>
         <p data-i18n="st_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Warm timber studios in the main house &mdash; kitchenette, balcony bathtub, and the morning view from bed.</p>
-        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
+        <button class="uv-cta-green uv-open-reserve" style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:12px 28px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">
+          <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:8.5px;letter-spacing:.2em">Opening January 2027</span>
+          <span data-i18n="reserve">Reserve</span>
+        </button>
       </article>
     </div>
   </div>
@@ -325,7 +334,10 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
     <a data-i18n="nav_gal" href="#gallery" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Gallery</a>
     <a data-i18n="nav_loc" href="#findus" class="uv-nav" style="font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,4.6vh,40px);line-height:1.15">Find Us</a>
   </nav>
-  <button data-i18n="hero_cta" class="uv-cta-cream uv-open-reserve" style="margin-top:clamp(24px,5vh,44px);align-self:flex-start;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:17px 40px;font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve your stay</button>
+  <button class="uv-cta-cream uv-open-reserve" style="display:inline-flex;flex-direction:column;align-items:center;gap:3px;margin-top:clamp(24px,5vh,44px);align-self:flex-start;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:13px 36px;font-size:11.5px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">
+    <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:9px;letter-spacing:.22em">Opening January 2027</span>
+    <span data-i18n="hero_cta">Reserve your stay</span>
+  </button>
   <div style="margin-top:clamp(24px,5vh,44px);display:flex;flex-direction:column;gap:10px;max-width:280px">
     <p data-i18n="foot_lang" style="margin:0;font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:rgba(247,240,233,.5)">Language</p>
     <div class="uv-dd" id="uv-dd-menu" data-langdd style="position:relative">
@@ -380,7 +392,8 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
   </div>
 </div>
 
-<button id="uv-mobilebar" class="uv-cta-cream uv-open-reserve" style="position:fixed;left:0;right:0;bottom:0;z-index:95;align-items:center;justify-content:center;gap:10px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px calc(19px + env(safe-area-inset-bottom));font-size:12px;letter-spacing:.32em;text-transform:uppercase;font-weight:600;box-shadow:0 -8px 30px rgba(0,0,0,.35);transition:background .3s,color .3s">
+<button id="uv-mobilebar" class="uv-cta-cream uv-open-reserve" style="position:fixed;left:0;right:0;bottom:0;z-index:95;flex-direction:column;align-items:center;justify-content:center;gap:3px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:12px 20px calc(12px + env(safe-area-inset-bottom));font-size:12px;letter-spacing:.32em;text-transform:uppercase;font-weight:600;box-shadow:0 -8px 30px rgba(0,0,0,.35);transition:background .3s,color .3s">
+  <span data-i18n="opening_tag" class="uv-opening" style="display:none;font-size:9.5px;letter-spacing:.26em">Opening January 2027</span>
   <span data-i18n="reserve">Reserve</span>
 </button>
 
