@@ -25,7 +25,7 @@ const state = {
   switching: false,
   ended: false,       // playlist finished; hold the final frame
   awayFromHero: false, // visitor scrolled away since it finished
-  isMobile: window.matchMedia('(max-width: 768px)').matches,
+  isMobile: window.matchMedia('(orientation: portrait)').matches, // portrait window -> portrait clips
 };
 
 const $ = (s) => document.querySelector(s);
@@ -178,7 +178,7 @@ new IntersectionObserver((entries) => {
   });
 }, { threshold: 0.15 }).observe(document.getElementById('top'));
 
-const mq = window.matchMedia('(max-width: 768px)');
+const mq = window.matchMedia('(orientation: portrait)');
 mq.addEventListener('change', (e) => {
   state.isMobile = e.matches;
   initHero();
