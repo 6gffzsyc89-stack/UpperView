@@ -26,7 +26,7 @@ The site opens with a full-screen hero video. Andy is generating it with Higgsfi
 ## Property facts (site content)
 
 **Accommodation:**
-- **8 Mini Villas** — 50 m² each, and each has its own **50 m² private rooftop deck**
+- **8 Mini Villas** — 40 m² each, and each has its own **40 m² private rooftop deck**
 - **3 Studio Rooms** — 40 to 60 m², located in the main building
 
 **Facilities:**
