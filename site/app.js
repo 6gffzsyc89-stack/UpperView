@@ -2,19 +2,19 @@
 import { CONFIG, LANGS, I18N } from './i18n.js';
 
 const HERO_CLIPS_DESKTOP = [
-  'video/fd143a0f.mp4', // entrance (original take)
-  'video/cd8c6355.mp4', // cafe (original take)
-  'video/454e0f8f.mp4', // coconut/loungers (original take)
+  'video/ef4dd4f6.mp4', // entrance (stabilized take)
+  'video/84ee8c89.mp4', // cafe (stabilized take)
+  'video/b80faa2a.mp4', // coconut/loungers (stabilized take)
   'video/a701c2f0.mp4', // villa bedroom (regen from real photo, no door)
-  'video/c5dcdd2d.mp4', // rooftop deck (original take)
+  'video/dd8f5635.mp4', // rooftop deck (stabilized take)
   'video/976d6cf4.mp4', // aerial (regen from real drone photo, 8 villas)
 ];
 const HERO_CLIPS_MOBILE = [
-  'video/37fc725b.mp4', // entrance (original take)
-  'video/ecf30afc.mp4', // cafe (original take)
-  'video/64a52140.mp4', // coconut/loungers (original take)
+  'video/f6ff953b.mp4', // entrance (stabilized take)
+  'video/bd08641e.mp4', // cafe (stabilized take)
+  'video/1ec444cd.mp4', // coconut/loungers (stabilized take)
   'video/dcac0ba3.mp4', // villa bedroom (regen from real photo, no door)
-  'video/85f4fddb.mp4', // rooftop deck (original take)
+  'video/ca9c8f2b.mp4', // rooftop deck (stabilized take)
   'video/9b230ee6.mp4', // aerial (regen from real drone photo, 8 villas)
 ];
 
@@ -23,6 +23,8 @@ const state = {
   vidIdx: 0,
   active: 'a',
   switching: false,
+  ended: false,       // playlist finished; hold the final frame
+  awayFromHero: false, // visitor scrolled away since it finished
   isMobile: window.matchMedia('(max-width: 768px)').matches,
 };
 
@@ -114,6 +116,8 @@ function initHero() {
   state.vidIdx = 0;
   state.active = 'a';
   state.switching = false;
+  state.ended = false;
+  state.awayFromHero = false;
   vA.src = list[0];
   vB.src = list[1] || '';
   vA.style.opacity = '1';
@@ -148,8 +152,14 @@ function advance() {
 function onTime(which) {
   return (e) => {
     const v = e.target;
-    if (!v.duration || state.switching) return;
+    if (!v.duration || state.switching || state.ended) return;
     if (state.active === which && v.currentTime > v.duration - 0.9) {
+      if (state.vidIdx >= heroList().length - 1) {
+        // played through once: hold the last frame; replay when the visitor
+        // scrolls away and comes back to the top
+        state.ended = true;
+        return;
+      }
       state.switching = true;
       advance();
     }
@@ -157,6 +167,16 @@ function onTime(which) {
 }
 vA.addEventListener('timeupdate', onTime('a'));
 vB.addEventListener('timeupdate', onTime('b'));
+
+new IntersectionObserver((entries) => {
+  entries.forEach((en) => {
+    if (!en.isIntersecting) {
+      state.awayFromHero = true;
+    } else if (state.ended && state.awayFromHero) {
+      initHero();
+    }
+  });
+}, { threshold: 0.15 }).observe(document.getElementById('top'));
 
 const mq = window.matchMedia('(max-width: 768px)');
 mq.addEventListener('change', (e) => {
