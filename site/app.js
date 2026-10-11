@@ -277,11 +277,17 @@ document
   });
 
 /* ---------- booking ---------- */
+const OPENING_DATE = '2027-01-01';      // first bookable night
+const OPENING_TAG_UNTIL = '2027-02-01'; // notice disappears after January 2027
 const today = new Date().toISOString().slice(0, 10);
-$('#uv-arr').min = today;
-$('#uv-dep').min = today;
+const minStay = today < OPENING_DATE ? OPENING_DATE : today;
+$('#uv-arr').min = minStay;
+$('#uv-dep').min = minStay;
 $('#uv-arr').addEventListener('change', () => {
-  $('#uv-dep').min = $('#uv-arr').value || today;
+  $('#uv-dep').min = $('#uv-arr').value || minStay;
+});
+document.querySelectorAll('.uv-opening').forEach((el) => {
+  el.style.display = today < OPENING_TAG_UNTIL ? 'block' : 'none';
 });
 $('#uv-check').addEventListener('click', () => {
   const url = CONFIG.bookingUrl;

@@ -92,6 +92,7 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
     <h1 data-i18n="hero_t" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;font-size:clamp(40px,9vw,104px);line-height:1.02;letter-spacing:.01em">Above it all</h1>
     <p data-i18n="hero_s" style="margin:22px 0 34px;max-width:520px;font-size:15px;line-height:1.7;color:rgba(247,240,233,.85)">Eight mini villas and three studios on the heights of Koh Samui — with a morning sea view you won’t forget.</p>
     <button data-i18n="hero_cta" class="uv-cta-ghost uv-open-reserve" style="background:transparent;color:#F7F0E9;border:1px solid rgba(247,240,233,.55);cursor:pointer;padding:16px 34px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,border-color .3s,color .3s">Reserve your stay</button>
+    <p data-i18n="opening_tag" class="uv-opening" style="margin:16px 0 0;font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:rgba(247,240,233,.8);display:none">Opening January 2027</p>
   </div>
   <div style="position:absolute;bottom:0;left:50%;width:1px;height:72px;background:rgba(247,240,233,.25);overflow:hidden">
     <span style="position:absolute;left:0;top:0;width:1px;height:100%;background:#F7F0E9;animation:uvCue 2.6s cubic-bezier(.65,0,.35,1) infinite"></span>
@@ -139,16 +140,11 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
 
     <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,420px),1fr));gap:clamp(32px,5vw,72px);align-items:start">
       <article style="display:flex;flex-direction:column;gap:0">
-        <div style="overflow:hidden">
-          <img data-reveal="img" src="photos/upper-view-092.jpg" alt="Mini Villa bedroom with rattan coffered ceiling" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover">
-        </div>
-        <h3 data-i18n="v_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Mini Villas</h3>
-        <p data-i18n="v_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">8 villas · 50 m² · private 50 m² rooftop deck</p>
-        <p data-i18n="v_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Fifty square metres of calm — rattan-coffered ceilings, a freestanding tub facing the sea, and your own rooftop deck the same size again, one flight up.</p>
-        <div style="position:relative">
-        <button aria-label="Previous" data-galprev="vgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
-        <button aria-label="Next" data-galnext="vgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
+        <div data-reveal style="position:relative">
+        <button aria-label="Previous" data-galprev="vgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&lsaquo;</button>
+        <button aria-label="Next" data-galnext="vgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&rsaquo;</button>
         <div id="vgal" data-gal style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none">
+          <img src="photos/upper-view-092.jpg" alt="Mini Villa bedroom with rattan coffered ceiling" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-072.jpg" alt="Private rooftop deck with panoramic bay view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-077.jpg" alt="Rooftop loungers under the fringed umbrella, sea beyond" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-074.jpg" alt="Sun loungers overlooking the north coast" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
@@ -163,18 +159,22 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
           <img src="photos/upper-view-133.jpg" alt="Private rooftop deck at dusk" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
         </div>
         </div>
+        <h3 data-i18n="v_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Mini Villas</h3>
+        <p data-i18n="v_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">8 villas &middot; 50 m&sup2; &middot; private 50 m&sup2; rooftop deck</p>
+        <p data-i18n="v_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Fifty square metres of calm &mdash; rattan-coffered ceilings, a freestanding tub facing the sea, and your own rooftop deck the same size again, one flight up.</p>
+        <div style="overflow:hidden;margin-top:clamp(18px,3vw,32px)">
+          <img data-reveal="img" src="photos/upper-view-077.jpg" alt="Private rooftop deck with fringed umbrella and sun loungers" loading="lazy" style="width:100%;aspect-ratio:16/10;object-fit:cover">
+        </div>
+        <h3 data-i18n="v_deck_t" style="margin:24px 0 10px;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(22px,3vw,34px);line-height:1.1">Your own rooftop</h3>
+        <p data-i18n="v_deck_b" style="margin:0 0 22px;max-width:420px;color:rgba(17,17,17,.68)">Sun loungers, a fringed umbrella, and nothing between you and the horizon.</p>
+        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
       </article>
       <article style="display:flex;flex-direction:column;gap:0">
-        <div style="overflow:hidden">
-          <img data-reveal="img" src="photos/upper-view-038.jpg" alt="Studio room in the main building" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover">
-        </div>
-        <h3 data-i18n="st_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Studio Rooms</h3>
-        <p data-i18n="st_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">3 studios · 40–60 m² · main building</p>
-        <p data-i18n="st_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Warm timber studios in the main house — kitchenette, balcony bathtub, and the morning view from bed.</p>
-        <div style="position:relative">
-        <button aria-label="Previous" data-galprev="sgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
-        <button aria-label="Next" data-galnext="sgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
+        <div data-reveal style="position:relative">
+        <button aria-label="Previous" data-galprev="sgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&lsaquo;</button>
+        <button aria-label="Next" data-galnext="sgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&rsaquo;</button>
         <div id="sgal" data-gal style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none">
+          <img src="photos/upper-view-038.jpg" alt="Studio room in the main building" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-041.jpg" alt="Studio terrace and bed with morning view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-048.jpg" alt="Studio balcony with panoramic sea view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-055.jpg" alt="Balcony jacuzzi overlooking the greenery and sea" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
@@ -186,18 +186,11 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
           <img src="photos/upper-view-044.jpg" alt="Studio bed" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
         </div>
         </div>
+        <h3 data-i18n="st_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Studio Rooms</h3>
+        <p data-i18n="st_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">3 studios &middot; 40&ndash;60 m&sup2; &middot; main building</p>
+        <p data-i18n="st_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Warm timber studios in the main house &mdash; kitchenette, balcony bathtub, and the morning view from bed.</p>
+        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="align-self:flex-start;background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
       </article>
-    </div>
-
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,380px),1fr));gap:clamp(28px,4vw,64px);align-items:center;margin-top:clamp(56px,8vw,100px)">
-      <div style="overflow:hidden">
-        <img data-reveal="img" src="photos/upper-view-077.jpg" alt="Private rooftop deck with fringed umbrella and sun loungers" loading="lazy" style="width:100%;aspect-ratio:16/10;object-fit:cover">
-      </div>
-      <div>
-        <h3 data-i18n="v_deck_t" data-reveal style="margin:0 0 14px;color:#4F6446;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(22px,3vw,34px);line-height:1.1">Your own rooftop</h3>
-        <p data-i18n="v_deck_b" data-reveal data-delay="90" style="margin:0 0 26px;max-width:420px;color:rgba(17,17,17,.68)">Sun loungers, a fringed umbrella, and nothing between you and the horizon.</p>
-        <button data-i18n="reserve" class="uv-cta-green uv-open-reserve" style="background:#4F6446;color:#F7F0E9;border:none;cursor:pointer;padding:15px 32px;font-size:11px;letter-spacing:.28em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s">Reserve</button>
-      </div>
     </div>
   </div>
 </section>
@@ -275,16 +268,16 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
   <button aria-label="Previous" data-galprev="ggal" style="position:absolute;left:clamp(16px,3vw,32px);top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">‹</button>
   <button aria-label="Next" data-galnext="ggal" style="position:absolute;right:clamp(16px,3vw,32px);top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">›</button>
   <div id="ggal" data-gal style="display:flex;gap:12px;overflow-x:auto;scroll-snap-type:x mandatory;padding:0 clamp(20px,4vw,40px);scrollbar-width:none">
-    <img src="photos/upper-view-010.jpg" alt="Panorama over the bay" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-005.jpg" alt="Rooftop lap pool" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-002.jpg" alt="Stomping Grounds café" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-072.jpg" alt="Rooftop deck with umbrella" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-100.jpg" alt="Main building corridor" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-131.jpg" alt="Villa stairs at night" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-118.jpg" alt="Café at dusk" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-140.jpg" alt="Pool and café exterior" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-135.jpg" alt="Aerial of the property" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
-    <img src="photos/upper-view-022.jpg" alt="Fresh fruit against the view" loading="lazy" style="flex:0 0 min(580px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-010.jpg" alt="Panorama over the bay" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-005.jpg" alt="Rooftop lap pool" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-002.jpg" alt="Stomping Grounds café" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-072.jpg" alt="Rooftop deck with umbrella" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-100.jpg" alt="Main building corridor" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-131.jpg" alt="Villa stairs at night" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-118.jpg" alt="Café at dusk" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-140.jpg" alt="Pool and café exterior" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-135.jpg" alt="Aerial of the property" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+    <img src="photos/upper-view-022.jpg" alt="Fresh fruit against the view" loading="lazy" style="flex:0 0 auto;width:clamp(300px,58vw,920px);min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
   </div>
   </div>
 </section>
@@ -349,6 +342,7 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
   </div>
   <div style="padding:clamp(28px,5vh,44px) clamp(24px,6vw,36px) 40px;display:flex;flex-direction:column;gap:26px">
     <h2 data-i18n="p_title" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,3.6vh,32px);line-height:1.05">Reserve Today</h2>
+    <p data-i18n="opening_tag" class="uv-opening" style="margin:-16px 0 0;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE;display:none">Opening January 2027</p>
     <div style="display:flex;flex-direction:column;gap:8px">
       <label data-i18n="p_arr" for="uv-arr" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Arrival</label>
       <input id="uv-arr" type="date" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;color-scheme:dark;border-radius:0">
