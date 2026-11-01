@@ -280,6 +280,7 @@ function setupLoop(id) {
 }
 setupLoop('vgal');
 setupLoop('sgal');
+setupLoop('ggal');
 
 function scrollGal(el, dir) {
   if (!el) return;
