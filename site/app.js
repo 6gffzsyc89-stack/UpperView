@@ -285,13 +285,16 @@ setupLoop('ggal');
 function scrollGal(el, dir) {
   if (!el) return;
   const rtl = document.documentElement.dir === 'rtl' ? -1 : 1;
-  // room galleries page one full photo; the property gallery keeps peek-ahead on desktop
-  const full = el.id !== 'ggal' || window.innerWidth <= 768;
+  const n = el._setWidth ? el.children.length / 2 : el.children.length;
+  const step = (el._setWidth ? el._setWidth() : el.scrollWidth) / n;
+  if (step <= 0) return;
   if (el._setWidth && dir < 0 && Math.abs(el.scrollLeft) <= 2) {
     // wrap backwards: jump to the identical duplicate set, then glide one back
     el.scrollLeft = rtl * el._setWidth();
   }
-  el.scrollBy({ left: dir * rtl * Math.round(el.clientWidth * (full ? 1 : 0.75)), behavior: 'smooth' });
+  // index-based: every click lands exactly on the next photo's snap position
+  const cur = Math.round(Math.abs(el.scrollLeft) / step);
+  el.scrollTo({ left: rtl * (cur + dir) * step, behavior: 'smooth' });
 }
 document.querySelectorAll('[data-galprev]').forEach((b) =>
   b.addEventListener('click', () => scrollGal(document.getElementById(b.dataset.galprev), -1))
