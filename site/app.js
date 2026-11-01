@@ -281,6 +281,7 @@ function setupLoop(id) {
 setupLoop('vgal');
 setupLoop('sgal');
 setupLoop('ggal');
+setupLoop('pgal');
 
 function scrollGal(el, dir) {
   if (!el) return;

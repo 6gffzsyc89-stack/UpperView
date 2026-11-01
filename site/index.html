@@ -58,13 +58,13 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
 .uv-hint-mouse { display:none; }
 @media (hover:hover) and (pointer:fine) { .uv-hint-touch { display:none; } .uv-hint-mouse { display:inline; } }
 /* room galleries: page one full, uncropped 3:2 photo per step (all screens) */
-#vgal img, #sgal img, #ggal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
+#vgal img, #sgal img, #ggal img, #pgal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
 @media (max-width: 768px) {
   #uv-mobilebar { display: flex; }
   body.reserve-open #uv-mobilebar { display: none; }
   #uv-reserve-desk { display: none; }
   /* sliver of the next photo: the strongest swipe cue */
-  #vgal img, #sgal img, #ggal img { flex-basis: 94% !important; width: 94% !important; }
+  #vgal img, #sgal img, #ggal img, #pgal img { flex-basis: 94% !important; width: 94% !important; }
 }
 </style>
 </head>
@@ -222,18 +222,22 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
     <h2 data-i18n="pool_t" data-reveal data-delay="80" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(28px,5.5vw,64px);line-height:1.05">One line to the horizon</h2>
     <p data-i18n="pool_b" data-reveal data-delay="160" style="margin:24px 0 0;max-width:520px;color:rgba(247,240,233,.85)">The rooftop lap pool runs the full length of the main house. Swim toward Koh Phangan, stay for the sunset.</p>
   </div>
-  <div style="overflow:hidden">
-    <img data-reveal="img" src="photos/upper-view-025.jpg" alt="Rooftop lap pool stretching toward the bay" loading="lazy" style="width:100%;aspect-ratio:3/2;object-fit:cover">
-  </div>
-  <div style="max-width:1180px;margin:0 auto;padding:clamp(28px,4vw,48px) clamp(20px,4vw,40px) clamp(48px,7vw,84px)">
-    <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(min(100%,300px),1fr));gap:12px">
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-140.jpg" alt="The lap pool alongside Stomping Grounds" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-007.jpg" alt="Pool edge and ladder above the north coast" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-009.jpg" alt="Green stone pool water" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-005.jpg" alt="Rooftop lap pool facing the sea" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-105.jpg" alt="Pool corner at dusk" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
-      <div style="overflow:hidden"><img data-reveal="img" src="photos/upper-view-119.jpg" alt="The pool at blue hour" loading="lazy" style="width:100%;aspect-ratio:4/3;object-fit:cover"></div>
+  <div style="max-width:1180px;margin:0 auto;padding:0 clamp(20px,4vw,40px) clamp(48px,7vw,84px)">
+    <div data-reveal style="position:relative">
+    <button aria-label="Previous" data-galprev="pgal" style="position:absolute;left:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&lsaquo;</button>
+    <button aria-label="Next" data-galnext="pgal" style="position:absolute;right:10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;align-items:center;justify-content:center;padding:0;transition:background .25s">&rsaquo;</button>
+    <div id="pgal" data-gal style="display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;padding-bottom:6px;scrollbar-width:none">
+      <img src="photos/upper-view-025.jpg" alt="Rooftop lap pool stretching toward the bay" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-140.jpg" alt="The lap pool alongside Stomping Grounds" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-007.jpg" alt="Pool edge and ladder above the north coast" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-009.jpg" alt="Green stone pool water" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-005.jpg" alt="Rooftop lap pool facing the sea" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-105.jpg" alt="Pool corner at dusk" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
+      <img src="photos/upper-view-119.jpg" alt="The pool at blue hour" loading="lazy" style="flex:0 0 100%;width:100%;min-width:0;aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
     </div>
+    <span class="uv-count" aria-hidden="true">1 / 1</span>
+    </div>
+    <p class="uv-galhint" style="color:rgba(247,240,233,.5)"><span class="uv-hint-touch" data-i18n="gal_hint_touch">Swipe for more photos</span><span class="uv-hint-mouse" data-i18n="gal_hint_mouse">Browse the photos with the arrows</span></p>
   </div>
 </section>
 
