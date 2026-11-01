@@ -318,6 +318,10 @@ $('#uv-arr').addEventListener('change', () => {
 document.querySelectorAll('.uv-opening').forEach((el) => {
   el.style.display = today < OPENING_TAG_UNTIL ? 'block' : 'none';
 });
+const MAR_TAG_UNTIL = '2027-04-01'; // cafe & spa notices disappear after March 2027
+document.querySelectorAll('.uv-opening-mar').forEach((el) => {
+  el.style.display = today < MAR_TAG_UNTIL ? 'inline-block' : 'none';
+});
 $('#uv-check').addEventListener('click', () => {
   const url = CONFIG.bookingUrl;
   if (url) {
