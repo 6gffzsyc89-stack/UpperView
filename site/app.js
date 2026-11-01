@@ -268,6 +268,15 @@ function setupLoop(id) {
     },
     { passive: true }
   );
+  const count = el.parentElement.querySelector('.uv-count');
+  if (count) {
+    const update = () => {
+      const step = el._setWidth() / n;
+      if (step > 0) count.textContent = ((Math.round(Math.abs(el.scrollLeft) / step) % n) + 1) + ' / ' + n;
+    };
+    el.addEventListener('scroll', update, { passive: true });
+    update();
+  }
 }
 setupLoop('vgal');
 setupLoop('sgal');

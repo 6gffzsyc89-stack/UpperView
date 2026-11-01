@@ -52,12 +52,19 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
 .uv-dd.open .uv-chev { transform: rotate(180deg); }
 #uv-mobilebar { display: none; }
 #uv-reserve-desk { display: inline-flex; }
+.uv-count { position:absolute; right:12px; bottom:16px; z-index:2; background:rgba(17,17,17,.55); color:#F7F0E9; font-size:10px; letter-spacing:.18em; padding:5px 10px; }
+html[dir="rtl"] .uv-count { right:auto; left:12px; }
+.uv-galhint { margin:10px 0 0; font-size:9.5px; letter-spacing:.24em; text-transform:uppercase; color:rgba(17,17,17,.45); }
+.uv-hint-mouse { display:none; }
+@media (hover:hover) and (pointer:fine) { .uv-hint-touch { display:none; } .uv-hint-mouse { display:inline; } }
 /* room galleries: page one full, uncropped 3:2 photo per step (all screens) */
 #vgal img, #sgal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
 @media (max-width: 768px) {
   #uv-mobilebar { display: flex; }
   body.reserve-open #uv-mobilebar { display: none; }
   #uv-reserve-desk { display: none; }
+  /* sliver of the next photo: the strongest swipe cue */
+  #vgal img, #sgal img { flex-basis: 94% !important; width: 94% !important; }
 }
 </style>
 </head>
@@ -161,7 +168,9 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
           <img src="photos/upper-view-106.jpg" alt="Villa lounge at dusk" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-133.jpg" alt="Private rooftop deck at dusk" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
         </div>
+        <span class="uv-count" aria-hidden="true">1 / 1</span>
         </div>
+        <p class="uv-galhint"><span class="uv-hint-touch" data-i18n="gal_hint_touch">Swipe for more photos</span><span class="uv-hint-mouse" data-i18n="gal_hint_mouse">Browse the photos with the arrows</span></p>
         <h3 data-i18n="v_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Mini Villas</h3>
         <p data-i18n="v_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">8 villas &middot; 40 m&sup2; &middot; private 40 m&sup2; rooftop deck</p>
         <p data-i18n="v_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Forty square metres of calm &mdash; rattan-coffered ceilings, a freestanding tub facing the sea, and your own rooftop deck the same size again, one flight up.</p>
@@ -192,7 +201,9 @@ html[dir="rtl"] body.help-open #uv-helppanel { transform: translate(0, -50%); }
           <img src="photos/upper-view-066.jpg" alt="Studio vanity with a view" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
           <img src="photos/upper-view-044.jpg" alt="Studio bed" loading="lazy" style="flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start">
         </div>
+        <span class="uv-count" aria-hidden="true">1 / 1</span>
         </div>
+        <p class="uv-galhint"><span class="uv-hint-touch" data-i18n="gal_hint_touch">Swipe for more photos</span><span class="uv-hint-mouse" data-i18n="gal_hint_mouse">Browse the photos with the arrows</span></p>
         <h3 data-i18n="st_name" style="margin:26px 0 8px;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:500;text-transform:uppercase;letter-spacing:.08em;font-size:clamp(18px,2.1vw,23px);line-height:1.1">Studio Rooms</h3>
         <p data-i18n="st_facts" style="margin:0 0 14px;font-size:10.5px;letter-spacing:.22em;text-transform:uppercase;color:#4F6446;font-weight:500">3 studios &middot; 40&ndash;60 m&sup2; &middot; main building</p>
         <p data-i18n="st_body" style="margin:0 0 22px;max-width:480px;color:rgba(17,17,17,.68)">Warm timber studios in the main house &mdash; kitchenette, balcony bathtub, and the morning view from bed.</p>
