@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=aer2';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=flow2';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -437,17 +437,6 @@ function bkRenderSummary() {
   el.textContent = s;
 }
 
-async function bkSetType(type) {
-  BK.type = type; BK.ci = null; BK.co = null;
-  document.querySelectorAll('.uv-rtbtn').forEach((b) =>
-    b.classList.toggle('on', b.dataset.rt === type)
-  );
-  await bkFetch(type);
-  bkRenderCal();
-}
-document.querySelectorAll('.uv-rtbtn').forEach((b) =>
-  b.addEventListener('click', () => bkSetType(b.dataset.rt))
-);
 $('#uv-calprev').addEventListener('click', () => {
   const [y, m] = BK.month.split('-').map(Number);
   BK.month = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
@@ -461,21 +450,135 @@ $('#uv-calnext').addEventListener('click', () => {
 window.uvBkRefresh = () => bkRenderCal(); // re-render month/weekday names on language change
 bkFetch('villa').then(bkRenderCal);
 
-function bkError(msg) {
-  const el = $('#uv-bkerr');
+function bkError(msg, which) {
+  const el = $(which === 2 ? '#uv-bkerr2' : '#uv-bkerr');
+  if (!el) return;
   el.textContent = msg;
   el.style.display = msg ? 'block' : 'none';
 }
 
+/* Nobu-style flow: dates -> available rooms (with photo sliders) -> details */
+const ROOM_IMGS = {
+  villa: ['photos/upper-view-106.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-133.jpg', 'photos/upper-view-131.jpg'],
+  superior: ['photos/upper-view-044.jpg', 'photos/upper-view-066.jpg'],
+  deluxe: ['photos/upper-view-066.jpg', 'photos/upper-view-044.jpg'],
+  king: ['photos/upper-view-044.jpg', 'photos/upper-view-066.jpg'],
+};
+const ROOM_SIZE = { villa: '40 m²', superior: '40 m²', deluxe: '50 m²', king: '60 m²' };
+
+function bkShowStep(step) {
+  $('#uv-step1').style.display = step === 1 ? 'contents' : 'none';
+  $('#uv-results').style.display = step === 2 ? 'flex' : 'none';
+  $('#uv-details').style.display = step === 3 ? 'flex' : 'none';
+  $('#uv-panel').scrollTo({ top: 0 });
+}
+
+function bkFmt(n) { return Number(n).toLocaleString(); }
+
+function bkRenderResults(q) {
+  const box = $('#uv-results');
+  box.innerHTML = '';
+  const back = document.createElement('button');
+  back.type = 'button';
+  back.className = 'uv-backlink';
+  back.textContent = '‹ ' + (t('p_back') || 'Change dates');
+  back.addEventListener('click', () => bkShowStep(1));
+  box.appendChild(back);
+  const sum = document.createElement('p');
+  sum.style.cssText = 'margin:0;font-size:13px;letter-spacing:.06em;color:#E0D9CE';
+  sum.textContent = q.from + ' → ' + q.to + ' · ' + q.nights + ' ' + (t('p_nights') || 'nights')
+    + ' · ' + $('#uv-gst').value + ' ' + (t('p_gst') || 'Guests');
+  box.appendChild(sum);
+
+  q.rooms.forEach((room) => {
+    const card = document.createElement('div');
+    card.className = 'uv-roomcard' + (room.available ? '' : ' uv-rc-soldout');
+    const gal = document.createElement('div');
+    gal.className = 'uv-rc-gal';
+    (ROOM_IMGS[room.type] || []).forEach((src) => {
+      const img = document.createElement('img');
+      img.src = src; img.alt = room.name; img.loading = 'lazy';
+      gal.appendChild(img);
+    });
+    card.appendChild(gal);
+    const body = document.createElement('div');
+    body.className = 'uv-rc-body';
+    const h = document.createElement('h3');
+    h.textContent = t(bkTypeKey(room.type)) || room.name;
+    body.appendChild(h);
+    const facts = document.createElement('p');
+    facts.className = 'uv-rc-facts';
+    facts.textContent = (ROOM_SIZE[room.type] || '') + ' · 2 ' + (t('p_gst') || 'Guests');
+    body.appendChild(facts);
+    const row = document.createElement('div');
+    row.className = 'uv-rc-row';
+    const price = document.createElement('div');
+    price.className = 'uv-rc-price';
+    if (room.available && room.nightly) {
+      price.innerHTML = '฿' + bkFmt(room.nightly) + ' <small>'
+        + (t('p_pernight') || 'per night') + ' · ฿' + bkFmt(room.total)
+        + ' ' + (t('p_total') || 'total') + '</small>';
+    } else if (room.available) {
+      price.innerHTML = '<small>' + (t('p_note') || '') + '</small>';
+    } else {
+      price.innerHTML = '<small>' + (t('p_full') || 'Unavailable') + '</small>';
+    }
+    row.appendChild(price);
+    if (room.available) {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      btn.className = 'uv-rc-book';
+      btn.textContent = t('p_book') || 'Book now';
+      btn.addEventListener('click', () => {
+        BK.type = room.type; BK.sel = room;
+        $('#uv-selsum').textContent = (t(bkTypeKey(room.type)) || room.name) + ' · '
+          + q.from + ' → ' + q.to + ' · ' + q.nights + ' ' + (t('p_nights') || 'nights')
+          + (room.total ? ' · ฿' + bkFmt(room.total) : '');
+        bkShowStep(3);
+      });
+      row.appendChild(btn);
+    }
+    body.appendChild(row);
+    card.appendChild(body);
+    box.appendChild(card);
+  });
+}
+
+function bkTypeKey(type) {
+  return { villa: 'p_villa', superior: 'p_sup', deluxe: 'p_dlx', king: 'p_king' }[type];
+}
+
 $('#uv-check').addEventListener('click', async () => {
   bkError('');
-  const name = $('#uv-name').value.trim();
-  const email = $('#uv-email').value.trim();
-  if (!BK.ci || !BK.co || !name || !/.+@.+\..+/.test(email)) {
-    bkError(t('p_err') || 'Please select dates and fill in your name and email.');
+  if (!BK.ci || !BK.co) {
+    bkError(t('p_err_dates') || 'Please select your dates.');
     return;
   }
   const btn = $('#uv-check');
+  btn.disabled = true; btn.style.opacity = '.6';
+  try {
+    const r = await fetch('booking/api.php?action=quote&from=' + BK.ci + '&to=' + BK.co);
+    const q = await r.json();
+    if (!q.rooms) throw new Error(q.error || 'quote failed');
+    BK.quote = q;
+    bkRenderResults(q);
+    bkShowStep(2);
+  } catch (e) {
+    bkError('Network error — please try again.');
+  } finally {
+    btn.disabled = false; btn.style.opacity = '1';
+  }
+});
+
+$('#uv-confirm').addEventListener('click', async () => {
+  bkError('', 2);
+  const name = $('#uv-name').value.trim();
+  const email = $('#uv-email').value.trim();
+  if (!name || !/.+@.+\..+/.test(email)) {
+    bkError(t('p_err') || 'Please fill in your name and email.', 2);
+    return;
+  }
+  const btn = $('#uv-confirm');
   btn.disabled = true; btn.style.opacity = '.6';
   try {
     const r = await fetch('booking/api.php?action=book', {
@@ -490,17 +593,17 @@ $('#uv-check').addEventListener('click', async () => {
     const j = await r.json();
     if (j.mode === 'pay' && j.url) { window.location.href = j.url; return; }
     if (j.mode === 'inquiry') {
+      $('#uv-details').style.display = 'none';
       const msg = $('#uv-bkmsg');
       msg.textContent = (t('p_sent') || 'Request received.') + ' · ' + j.code;
       msg.style.display = 'block';
-      BK.avail = {}; // force re-fetch: the hold now blocks these dates
-      await bkFetch(BK.type);
+      BK.avail = {}; BK.ci = null; BK.co = null;
       bkRenderCal();
       return;
     }
-    bkError(j.error === 'no availability' ? (t('p_full') || 'Unavailable') : (j.error || 'Error'));
+    bkError(j.error === 'no availability' ? (t('p_full') || 'Unavailable') : (j.error || 'Error'), 2);
   } catch (e) {
-    bkError('Network error — please try again.');
+    bkError('Network error — please try again.', 2);
   } finally {
     btn.disabled = false; btn.style.opacity = '1';
   }

@@ -27,6 +27,58 @@ if ($action === 'availability') {
     ]);
 }
 
+if ($action === 'quote') {
+    $from = $_GET['from'] ?? ''; $to = $_GET['to'] ?? '';
+    if (!uv_valid_date($from) || !uv_valid_date($to) || $to <= $from) uv_json(['error' => 'bad range'], 400);
+    $cfg = uv_config();
+    $nights = (int)((strtotime($to) - strtotime($from)) / 86400);
+    $mult = $cfg['direct_multiplier'] ?? 0.90; // direct booking = base rate -10%
+    $out = [];
+    foreach ($cfg['inventory'] as $type => $units) {
+        $roomId = $cfg['beds24']['room_map'][$type] ?? null;
+        $free = null; $total = null;
+        if ($roomId !== null && b24_enabled()) {
+            $lastDate = date('Y-m-d', strtotime($to . ' -1 day'));
+            $res = b24_api('GET', '/inventory/rooms/calendar?roomId=' . $roomId
+                . '&startDate=' . $from . '&endDate=' . $lastDate
+                . '&includeNumAvail=true&includePrices=true');
+            if (is_array($res) && isset($res['data'][0]['calendar'])) {
+                $freeMin = PHP_INT_MAX; $sum = 0.0; $covered = 0;
+                foreach ($res['data'][0]['calendar'] as $r) {
+                    $n = max(0, (int)($r['numAvail'] ?? 0));
+                    $p = (float)($r['price1'] ?? 0);
+                    for ($d = max($r['from'], $from); $d <= min($r['to'], $lastDate);
+                         $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+                        $freeMin = min($freeMin, $n);
+                        $sum += $p; $covered++;
+                    }
+                }
+                if ($covered === $nights) {
+                    $free = ($freeMin === PHP_INT_MAX) ? 0 : $freeMin;
+                    $total = $sum > 0 ? (int)round($sum * $mult) : null;
+                }
+            }
+        }
+        if ($free === null) { // fallback engine
+            $f = uv_avail($type, $from, $to);
+            $free = $f ? min($f) : 0;
+        }
+        $out[] = [
+            'type' => $type,
+            'name' => uv_type_name($type),
+            'units' => $units,
+            'free' => $free,
+            'available' => $free > 0 && ($total !== null || !b24_enabled()),
+            'nights' => $nights,
+            'total' => $total,
+            'nightly' => $total !== null && $nights ? (int)round($total / $nights) : null,
+            'currency' => $cfg['currency'],
+        ];
+    }
+    uv_json(['from' => $from, 'to' => $to, 'nights' => $nights, 'rooms' => $out,
+             'source' => b24_enabled() ? 'beds24' : 'local']);
+}
+
 if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $in = json_decode(file_get_contents('php://input'), true) ?: [];
     $type = $in['type'] ?? '';

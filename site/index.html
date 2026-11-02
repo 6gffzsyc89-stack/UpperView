@@ -71,6 +71,20 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
 .uv-calnav:disabled { opacity:.3; cursor:default; }
 .uv-rtbtn { flex:1; background:transparent; border:1px solid rgba(247,240,233,.3); color:#F7F0E9; padding:12px 8px; font-size:11px; letter-spacing:.22em; text-transform:uppercase; cursor:pointer; transition:background .25s,color .25s; font-family:inherit; }
 .uv-rtbtn.on { background:#F7F0E9; color:#3D4C36; font-weight:500; }
+/* room result cards (Nobu-style select-a-room) */
+.uv-roomcard { border:1px solid rgba(247,240,233,.18); }
+.uv-rc-gal { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
+.uv-rc-gal::-webkit-scrollbar { display:none; }
+.uv-rc-gal img { flex:0 0 100%; width:100%; aspect-ratio:3/2; object-fit:cover; scroll-snap-align:start; }
+.uv-rc-body { padding:16px 18px 18px; }
+.uv-roomcard h3 { margin:0 0 4px; font-family:'Jost','Noto Sans Thai',sans-serif; font-weight:400; text-transform:uppercase; letter-spacing:.08em; font-size:18px; color:#F7F0E9; }
+.uv-rc-facts { margin:0 0 12px; font-size:10.5px; letter-spacing:.14em; text-transform:uppercase; color:rgba(247,240,233,.55); }
+.uv-rc-row { display:flex; align-items:flex-end; justify-content:space-between; gap:12px; }
+.uv-rc-price { font-size:16px; color:#F7F0E9; }
+.uv-rc-price small { display:block; font-size:11px; color:rgba(247,240,233,.5); letter-spacing:.06em; margin-top:2px; }
+.uv-rc-book { background:#F7F0E9; color:#3D4C36; border:none; cursor:pointer; padding:13px 22px; font-size:10.5px; letter-spacing:.26em; text-transform:uppercase; font-weight:500; font-family:inherit; }
+.uv-rc-soldout { opacity:.45; }
+.uv-backlink { background:none; border:none; color:rgba(247,240,233,.6); cursor:pointer; font-size:11px; letter-spacing:.24em; text-transform:uppercase; padding:0; text-align:left; font-family:inherit; }
 /* room galleries: page one full, uncropped 3:2 photo per step (all screens) */
 #vgal img, #sgal img, #ggal img, #pgal img { flex: 0 0 100% !important; width: 100% !important; min-width: 0 !important; }
 @media (max-width: 768px) {
@@ -399,15 +413,7 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
   <div style="padding:clamp(28px,5vh,44px) clamp(24px,6vw,36px) 40px;display:flex;flex-direction:column;gap:26px">
     <h2 data-i18n="p_title" style="margin:0;font-family:'Jost','Noto Sans Thai',sans-serif;font-weight:400;text-transform:uppercase;letter-spacing:.05em;font-size:clamp(24px,3.6vh,32px);line-height:1.05">Reserve Today</h2>
     <p data-i18n="opening_tag" class="uv-opening" style="margin:-16px 0 0;font-size:10.5px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE;display:none">Opening late December 2026</p>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <label data-i18n="p_room" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Room type</label>
-      <div id="uv-rt" style="display:grid;grid-template-columns:1fr 1fr;gap:8px">
-        <button type="button" data-rt="villa" data-i18n="p_villa" class="uv-rtbtn on">Mini Villa</button>
-        <button type="button" data-rt="superior" data-i18n="p_sup" class="uv-rtbtn">Superior Suite</button>
-        <button type="button" data-rt="deluxe" data-i18n="p_dlx" class="uv-rtbtn">Deluxe Suite</button>
-        <button type="button" data-rt="king" data-i18n="p_king" class="uv-rtbtn">King Suite</button>
-      </div>
-    </div>
+    <div id="uv-step1" style="display:contents">
     <div style="display:flex;flex-direction:column;gap:10px">
       <div style="display:flex;align-items:center;justify-content:space-between">
         <button type="button" id="uv-calprev" aria-label="Previous month" class="uv-calnav">&lsaquo;</button>
@@ -426,23 +432,30 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
       </select>
     </div>
     <div style="display:flex;flex-direction:column;gap:8px">
-      <label data-i18n="p_name" for="uv-name" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Full name</label>
-      <input id="uv-name" type="text" autocomplete="name" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <label data-i18n="p_email" for="uv-email" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Email</label>
-      <input id="uv-email" type="email" autocomplete="email" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
-      <label data-i18n="p_phone" for="uv-phone" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Phone (optional)</label>
-      <input id="uv-phone" type="tel" autocomplete="tel" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
-    </div>
-    <div style="display:flex;flex-direction:column;gap:8px">
       <label data-i18n="p_promo" for="uv-promo" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Promo code</label>
       <input id="uv-promo" type="text" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
     </div>
     <p id="uv-bkerr" style="margin:-10px 0 0;font-size:12.5px;color:#E8B4A8;display:none"></p>
-    <button data-i18n="p_reserve" id="uv-check" class="uv-cta-cream" style="margin-top:8px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px;width:100%;font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s,opacity .3s">Reserve now</button>
+    <button data-i18n="p_cta" id="uv-check" class="uv-cta-cream" style="margin-top:8px;background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px;width:100%;font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s,opacity .3s">Check availability</button>
+    </div>
+    <div id="uv-results" style="display:none;flex-direction:column;gap:22px"></div>
+    <div id="uv-details" style="display:none;flex-direction:column;gap:22px">
+      <p id="uv-selsum" style="margin:0;font-size:13px;letter-spacing:.06em;color:#E0D9CE;line-height:1.6"></p>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label data-i18n="p_name" for="uv-name" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Full name</label>
+        <input id="uv-name" type="text" autocomplete="name" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label data-i18n="p_email" for="uv-email" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Email</label>
+        <input id="uv-email" type="email" autocomplete="email" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
+      </div>
+      <div style="display:flex;flex-direction:column;gap:8px">
+        <label data-i18n="p_phone" for="uv-phone" style="font-size:10px;letter-spacing:.26em;text-transform:uppercase;color:#E0D9CE">Phone (optional)</label>
+        <input id="uv-phone" type="tel" autocomplete="tel" style="background:transparent;border:none;border-bottom:1px solid rgba(247,240,233,.3);color:#F7F0E9;font-size:16px;padding:10px 0;border-radius:0">
+      </div>
+      <p id="uv-bkerr2" style="margin:-10px 0 0;font-size:12.5px;color:#E8B4A8;display:none"></p>
+      <button data-i18n="p_reserve" id="uv-confirm" class="uv-cta-cream" style="background:#F7F0E9;color:#3D4C36;border:none;cursor:pointer;padding:19px 20px;width:100%;font-size:11.5px;letter-spacing:.3em;text-transform:uppercase;font-weight:500;transition:background .3s,color .3s,opacity .3s">Reserve now</button>
+    </div>
     <p id="uv-bkmsg" style="margin:-8px 0 0;font-size:13px;color:#E0D9CE;display:none;text-align:center"></p>
     <p data-i18n="p_note" style="margin:-8px 0 0;font-size:12px;color:rgba(247,240,233,.45);text-align:center">Your request continues to our reservations team.</p>
   </div>
@@ -464,6 +477,6 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
   <span data-i18n="reserve">Reserve</span>
 </button>
 
-<script type="module" src="app.js?v=aer2"></script>
+<script type="module" src="app.js?v=flow2"></script>
 </body>
 </html>
