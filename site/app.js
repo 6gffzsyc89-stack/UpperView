@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=aer3';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=st42';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -464,7 +464,7 @@ const ROOM_IMGS = {
   deluxe: ['photos/upper-view-066.jpg', 'photos/upper-view-044.jpg'],
   king: ['photos/upper-view-044.jpg', 'photos/upper-view-066.jpg'],
 };
-const ROOM_SIZE = { villa: '40 m²', superior: '40 m²', deluxe: '50 m²', king: '60 m²' };
+const ROOM_SIZE = { villa: '40 m²', superior: '50 m²', deluxe: '40 m²', king: '60 m²' };
 
 function bkShowStep(step) {
   $('#uv-step1').style.display = step === 1 ? 'contents' : 'none';
