@@ -7,7 +7,7 @@ const HERO_CLIPS_DESKTOP = [
   'video/454e0f8f.mp4', // coconut/loungers (original take)
   'video/a701c2f0.mp4', // villa bedroom (regen from real photo, no door)
   'video/c5dcdd2d.mp4', // rooftop deck (original take)
-  'video/67be7bb9.mp4', // aerial (retouched drone photo: all 8 decks furnished)
+  'video/49cb60bf.mp4', // aerial pull-back ending on the real retouched photo (all 8 decks furnished)
 ];
 const HERO_CLIPS_MOBILE = [
   'video/37fc725b.mp4', // entrance (original take)
@@ -15,7 +15,7 @@ const HERO_CLIPS_MOBILE = [
   'video/64a52140.mp4', // coconut/loungers (original take)
   'video/dcac0ba3.mp4', // villa bedroom (regen from real photo, no door)
   'video/85f4fddb.mp4', // rooftop deck (original take)
-  'video/cc98c07e.mp4', // aerial (retouched drone photo: all 8 decks furnished)
+  'video/775ba04a.mp4', // aerial pull-back ending on the real retouched photo (all 8 decks furnished)
 ];
 
 const state = {
