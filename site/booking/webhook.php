@@ -2,6 +2,7 @@
 /** Stripe webhook: confirms a pending booking on checkout.session.completed. */
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
+require __DIR__ . '/beds24.php';
 
 $cfg = uv_config();
 $secret = $cfg['stripe']['webhook_secret'] ?? '';
@@ -37,10 +38,16 @@ if (($event['type'] ?? '') === 'checkout.session.completed') {
         if ($b && $b['status'] !== 'confirmed') {
             $db->prepare("UPDATE bookings SET status='confirmed', updated_at=datetime('now') WHERE code=?")
                ->execute([$code]);
+            $b24id = b24_create_booking([
+                'code' => $code, 'type' => $b['type'], 'checkin' => $b['checkin'],
+                'checkout' => $b['checkout'], 'guests' => $b['guests'], 'name' => (string)$b['name'],
+                'email' => (string)$b['email'], 'phone' => (string)$b['phone'], 'status' => 'confirmed',
+            ]);
             $summary = ($b['type'] === 'villa' ? 'Mini Villa' : 'Studio')
                 . " | {$b['checkin']} -> {$b['checkout']} | {$b['name']} | {$b['email']} | code $code | PAID";
-            uv_notify("Upper View: BOOKING CONFIRMED $code — block OTA calendars now", $summary
-                . "\n\nReminder: block these dates on Booking.com and Airbnb immediately.");
+            uv_notify("Upper View: BOOKING CONFIRMED $code", $summary
+                . ($b24id ? "\n\nSynced to Beds24 (booking $b24id)."
+                          : "\n\nNOT in Beds24 — block OTA calendars manually."));
             uv_mail_guest((string)$b['email'], 'Upper View — booking confirmed',
                 "Thank you {$b['name']}!\n\nYour booking is confirmed:\n"
                 . ($b['type'] === 'villa' ? 'Mini Villa' : 'Studio')

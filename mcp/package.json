@@ -1,0 +1,13 @@
+{
+  "name": "upperview-mcp",
+  "version": "1.0.0",
+  "description": "Upper View Samui hotel management MCP: availability, occupancy, bookings, blocks and rates via the website backend + Beds24",
+  "type": "module",
+  "bin": {
+    "upperview-mcp": "index.js"
+  },
+  "dependencies": {
+    "@modelcontextprotocol/sdk": "^1.0.0",
+    "zod": "^4.6.7"
+  }
+}

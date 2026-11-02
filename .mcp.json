@@ -1,0 +1,8 @@
+{
+  "mcpServers": {
+    "upperview": {
+      "command": "node",
+      "args": ["mcp/index.js"]
+    }
+  }
+}
