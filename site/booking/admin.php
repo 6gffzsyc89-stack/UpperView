@@ -12,7 +12,7 @@ $msg = '';
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['act'] ?? '';
     if ($act === 'block' && uv_valid_date($_POST['ci'] ?? null) && uv_valid_date($_POST['co'] ?? null)
-        && in_array($_POST['type'] ?? '', ['villa', 'studio'], true) && $_POST['co'] > $_POST['ci']) {
+        && uv_valid_type($_POST['type'] ?? '') && $_POST['co'] > $_POST['ci']) {
         $now = gmdate('Y-m-d H:i:s');
         $db->prepare("INSERT INTO bookings (code,type,checkin,checkout,guests,name,status,source,currency,created_at,updated_at)
                       VALUES (?,?,?,?,0,?,'blocked','admin',?,?,?)")
@@ -75,7 +75,7 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:
 
 <h2>Block dates (maintenance, phone bookings…)</h2>
 <form method="post"><input type="hidden" name="act" value="block">
-<select name="type"><option value="villa">Mini Villa (takes 1 of 8)</option><option value="studio">Studio (takes 1 of 3)</option></select>
+<select name="type"><option value="villa">Mini Villa (1 of 8)</option><option value="superior">Superior Suite</option><option value="deluxe">Deluxe Suite</option><option value="king">King Suite</option></select>
 <input type="date" name="ci" required> → <input type="date" name="co" required>
 <input name="note" placeholder="note"><button>Block</button></form>
 

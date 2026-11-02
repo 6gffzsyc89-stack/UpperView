@@ -213,6 +213,15 @@ function uv_json(array $data, int $code = 200): void {
     exit;
 }
 
+const UV_TYPE_NAMES = [
+    'villa' => 'Mini Villa', 'superior' => 'Superior Suite',
+    'deluxe' => 'Deluxe Suite', 'king' => 'King Suite', 'studio' => 'Studio',
+];
+function uv_type_name(string $t): string { return UV_TYPE_NAMES[$t] ?? $t; }
+function uv_valid_type(string $t): bool {
+    return array_key_exists($t, uv_config()['inventory']);
+}
+
 function uv_valid_date(?string $d): bool {
     return is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)
         && checkdate((int)substr($d, 5, 2), (int)substr($d, 8, 2), (int)substr($d, 0, 4));
@@ -257,7 +266,7 @@ function uv_checkout_create(array $booking): ?array {
         'line_items[0][price_data][currency]' => strtolower($booking['currency']),
         'line_items[0][price_data][unit_amount]' => $booking['amount'],
         'line_items[0][price_data][product_data][name]' =>
-            'Upper View — ' . ($booking['type'] === 'villa' ? 'Mini Villa' : 'Studio')
+            'Upper View — ' . uv_type_name($booking['type'])
             . ' · ' . $booking['checkin'] . ' → ' . $booking['checkout'],
         'metadata[booking_code]' => $booking['code'],
     ];

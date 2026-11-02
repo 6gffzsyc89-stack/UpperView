@@ -39,13 +39,13 @@ async function call(action, { method = "GET", params = {}, body } = {}) {
 
 const asResult = (text) => ({ content: [{ type: "text", text }] });
 const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
-const TYPE = z.enum(["villa", "studio"]);
+const TYPE = z.enum(["villa", "superior", "deluxe", "king"]);
 
 const server = new McpServer({ name: "upperview", version: "1.0.0" });
 
 server.tool(
   "get_availability",
-  "Free units per date for a room type (villa: 8 Mini Villas, studio: 3 Studios). Dates are YYYY-MM-DD; 'to' is exclusive.",
+  "Free units per date for a room type (villa: 8 Mini Villas, superior/deluxe/king: one suite each). Dates are YYYY-MM-DD; 'to' is exclusive.",
   { type: TYPE, from: DATE, to: DATE },
   async ({ type, from, to }) =>
     asResult(await call("availability", { params: { type, from, to } }))

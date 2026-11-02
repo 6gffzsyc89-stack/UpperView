@@ -8,7 +8,7 @@ $action = $_GET['action'] ?? '';
 
 if ($action === 'availability') {
     $type = $_GET['type'] ?? 'villa';
-    if (!in_array($type, ['villa', 'studio'], true)) uv_json(['error' => 'bad type'], 400);
+    if (!uv_valid_type($type)) uv_json(['error' => 'bad type'], 400);
     $from = $_GET['from'] ?? date('Y-m-d');
     $to   = $_GET['to'] ?? date('Y-m-d', strtotime('+120 days'));
     if (!uv_valid_date($from) || !uv_valid_date($to) || $to <= $from) {
@@ -36,7 +36,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $email = trim((string)($in['email'] ?? ''));
     $phone = trim((string)($in['phone'] ?? ''));
 
-    if (!in_array($type, ['villa', 'studio'], true)) uv_json(['error' => 'bad type'], 400);
+    if (!uv_valid_type($type)) uv_json(['error' => 'bad type'], 400);
     if (!uv_valid_date($ci) || !uv_valid_date($co) || $co <= $ci) uv_json(['error' => 'bad dates'], 400);
     $cfg = uv_config();
     if ($ci < $cfg['opening_date']) uv_json(['error' => 'before opening'], 400);
@@ -61,7 +61,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                    $paid ? 'pending' : 'inquiry', 'direct',
                    $amount, $cfg['currency'], $now, $now]);
 
-    $summary = ($type === 'villa' ? 'Mini Villa' : 'Studio')
+    $summary = uv_type_name($type)
         . " | $ci -> $co ($nights nights) | $guests guests | $name | $email | $phone | code $code";
 
     if ($paid) {
@@ -86,7 +86,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                   : "\n\nNOT in Beds24 — block OTA calendars manually."));
     uv_mail_guest($email, 'Upper View — booking request received',
         "Thank you $name!\n\nWe received your request for a "
-        . ($type === 'villa' ? 'Mini Villa' : 'Studio')
+        . uv_type_name($type)
         . " from $ci to $co ($nights nights, $guests guests).\n"
         . "Your reference is $code. We will confirm by email shortly.\n\nUpper View Samui");
     uv_json(['mode' => 'inquiry', 'code' => $code]);
@@ -134,7 +134,7 @@ if (strpos($action, 'admin-') === 0) {
     if ($action === 'admin-block' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $in = json_decode(file_get_contents('php://input'), true) ?: [];
         $type = $in['type'] ?? ''; $ci = $in['checkin'] ?? ''; $co = $in['checkout'] ?? '';
-        if (!in_array($type, ['villa', 'studio'], true) || !uv_valid_date($ci) || !uv_valid_date($co) || $co <= $ci) {
+        if (!uv_valid_type($type) || !uv_valid_date($ci) || !uv_valid_date($co) || $co <= $ci) {
             uv_json(['error' => 'type/checkin/checkout required'], 400);
         }
         $code = uv_booking_code(); $now = gmdate('Y-m-d H:i:s');

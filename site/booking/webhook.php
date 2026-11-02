@@ -43,14 +43,14 @@ if (($event['type'] ?? '') === 'checkout.session.completed') {
                 'checkout' => $b['checkout'], 'guests' => $b['guests'], 'name' => (string)$b['name'],
                 'email' => (string)$b['email'], 'phone' => (string)$b['phone'], 'status' => 'confirmed',
             ]);
-            $summary = ($b['type'] === 'villa' ? 'Mini Villa' : 'Studio')
+            $summary = uv_type_name($b['type'])
                 . " | {$b['checkin']} -> {$b['checkout']} | {$b['name']} | {$b['email']} | code $code | PAID";
             uv_notify("Upper View: BOOKING CONFIRMED $code", $summary
                 . ($b24id ? "\n\nSynced to Beds24 (booking $b24id)."
                           : "\n\nNOT in Beds24 — block OTA calendars manually."));
             uv_mail_guest((string)$b['email'], 'Upper View — booking confirmed',
                 "Thank you {$b['name']}!\n\nYour booking is confirmed:\n"
-                . ($b['type'] === 'villa' ? 'Mini Villa' : 'Studio')
+                . uv_type_name($b['type'])
                 . " from {$b['checkin']} to {$b['checkout']}.\nReference: $code\n\n"
                 . "We look forward to welcoming you.\nUpper View Samui");
         }
