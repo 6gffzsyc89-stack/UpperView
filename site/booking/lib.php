@@ -1,0 +1,277 @@
+<?php
+/**
+ * Upper View booking engine — shared library.
+ * Config + SQLite live OUTSIDE the web root (../../data relative to this file
+ * on Hostinger: domains/upperviewsamui.com/data/). See config.sample.php.
+ */
+
+declare(strict_types=1);
+
+const UV_DATA_DIR_CANDIDATES = [
+    __DIR__ . '/../../data',   // production: public_html/booking -> domain/data
+    __DIR__ . '/../_devdata',  // local dev fallback
+];
+
+function uv_data_dir(): string {
+    foreach (UV_DATA_DIR_CANDIDATES as $d) {
+        if (is_dir($d)) return rtrim($d, '/');
+    }
+    http_response_code(500);
+    exit(json_encode(['error' => 'data dir missing']));
+}
+
+function uv_config(): array {
+    static $cfg = null;
+    if ($cfg === null) {
+        $cfg = require uv_data_dir() . '/config.php';
+    }
+    return $cfg;
+}
+
+function uv_db(): PDO {
+    static $db = null;
+    if ($db === null) {
+        $db = new PDO('sqlite:' . uv_data_dir() . '/bookings.sqlite');
+        $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+        $db->exec('PRAGMA journal_mode=WAL');
+        $db->exec('CREATE TABLE IF NOT EXISTS bookings (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            code TEXT UNIQUE NOT NULL,
+            type TEXT NOT NULL,
+            checkin TEXT NOT NULL,
+            checkout TEXT NOT NULL,
+            guests INTEGER NOT NULL DEFAULT 2,
+            name TEXT, email TEXT, phone TEXT,
+            status TEXT NOT NULL,            -- pending|inquiry|confirmed|cancelled|blocked
+            source TEXT NOT NULL,            -- direct|admin
+            amount INTEGER, currency TEXT,
+            stripe_session TEXT,
+            created_at TEXT NOT NULL,
+            updated_at TEXT NOT NULL
+        )');
+        $db->exec('CREATE TABLE IF NOT EXISTS ota_busy (
+            source TEXT NOT NULL,            -- airbnb|booking|...
+            unit_key TEXT NOT NULL,          -- v1..v8, s1..s3
+            type TEXT NOT NULL,              -- villa|studio
+            dtstart TEXT NOT NULL,           -- inclusive date
+            dtend TEXT NOT NULL,             -- exclusive date (iCal convention)
+            uid TEXT,
+            PRIMARY KEY (source, unit_key, dtstart, dtend, uid)
+        )');
+        $db->exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
+    }
+    return $db;
+}
+
+function uv_meta_get(string $k): ?string {
+    $st = uv_db()->prepare('SELECT v FROM meta WHERE k=?');
+    $st->execute([$k]);
+    $v = $st->fetchColumn();
+    return $v === false ? null : $v;
+}
+
+function uv_meta_set(string $k, string $v): void {
+    uv_db()->prepare('INSERT INTO meta(k,v) VALUES(?,?)
+        ON CONFLICT(k) DO UPDATE SET v=excluded.v')->execute([$k, $v]);
+}
+
+/* ---------- OTA iCal import (our pull: fast; their pull of us: slow) ---------- */
+
+function uv_refresh_ota(bool $force = false): array {
+    $cfg = uv_config();
+    $last = (int)(uv_meta_get('ota_fetched_at') ?? '0');
+    $maxAge = $cfg['ota_refresh_seconds'] ?? 300;
+    if (!$force && time() - $last < $maxAge) {
+        return ['refreshed' => false, 'age' => time() - $last];
+    }
+    // Lock so parallel requests don't stampede the feeds.
+    uv_meta_set('ota_fetched_at', (string)time());
+
+    $feeds = $cfg['ical_feeds'] ?? [];
+    $results = [];
+    $db = uv_db();
+    foreach ($feeds as $feed) {
+        if (empty($feed['url'])) continue;
+        $ics = uv_http_get($feed['url'], 8);
+        if ($ics === null) { $results[$feed['unit']] = 'fetch-failed'; continue; }
+        $events = uv_parse_ics($ics);
+        $db->beginTransaction();
+        $db->prepare('DELETE FROM ota_busy WHERE source=? AND unit_key=?')
+           ->execute([$feed['source'], $feed['unit']]);
+        $ins = $db->prepare('INSERT OR IGNORE INTO ota_busy(source,unit_key,type,dtstart,dtend,uid)
+                             VALUES(?,?,?,?,?,?)');
+        foreach ($events as $ev) {
+            $ins->execute([$feed['source'], $feed['unit'], $feed['type'],
+                           $ev['start'], $ev['end'], $ev['uid']]);
+        }
+        $db->commit();
+        $results[$feed['unit']] = count($events) . ' events';
+    }
+    return ['refreshed' => true, 'feeds' => $results];
+}
+
+function uv_http_get(string $url, int $timeout): ?string {
+    $ch = curl_init($url);
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_FOLLOWLOCATION => true,
+        CURLOPT_MAXREDIRS => 3,
+        CURLOPT_TIMEOUT => $timeout,
+        CURLOPT_USERAGENT => 'UpperViewBooking/1.0',
+    ]);
+    $body = curl_exec($ch);
+    $code = curl_getinfo($ch, CURLINFO_RESPONSE_CODE);
+    curl_close($ch);
+    return (is_string($body) && $code >= 200 && $code < 300) ? $body : null;
+}
+
+/** Minimal VEVENT parser: DTSTART/DTEND (date or datetime), UID. */
+function uv_parse_ics(string $ics): array {
+    $ics = str_replace(["\r\n ", "\r\n\t"], '', $ics); // unfold lines
+    $events = [];
+    if (!preg_match_all('/BEGIN:VEVENT(.*?)END:VEVENT/s', $ics, $blocks)) return $events;
+    foreach ($blocks[1] as $b) {
+        $get = function (string $prop) use ($b): ?string {
+            return preg_match('/^' . $prop . '[^:]*:(.+)$/mi', $b, $m) ? trim($m[1]) : null;
+        };
+        $s = $get('DTSTART'); $e = $get('DTEND');
+        if (!$s) continue;
+        $start = uv_ics_date($s);
+        $end   = $e ? uv_ics_date($e) : $start;
+        if ($end <= $start) $end = date('Y-m-d', strtotime($start . ' +1 day'));
+        $events[] = ['start' => $start, 'end' => $end, 'uid' => $get('UID') ?? ''];
+    }
+    return $events;
+}
+
+function uv_ics_date(string $v): string {
+    $v = preg_replace('/[^0-9TZ]/', '', $v);
+    return substr($v, 0, 4) . '-' . substr($v, 4, 2) . '-' . substr($v, 6, 2);
+}
+
+/* ---------- Availability ---------- */
+
+/** Units of a type that are OTA-busy or direct-booked, per date. */
+function uv_availability(string $type, string $from, string $to): array {
+    $cfg = uv_config();
+    $total = $cfg['inventory'][$type] ?? 0;
+    $db = uv_db();
+
+    // Expire stale pending holds.
+    $db->prepare("UPDATE bookings SET status='cancelled', updated_at=datetime('now')
+                  WHERE status='pending' AND created_at < datetime('now','-25 minutes')")
+       ->execute();
+
+    $busy = array_fill_keys(uv_date_range($from, $to), 0);
+
+    // OTA events: each busy unit_key blocks 1 unit on each covered date.
+    $st = $db->prepare('SELECT unit_key, dtstart, dtend FROM ota_busy
+                        WHERE type=? AND dtstart < ? AND dtend > ?');
+    $st->execute([$type, $to, $from]);
+    $otaPerDate = [];
+    foreach ($st as $row) {
+        foreach (uv_date_range(max($row['dtstart'], $from), min($row['dtend'], $to)) as $d) {
+            $otaPerDate[$d][$row['unit_key']] = true;
+        }
+    }
+    foreach ($otaPerDate as $d => $units) {
+        if (isset($busy[$d])) $busy[$d] += count($units);
+    }
+
+    // Direct bookings (confirmed, fresh pending, inquiries, admin blocks).
+    $st = $db->prepare("SELECT checkin, checkout FROM bookings
+                        WHERE type=? AND status IN ('confirmed','pending','inquiry','blocked')
+                        AND checkin < ? AND checkout > ?");
+    $st->execute([$type, $to, $from]);
+    foreach ($st as $row) {
+        foreach (uv_date_range(max($row['checkin'], $from), min($row['checkout'], $to)) as $d) {
+            if (isset($busy[$d])) $busy[$d]++;
+        }
+    }
+
+    $out = [];
+    foreach ($busy as $d => $n) $out[$d] = max(0, $total - $n);
+    return $out; // date => free unit count
+}
+
+/** Dates from $from inclusive to $to exclusive. */
+function uv_date_range(string $from, string $to): array {
+    $out = [];
+    for ($d = $from; $d < $to; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+        $out[] = $d;
+        if (count($out) > 400) break;
+    }
+    return $out;
+}
+
+/* ---------- Helpers ---------- */
+
+function uv_json(array $data, int $code = 200): void {
+    http_response_code($code);
+    header('Content-Type: application/json; charset=utf-8');
+    echo json_encode($data);
+    exit;
+}
+
+function uv_valid_date(?string $d): bool {
+    return is_string($d) && preg_match('/^\d{4}-\d{2}-\d{2}$/', $d)
+        && checkdate((int)substr($d, 5, 2), (int)substr($d, 8, 2), (int)substr($d, 0, 4));
+}
+
+function uv_booking_code(): string {
+    return 'UV' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
+}
+
+function uv_notify(string $subject, string $body): void {
+    $cfg = uv_config();
+    $to = $cfg['notify_email'] ?? '';
+    if ($to === '') return;
+    @mail($to, $subject, $body, 'From: bookings@upperviewsamui.com');
+}
+
+function uv_mail_guest(string $email, string $subject, string $body): void {
+    if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) return;
+    @mail($email, $subject, $body, 'From: bookings@upperviewsamui.com');
+}
+
+/* ---------- Payment adapter seam (stripe today, airwallex later) ---------- */
+
+function uv_payment_provider(): string {
+    $cfg = uv_config();
+    if (!empty($cfg['stripe']['secret_key'])) return 'stripe';
+    return 'none';
+}
+
+/** Create a hosted checkout for a booking. Returns ['url' => ...] or null. */
+function uv_checkout_create(array $booking): ?array {
+    if (uv_payment_provider() !== 'stripe') return null;
+    $cfg = uv_config();
+    $site = rtrim($cfg['site_url'], '/');
+    $fields = [
+        'mode' => 'payment',
+        'success_url' => $site . '/?booked=' . $booking['code'] . '#top',
+        'cancel_url'  => $site . '/?cancelled=' . $booking['code'] . '#top',
+        'client_reference_id' => $booking['code'],
+        'customer_email' => $booking['email'],
+        'line_items[0][quantity]' => 1,
+        'line_items[0][price_data][currency]' => strtolower($booking['currency']),
+        'line_items[0][price_data][unit_amount]' => $booking['amount'],
+        'line_items[0][price_data][product_data][name]' =>
+            'Upper View — ' . ($booking['type'] === 'villa' ? 'Mini Villa' : 'Studio')
+            . ' · ' . $booking['checkin'] . ' → ' . $booking['checkout'],
+        'metadata[booking_code]' => $booking['code'],
+    ];
+    $ch = curl_init('https://api.stripe.com/v1/checkout/sessions');
+    curl_setopt_array($ch, [
+        CURLOPT_RETURNTRANSFER => true,
+        CURLOPT_POST => true,
+        CURLOPT_POSTFIELDS => http_build_query($fields),
+        CURLOPT_USERPWD => $cfg['stripe']['secret_key'] . ':',
+        CURLOPT_TIMEOUT => 15,
+    ]);
+    $res = curl_exec($ch);
+    curl_close($ch);
+    $data = is_string($res) ? json_decode($res, true) : null;
+    if (!is_array($data) || empty($data['url'])) return null;
+    return ['url' => $data['url'], 'session_id' => $data['id'] ?? ''];
+}

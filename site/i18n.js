@@ -18,7 +18,7 @@ export const LANGS = [
 export const I18N = {
 en: {
   nav_stay:'Villas & Studios', nav_pool:'The Pool', nav_cafe:'Stomping Grounds', nav_well:'Wellness', nav_loc:'Find Us',
-  reserve:'Reserve', close:'Close', opening_tag:'Opening late December 2026', gal_hint_touch:'Swipe for more photos', gal_hint_mouse:'Browse the photos with the arrows', opening_mar:'Opening March 2027', cafe_full:'Full opening March 2027',
+  reserve:'Reserve', close:'Close', opening_tag:'Opening late December 2026', p_room:'Room type', p_villa:'Mini Villa', p_studio:'Studio', p_name:'Full name', p_email:'Email', p_phone:'Phone (optional)', p_reserve:'Reserve now', p_sent:'Request received — we will confirm by email shortly.', p_full:'Unavailable', p_nights:'nights', p_err:'Please select dates and fill in your name and email.', gal_hint_touch:'Swipe for more photos', gal_hint_mouse:'Browse the photos with the arrows', opening_mar:'Opening March 2027', cafe_full:'Full opening March 2027',
   hero_k:'Boutique Hotel · Koh Samui', hero_t:'Above it all', hero_s:'Eight mini villas and three studios on the heights of Koh Samui — with a morning sea view you won’t forget.', hero_cta:'Reserve your stay', scroll:'Scroll',
   intro_l:'The Upper View Experience', intro_t:'A magical escape at the top of Koh Samui', intro_b:'Indochine soul, modern craft, attention to every detail. A boutique hideaway dedicated to your happiness, high above the Gulf of Thailand.',
   view_l:'The View', view_t:'Wake to the whole gulf', view_b:'Every villa, studio and sun lounger faces the same panorama — the north coast, Koh Phangan on the horizon, and the longest view on Samui.',
@@ -37,7 +37,7 @@ en: {
 },
 th: {
   nav_stay:'วิลล่าและสตูดิโอ', nav_pool:'สระว่ายน้ำ', nav_cafe:'Stomping Grounds', nav_well:'เวลเนส', nav_loc:'ที่ตั้ง',
-  reserve:'จองห้องพัก', close:'ปิด', opening_tag:'เปิดให้บริการปลายธันวาคม 2026', gal_hint_touch:'ปัดเพื่อชมภาพเพิ่มเติม', gal_hint_mouse:'กดลูกศรเพื่อชมภาพเพิ่มเติม', opening_mar:'เปิดให้บริการมีนาคม 2027', cafe_full:'เปิดเต็มรูปแบบมีนาคม 2027',
+  reserve:'จองห้องพัก', close:'ปิด', opening_tag:'เปิดให้บริการปลายธันวาคม 2026', p_room:'ประเภทห้อง', p_villa:'มินิวิลล่า', p_studio:'สตูดิโอ', p_name:'ชื่อ-นามสกุล', p_email:'อีเมล', p_phone:'โทรศัพท์ (ไม่บังคับ)', p_reserve:'จองเลย', p_sent:'ได้รับคำขอแล้ว — เราจะยืนยันทางอีเมลโดยเร็ว', p_full:'ไม่ว่าง', p_nights:'คืน', p_err:'กรุณาเลือกวันที่ และกรอกชื่อกับอีเมล', gal_hint_touch:'ปัดเพื่อชมภาพเพิ่มเติม', gal_hint_mouse:'กดลูกศรเพื่อชมภาพเพิ่มเติม', opening_mar:'เปิดให้บริการมีนาคม 2027', cafe_full:'เปิดเต็มรูปแบบมีนาคม 2027',
   hero_k:'บูทีคโฮเทล · เกาะสมุย', hero_t:'เหนือทุกสิ่ง', hero_s:'มินิวิลล่า 8 หลังและสตูดิโอ 3 ห้องบนยอดเขาเกาะสมุย พร้อมวิวทะเลยามเช้าที่คุณจะไม่มีวันลืม', hero_cta:'จองที่พักของคุณ', scroll:'เลื่อนลง',
   intro_l:'ประสบการณ์ Upper View', intro_t:'ที่หลบภัยอันมหัศจรรย์บนยอดเกาะสมุย', intro_b:'กลิ่นอายอินโดจีน งานฝีมือสมัยใหม่ ใส่ใจทุกรายละเอียด บูทีคโฮเทลที่อุทิศให้ความสุขของคุณ เหนืออ่าวไทย',
   view_l:'วิวทิวทัศน์', view_t:'ตื่นมาพบอ่าวทั้งอ่าว', view_b:'ทุกวิลล่า สตูดิโอ และเตียงอาบแดด หันหน้าสู่พาโนรามาเดียวกัน — ชายฝั่งเหนือ เกาะพะงันบนเส้นขอบฟ้า',
@@ -56,7 +56,7 @@ th: {
 },
 zh: {
   nav_stay:'别墅与客房', nav_pool:'泳池', nav_cafe:'Stomping Grounds', nav_well:'康体', nav_loc:'位置',
-  reserve:'预订', close:'关闭', opening_tag:'2026年12月下旬开业', gal_hint_touch:'左右滑动查看更多照片', gal_hint_mouse:'点击箭头浏览更多照片', opening_mar:'2027年3月开业', cafe_full:'2027年3月全面开业',
+  reserve:'预订', close:'关闭', opening_tag:'2026年12月下旬开业', p_room:'房型', p_villa:'迷你别墅', p_studio:'工作室客房', p_name:'姓名', p_email:'邮箱', p_phone:'电话（选填）', p_reserve:'立即预订', p_sent:'已收到您的预订请求，我们将尽快邮件确认。', p_full:'已满', p_nights:'晚', p_err:'请选择日期并填写姓名和邮箱。', gal_hint_touch:'左右滑动查看更多照片', gal_hint_mouse:'点击箭头浏览更多照片', opening_mar:'2027年3月开业', cafe_full:'2027年3月全面开业',
   hero_k:'精品酒店 · 苏梅岛', hero_t:'凌驾一切之上', hero_s:'八栋迷你别墅与三间开放式客房，坐落于苏梅岛高处，清晨海景令人难忘。', hero_cta:'立即预订', scroll:'向下滚动',
   intro_l:'Upper View 体验', intro_t:'苏梅之巅的奇妙度假地', intro_b:'印度支那风情与现代工艺的结合，注重每个细节。一家致力于您幸福感的精品酒店，俯瞰泰国湾。',
   view_l:'景观', view_t:'醒来即见整片海湾', view_b:'每栋别墅、客房与日光躺椅都面向同一全景 — 北海岸与地平线上的帕岸岛。',
@@ -75,7 +75,7 @@ zh: {
 },
 tw: {
   nav_stay:'別墅與客房', nav_pool:'泳池', nav_cafe:'Stomping Grounds', nav_well:'康體', nav_loc:'位置',
-  reserve:'預訂', close:'關閉', opening_tag:'2026年12月下旬開業', gal_hint_touch:'左右滑動查看更多照片', gal_hint_mouse:'點擊箭頭瀏覽更多照片', opening_mar:'2027年3月開業', cafe_full:'2027年3月全面開業',
+  reserve:'預訂', close:'關閉', opening_tag:'2026年12月下旬開業', p_room:'房型', p_villa:'迷你別墅', p_studio:'工作室客房', p_name:'姓名', p_email:'電子郵件', p_phone:'電話（選填）', p_reserve:'立即預訂', p_sent:'已收到您的預訂請求，我們將盡快以電子郵件確認。', p_full:'已滿', p_nights:'晚', p_err:'請選擇日期並填寫姓名與電子郵件。', gal_hint_touch:'左右滑動查看更多照片', gal_hint_mouse:'點擊箭頭瀏覽更多照片', opening_mar:'2027年3月開業', cafe_full:'2027年3月全面開業',
   hero_k:'精品酒店 · 蘇美島', hero_t:'凌駕一切之上', hero_s:'八棟迷你別墅與三間開放式客房，坐落於蘇美島高處，清晨海景令人難忘。', hero_cta:'立即預訂', scroll:'向下捲動',
   intro_l:'Upper View 體驗', intro_t:'蘇美之巔的奇妙度假地', intro_b:'印度支那風情與現代工藝的結合，注重每個細節。一家致力於您幸福感的精品酒店，俯瞰泰國灣。',
   view_l:'景觀', view_t:'醒來即見整片海灣', view_b:'每棟別墅、客房與日光躺椅都面向同一全景 — 北海岸與地平線上的帕岸島。',
@@ -94,7 +94,7 @@ tw: {
 },
 fr: {
   nav_stay:'Villas & Studios', nav_pool:'La Piscine', nav_cafe:'Stomping Grounds', nav_well:'Bien-être', nav_loc:'Nous trouver',
-  reserve:'Réserver', close:'Fermer', opening_tag:'Ouverture fin décembre 2026', gal_hint_touch:'Faites glisser pour plus de photos', gal_hint_mouse:'Parcourez les photos avec les flèches', opening_mar:'Ouverture en mars 2027', cafe_full:'Ouverture complète en mars 2027',
+  reserve:'Réserver', close:'Fermer', opening_tag:'Ouverture fin décembre 2026', p_room:'Type de chambre', p_villa:'Mini Villa', p_studio:'Studio', p_name:'Nom complet', p_email:'E-mail', p_phone:'Téléphone (facultatif)', p_reserve:'Réserver', p_sent:'Demande reçue — nous confirmerons par e-mail très vite.', p_full:'Indisponible', p_nights:'nuits', p_err:'Choisissez vos dates et renseignez nom et e-mail.', gal_hint_touch:'Faites glisser pour plus de photos', gal_hint_mouse:'Parcourez les photos avec les flèches', opening_mar:'Ouverture en mars 2027', cafe_full:'Ouverture complète en mars 2027',
   hero_k:'Hôtel Boutique · Koh Samui', hero_t:'Au-dessus de tout', hero_s:'Huit mini-villas et trois studios sur les hauteurs de Koh Samui — avec une vue mer au réveil inoubliable.', hero_cta:'Réserver votre séjour', scroll:'Défiler',
   intro_l:'L’expérience Upper View', intro_t:'Une échappée magique au sommet de Koh Samui', intro_b:'Âme indochinoise, artisanat moderne, attention à chaque détail. Un refuge boutique dédié à votre bonheur, au-dessus du golfe de Thaïlande.',
   view_l:'La Vue', view_t:'Se réveiller face au golfe', view_b:'Chaque villa, studio et transat fait face au même panorama — la côte nord et Koh Phangan à l’horizon.',
@@ -113,7 +113,7 @@ fr: {
 },
 es: {
   nav_stay:'Villas y Estudios', nav_pool:'La Piscina', nav_cafe:'Stomping Grounds', nav_well:'Bienestar', nav_loc:'Cómo llegar',
-  reserve:'Reservar', close:'Cerrar', opening_tag:'Apertura a finales de diciembre de 2026', gal_hint_touch:'Desliza para ver más fotos', gal_hint_mouse:'Explora las fotos con las flechas', opening_mar:'Apertura en marzo de 2027', cafe_full:'Apertura completa en marzo de 2027',
+  reserve:'Reservar', close:'Cerrar', opening_tag:'Apertura a finales de diciembre de 2026', p_room:'Tipo de habitación', p_villa:'Mini Villa', p_studio:'Estudio', p_name:'Nombre completo', p_email:'Correo electrónico', p_phone:'Teléfono (opcional)', p_reserve:'Reservar', p_sent:'Solicitud recibida — confirmaremos por correo en breve.', p_full:'No disponible', p_nights:'noches', p_err:'Selecciona las fechas e indica tu nombre y correo.', gal_hint_touch:'Desliza para ver más fotos', gal_hint_mouse:'Explora las fotos con las flechas', opening_mar:'Apertura en marzo de 2027', cafe_full:'Apertura completa en marzo de 2027',
   hero_k:'Hotel Boutique · Koh Samui', hero_t:'Por encima de todo', hero_s:'Ocho mini villas y tres estudios en lo alto de Koh Samui, con una vista al mar al despertar que no olvidará.', hero_cta:'Reserve su estancia', scroll:'Desplazar',
   intro_l:'La experiencia Upper View', intro_t:'Un escape mágico en lo alto de Koh Samui', intro_b:'Alma indochina, artesanía moderna y atención a cada detalle. Un refugio boutique dedicado a su felicidad, sobre el golfo de Tailandia.',
   view_l:'La Vista', view_t:'Despertar ante todo el golfo', view_b:'Cada villa, estudio y tumbona mira al mismo panorama: la costa norte y Koh Phangan en el horizonte.',
@@ -132,7 +132,7 @@ es: {
 },
 ru: {
   nav_stay:'Виллы и студии', nav_pool:'Бассейн', nav_cafe:'Stomping Grounds', nav_well:'Веллнес', nav_loc:'Как добраться',
-  reserve:'Забронировать', close:'Закрыть', opening_tag:'Открытие — конец декабря 2026', gal_hint_touch:'Листайте, чтобы увидеть больше фото', gal_hint_mouse:'Листайте фото стрелками', opening_mar:'Открытие — март 2027', cafe_full:'Полное открытие — март 2027',
+  reserve:'Забронировать', close:'Закрыть', opening_tag:'Открытие — конец декабря 2026', p_room:'Тип номера', p_villa:'Мини-вилла', p_studio:'Студия', p_name:'Имя и фамилия', p_email:'Эл. почта', p_phone:'Телефон (необязательно)', p_reserve:'Забронировать', p_sent:'Заявка получена — мы подтвердим по почте в ближайшее время.', p_full:'Занято', p_nights:'ночей', p_err:'Выберите даты и укажите имя и почту.', gal_hint_touch:'Листайте, чтобы увидеть больше фото', gal_hint_mouse:'Листайте фото стрелками', opening_mar:'Открытие — март 2027', cafe_full:'Полное открытие — март 2027',
   hero_k:'Бутик-отель · Ко Самуи', hero_t:'Выше всего', hero_s:'Восемь мини-вилл и три студии на высотах Самуи — с незабываемым видом на море по утрам.', hero_cta:'Забронировать', scroll:'Листайте',
   intro_l:'Опыт Upper View', intro_t:'Волшебное убежище на вершине Самуи', intro_b:'Дух Индокитая, современное мастерство и внимание к каждой детали. Бутик-отель, посвящённый вашему счастью, над Сиамским заливом.',
   view_l:'Вид', view_t:'Просыпайтесь над заливом', view_b:'Каждая вилла, студия и шезлонг обращены к одной панораме — северное побережье и Панган на горизонте.',
@@ -151,7 +151,7 @@ ru: {
 },
 de: {
   nav_stay:'Villen & Studios', nav_pool:'Der Pool', nav_cafe:'Stomping Grounds', nav_well:'Wellness', nav_loc:'Anfahrt',
-  reserve:'Reservieren', close:'Schließen', opening_tag:'Eröffnung Ende Dezember 2026', gal_hint_touch:'Wischen Sie für weitere Fotos', gal_hint_mouse:'Blättern Sie mit den Pfeilen durch die Fotos', opening_mar:'Eröffnung März 2027', cafe_full:'Vollständige Eröffnung März 2027',
+  reserve:'Reservieren', close:'Schließen', opening_tag:'Eröffnung Ende Dezember 2026', p_room:'Zimmertyp', p_villa:'Mini-Villa', p_studio:'Studio', p_name:'Vollständiger Name', p_email:'E-Mail', p_phone:'Telefon (optional)', p_reserve:'Jetzt reservieren', p_sent:'Anfrage erhalten — wir bestätigen in Kürze per E-Mail.', p_full:'Belegt', p_nights:'Nächte', p_err:'Bitte Daten wählen sowie Name und E-Mail angeben.', gal_hint_touch:'Wischen Sie für weitere Fotos', gal_hint_mouse:'Blättern Sie mit den Pfeilen durch die Fotos', opening_mar:'Eröffnung März 2027', cafe_full:'Vollständige Eröffnung März 2027',
   hero_k:'Boutique-Hotel · Koh Samui', hero_t:'Über allem', hero_s:'Acht Mini-Villen und drei Studios auf den Höhen von Koh Samui — mit einem unvergesslichen Meerblick am Morgen.', hero_cta:'Aufenthalt reservieren', scroll:'Scrollen',
   intro_l:'Das Upper-View-Erlebnis', intro_t:'Ein magischer Rückzugsort über Koh Samui', intro_b:'Indochina-Seele, modernes Handwerk, Liebe zum Detail. Ein Boutique-Refugium für Ihr Glück, hoch über dem Golf von Thailand.',
   view_l:'Der Ausblick', view_t:'Mit dem ganzen Golf aufwachen', view_b:'Jede Villa, jedes Studio und jede Liege blickt auf dasselbe Panorama — die Nordküste und Koh Phangan am Horizont.',
@@ -170,7 +170,7 @@ de: {
 },
 pl: {
   nav_stay:'Wille i studia', nav_pool:'Basen', nav_cafe:'Stomping Grounds', nav_well:'Wellness', nav_loc:'Dojazd',
-  reserve:'Rezerwuj', close:'Zamknij', opening_tag:'Otwarcie — koniec grudnia 2026', gal_hint_touch:'Przesuń, aby zobaczyć więcej zdjęć', gal_hint_mouse:'Przeglądaj zdjęcia strzałkami', opening_mar:'Otwarcie — marzec 2027', cafe_full:'Pełne otwarcie — marzec 2027',
+  reserve:'Rezerwuj', close:'Zamknij', opening_tag:'Otwarcie — koniec grudnia 2026', p_room:'Typ pokoju', p_villa:'Mini willa', p_studio:'Studio', p_name:'Imię i nazwisko', p_email:'E-mail', p_phone:'Telefon (opcjonalnie)', p_reserve:'Rezerwuj', p_sent:'Otrzymaliśmy zgłoszenie — wkrótce potwierdzimy e-mailem.', p_full:'Niedostępne', p_nights:'nocy', p_err:'Wybierz daty oraz podaj imię i e-mail.', gal_hint_touch:'Przesuń, aby zobaczyć więcej zdjęć', gal_hint_mouse:'Przeglądaj zdjęcia strzałkami', opening_mar:'Otwarcie — marzec 2027', cafe_full:'Pełne otwarcie — marzec 2027',
   hero_k:'Hotel butikowy · Koh Samui', hero_t:'Ponad wszystkim', hero_s:'Osiem mini willi i trzy studia na wzgórzach Koh Samui — z niezapomnianym porannym widokiem na morze.', hero_cta:'Zarezerwuj pobyt', scroll:'Przewiń',
   intro_l:'Doświadczenie Upper View', intro_t:'Magiczna kryjówka na szczycie Koh Samui', intro_b:'Dusza Indochin, nowoczesne rzemiosło i dbałość o każdy detal. Butikowe schronienie oddane Waszemu szczęściu, nad Zatoką Tajlandzką.',
   view_l:'Widok', view_t:'Budzić się nad całą zatoką', view_b:'Każda willa, studio i leżak zwrócone są ku tej samej panoramie — północnemu wybrzeżu i Koh Phangan na horyzoncie.',
@@ -189,7 +189,7 @@ pl: {
 },
 he: {
   nav_stay:'וילות וסטודיו', nav_pool:'הבריכה', nav_cafe:'Stomping Grounds', nav_well:'ספא וכושר', nav_loc:'איך מגיעים',
-  reserve:'הזמינו', close:'סגירה', opening_tag:'פתיחה בסוף דצמבר 2026', gal_hint_touch:'החליקו לצפייה בתמונות נוספות', gal_hint_mouse:'דפדפו בתמונות בעזרת החצים', opening_mar:'פתיחה במרץ 2027', cafe_full:'פתיחה מלאה במרץ 2027',
+  reserve:'הזמינו', close:'סגירה', opening_tag:'פתיחה בסוף דצמבר 2026', p_room:'סוג חדר', p_villa:'מיני וילה', p_studio:'סטודיו', p_name:'שם מלא', p_email:'אימייל', p_phone:'טלפון (לא חובה)', p_reserve:'הזמינו עכשיו', p_sent:'הבקשה התקבלה — נאשר באימייל בהקדם.', p_full:'תפוס', p_nights:'לילות', p_err:'בחרו תאריכים ומלאו שם ואימייל.', gal_hint_touch:'החליקו לצפייה בתמונות נוספות', gal_hint_mouse:'דפדפו בתמונות בעזרת החצים', opening_mar:'פתיחה במרץ 2027', cafe_full:'פתיחה מלאה במרץ 2027',
   hero_k:'מלון בוטיק · קו סמוי', hero_t:'מעל הכול', hero_s:'שמונה מיני-וילות ושלושה חדרי סטודיו על גבעות קו סמוי — עם נוף בוקר לים שלא תשכחו.', hero_cta:'הזמינו את השהות', scroll:'גללו',
   intro_l:'חוויית Upper View', intro_t:'מפלט קסום בפסגת קו סמוי', intro_b:'נשמה אינדוכינית, אומנות מודרנית ותשומת לב לכל פרט. מקלט בוטיק שמוקדש לאושר שלכם, מעל מפרץ תאילנד.',
   view_l:'הנוף', view_t:'להתעורר מול המפרץ כולו', view_b:'כל וילה, סטודיו ומיטת שיזוף פונים לאותה פנורמה — החוף הצפוני וקו פנגן באופק.',

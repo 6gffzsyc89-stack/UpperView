@@ -50,6 +50,7 @@ function applyI18n() {
   });
   updateContactLinks();
   buildLangLists();
+  if (window.uvBkRefresh) window.uvBkRefresh();
 }
 
 function buildLangLists() {
@@ -84,9 +85,9 @@ function waHref(withForm) {
   const num = String(CONFIG.whatsapp).replace(/\D/g, '');
   let msg = t('wa_msg') || "Hello Upper View! I'd like to inquire about a booking.";
   if (withForm) {
-    const arr = $('#uv-arr').value, dep = $('#uv-dep').value, gst = $('#uv-gst').value;
-    if (arr) msg += ' Arrival: ' + arr + '.';
-    if (dep) msg += ' Departure: ' + dep + '.';
+    const gst = $('#uv-gst').value;
+    if (BK.ci) msg += ' Arrival: ' + BK.ci + '.';
+    if (BK.co) msg += ' Departure: ' + BK.co + '.';
     if (gst) msg += ' Guests: ' + gst + '.';
   }
   return 'https://wa.me/' + num + '?text=' + encodeURIComponent(msg);
@@ -315,11 +316,6 @@ const OPENING_DATE = '2026-12-20';      // first bookable night (late December o
 const OPENING_TAG_UNTIL = '2026-12-27'; // notice disappears once the hotel is open
 const today = new Date().toISOString().slice(0, 10);
 const minStay = today < OPENING_DATE ? OPENING_DATE : today;
-$('#uv-arr').min = minStay;
-$('#uv-dep').min = minStay;
-$('#uv-arr').addEventListener('change', () => {
-  $('#uv-dep').min = $('#uv-arr').value || minStay;
-});
 document.querySelectorAll('.uv-opening').forEach((el) => {
   el.style.display = today < OPENING_TAG_UNTIL ? 'block' : 'none';
 });
@@ -327,18 +323,186 @@ const MAR_TAG_UNTIL = '2027-04-01'; // cafe & spa notices disappear after March 
 document.querySelectorAll('.uv-opening-mar').forEach((el) => {
   el.style.display = today < MAR_TAG_UNTIL ? 'inline-block' : 'none';
 });
-$('#uv-check').addEventListener('click', () => {
-  const url = CONFIG.bookingUrl;
-  if (url) {
-    const q = new URLSearchParams({
-      checkin: $('#uv-arr').value,
-      checkout: $('#uv-dep').value,
-      guests: $('#uv-gst').value,
-      promo: $('#uv-promo').value,
-    });
-    window.open(url + (url.includes('?') ? '&' : '?') + q.toString(), '_blank');
+/* ---------- booking calendar + live availability ---------- */
+const BK = {
+  type: 'villa',
+  ci: null,
+  co: null,
+  month: minStay.slice(0, 7), // 'YYYY-MM' being shown
+  avail: {},                  // per type: {free:{date:n}, nightly, currency, ...}
+};
+const bkLocale = () =>
+  state.lang === 'zh' ? 'zh-Hans' : state.lang === 'tw' ? 'zh-Hant' : state.lang;
+
+async function bkFetch(type) {
+  if (BK.avail[type]) return BK.avail[type];
+  try {
+    const to = new Date(Date.now() + 395 * 86400000).toISOString().slice(0, 10);
+    const r = await fetch(
+      'booking/api.php?action=availability&type=' + type + '&from=' + minStay + '&to=' + to
+    );
+    if (r.ok) BK.avail[type] = await r.json();
+  } catch (e) {
+    /* availability unknown: calendar stays optimistic, the server re-checks on booking */
+  }
+  return BK.avail[type];
+}
+
+function bkFree(d) {
+  const a = BK.avail[BK.type];
+  if (!a || !a.free) return 1; // unknown -> selectable; server validates
+  return a.free[d] ?? 1;
+}
+
+function bkRenderCal() {
+  const cal = $('#uv-cal');
+  if (!cal) return;
+  const [y, m] = BK.month.split('-').map(Number);
+  const first = new Date(Date.UTC(y, m - 1, 1));
+  const label = first.toLocaleDateString(bkLocale(), {
+    month: 'long', year: 'numeric', timeZone: 'UTC',
+  });
+  $('#uv-calmonth').textContent = label;
+
+  // weekday header, Monday first
+  const head = $('#uv-calhead');
+  head.innerHTML = '';
+  for (let i = 0; i < 7; i++) {
+    const d = new Date(Date.UTC(2024, 0, i + 1)); // 2024-01-01 is a Monday
+    const s = document.createElement('span');
+    s.textContent = d.toLocaleDateString(bkLocale(), { weekday: 'narrow', timeZone: 'UTC' });
+    head.appendChild(s);
+  }
+
+  cal.innerHTML = '';
+  const pad = (first.getUTCDay() + 6) % 7;
+  for (let i = 0; i < pad; i++) {
+    const b = document.createElement('button');
+    b.className = 'pad';
+    b.disabled = true;
+    cal.appendChild(b);
+  }
+  const days = new Date(Date.UTC(y, m, 0)).getUTCDate();
+  for (let day = 1; day <= days; day++) {
+    const d = BK.month + '-' + String(day).padStart(2, '0');
+    const b = document.createElement('button');
+    b.type = 'button';
+    b.textContent = String(day);
+    // a date can be CHECKOUT even when its night is taken, as long as it is not before check-in
+    const selectable =
+      d >= minStay && (bkFree(d) > 0 || (BK.ci && !BK.co && d > BK.ci));
+    b.disabled = !selectable;
+    if (BK.ci && d === BK.ci) b.classList.add('edge');
+    if (BK.co && d === BK.co) b.classList.add('edge');
+    if (BK.ci && BK.co && d > BK.ci && d < BK.co) b.classList.add('inrange');
+    b.addEventListener('click', () => bkPick(d));
+    cal.appendChild(b);
+  }
+  // month nav bounds: current month .. +12 months
+  $('#uv-calprev').disabled = BK.month <= minStay.slice(0, 7);
+  const maxMonth = new Date(Date.now() + 365 * 86400000).toISOString().slice(0, 7);
+  $('#uv-calnext').disabled = BK.month >= maxMonth;
+  bkRenderSummary();
+}
+
+function bkNightsFree(ci, co) {
+  for (let d = ci; d < co; d = nextDay(d)) if (bkFree(d) < 1) return false;
+  return true;
+}
+const nextDay = (d) => new Date(new Date(d + 'T00:00:00Z').getTime() + 86400000)
+  .toISOString().slice(0, 10);
+
+function bkPick(d) {
+  if (!BK.ci || (BK.ci && BK.co)) {
+    BK.ci = d; BK.co = null;
+  } else if (d > BK.ci && bkNightsFree(BK.ci, d)) {
+    BK.co = d;
   } else {
-    window.open(waHref(true), '_blank');
+    BK.ci = d; BK.co = null;
+  }
+  bkRenderCal();
+}
+
+function bkRenderSummary() {
+  const el = $('#uv-bksum');
+  if (!el) return;
+  if (!BK.ci) { el.textContent = ''; return; }
+  if (!BK.co) { el.textContent = BK.ci + ' → …'; return; }
+  const n = Math.round((Date.parse(BK.co) - Date.parse(BK.ci)) / 86400000);
+  let s = BK.ci + ' → ' + BK.co + ' · ' + n + ' ' + (t('p_nights') || 'nights');
+  const a = BK.avail[BK.type];
+  if (a && a.rates_confirmed && a.nightly) {
+    s += ' · ' + (n * a.nightly).toLocaleString() + ' ' + a.currency;
+  }
+  el.textContent = s;
+}
+
+async function bkSetType(type) {
+  BK.type = type; BK.ci = null; BK.co = null;
+  document.querySelectorAll('.uv-rtbtn').forEach((b) =>
+    b.classList.toggle('on', b.dataset.rt === type)
+  );
+  await bkFetch(type);
+  bkRenderCal();
+}
+document.querySelectorAll('.uv-rtbtn').forEach((b) =>
+  b.addEventListener('click', () => bkSetType(b.dataset.rt))
+);
+$('#uv-calprev').addEventListener('click', () => {
+  const [y, m] = BK.month.split('-').map(Number);
+  BK.month = new Date(Date.UTC(y, m - 2, 1)).toISOString().slice(0, 7);
+  bkRenderCal();
+});
+$('#uv-calnext').addEventListener('click', () => {
+  const [y, m] = BK.month.split('-').map(Number);
+  BK.month = new Date(Date.UTC(y, m, 1)).toISOString().slice(0, 7);
+  bkRenderCal();
+});
+window.uvBkRefresh = () => bkRenderCal(); // re-render month/weekday names on language change
+bkFetch('villa').then(bkRenderCal);
+
+function bkError(msg) {
+  const el = $('#uv-bkerr');
+  el.textContent = msg;
+  el.style.display = msg ? 'block' : 'none';
+}
+
+$('#uv-check').addEventListener('click', async () => {
+  bkError('');
+  const name = $('#uv-name').value.trim();
+  const email = $('#uv-email').value.trim();
+  if (!BK.ci || !BK.co || !name || !/.+@.+\..+/.test(email)) {
+    bkError(t('p_err') || 'Please select dates and fill in your name and email.');
+    return;
+  }
+  const btn = $('#uv-check');
+  btn.disabled = true; btn.style.opacity = '.6';
+  try {
+    const r = await fetch('booking/api.php?action=book', {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        type: BK.type, checkin: BK.ci, checkout: BK.co,
+        guests: Number($('#uv-gst').value), name, email,
+        phone: $('#uv-phone').value.trim(),
+      }),
+    });
+    const j = await r.json();
+    if (j.mode === 'pay' && j.url) { window.location.href = j.url; return; }
+    if (j.mode === 'inquiry') {
+      const msg = $('#uv-bkmsg');
+      msg.textContent = (t('p_sent') || 'Request received.') + ' · ' + j.code;
+      msg.style.display = 'block';
+      BK.avail = {}; // force re-fetch: the hold now blocks these dates
+      await bkFetch(BK.type);
+      bkRenderCal();
+      return;
+    }
+    bkError(j.error === 'no availability' ? (t('p_full') || 'Unavailable') : (j.error || 'Error'));
+  } catch (e) {
+    bkError('Network error — please try again.');
+  } finally {
+    btn.disabled = false; btn.style.opacity = '1';
   }
 });
 
