@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=flow2';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=aer3';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -7,7 +7,7 @@ const HERO_CLIPS_DESKTOP = [
   'video/454e0f8f.mp4', // coconut/loungers (original take)
   'video/a701c2f0.mp4', // villa bedroom (regen from real photo, no door)
   'video/c5dcdd2d.mp4', // rooftop deck (original take)
-  'video/aer2d.mp4', // aerial push-in from the real retouched photo (all 8 decks furnished), July-style motion
+  'video/aer3d.mp4', // aerial: programmatic center-locked zoom into the real retouched photo (no AI motion)
 ];
 const HERO_CLIPS_MOBILE = [
   'video/37fc725b.mp4', // entrance (original take)
@@ -15,7 +15,7 @@ const HERO_CLIPS_MOBILE = [
   'video/64a52140.mp4', // coconut/loungers (original take)
   'video/dcac0ba3.mp4', // villa bedroom (regen from real photo, no door)
   'video/85f4fddb.mp4', // rooftop deck (original take)
-  'video/aer2m.mp4', // aerial push-in from the real retouched photo (all 8 decks furnished), July-style motion
+  'video/aer3m.mp4', // aerial: programmatic center-locked zoom into the real retouched photo (no AI motion)
 ];
 
 const state = {
