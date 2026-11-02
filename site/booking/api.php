@@ -94,12 +94,31 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($ci < $cfg['opening_date']) uv_json(['error' => 'before opening'], 400);
     $nights = (int)((strtotime($co) - strtotime($ci)) / 86400);
     if ($nights > 30) uv_json(['error' => 'too long'], 400);
-    if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
-        uv_json(['error' => 'name and valid email required'], 400);
-    }
-
     foreach (uv_avail($type, $ci, $co) as $d => $free) {
         if ($free < 1) uv_json(['error' => 'no availability', 'date' => $d], 409);
+    }
+
+    /* Nobu-style flow: guest details + card are collected on the checkout
+       page (booking/pay.php), so a hold is created without them. */
+    if (uv_payment_provider() === 'airwallex') {
+        $q = uv_live_total($type, $ci, $co);
+        if (($q['free'] ?? 0) < 1) uv_json(['error' => 'no availability'], 409);
+        if (empty($q['total'])) uv_json(['error' => 'no rate for these dates'], 409);
+        $amount = (int) $q['total'];
+        $code = uv_booking_code();
+        $now = gmdate('Y-m-d H:i:s');
+        uv_db()->prepare('INSERT INTO bookings
+            (code,type,checkin,checkout,guests,name,email,phone,status,source,amount,currency,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute([$code, $type, $ci, $co, $guests, $name, $email, $phone,
+                       'pending', 'direct', $amount, $cfg['currency'], $now, $now]);
+        $checkout = uv_checkout_create(['code' => $code]);
+        uv_json(['mode' => 'pay', 'code' => $code, 'url' => $checkout['url'],
+                 'total' => $amount, 'currency' => $cfg['currency']]);
+    }
+
+    if ($name === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) {
+        uv_json(['error' => 'name and valid email required'], 400);
     }
 
     $paid = uv_payment_provider() !== 'none' && ($cfg['rates_confirmed'] ?? false);

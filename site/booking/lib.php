@@ -247,12 +247,28 @@ function uv_mail_guest(string $email, string $subject, string $body): void {
 
 function uv_payment_provider(): string {
     $cfg = uv_config();
+    if (!empty($cfg['airwallex']['client_id']) && !empty($cfg['airwallex']['api_key'])) return 'airwallex';
     if (!empty($cfg['stripe']['secret_key'])) return 'stripe';
     return 'none';
 }
 
+/** Signature for checkout-page links so booking codes can't be enumerated. */
+function uv_pay_sig(string $code): string {
+    $cfg = uv_config();
+    return substr(hash_hmac('sha256', 'pay|' . $code, $cfg['admin_key']), 0, 16);
+}
+
 /** Create a hosted checkout for a booking. Returns ['url' => ...] or null. */
 function uv_checkout_create(array $booking): ?array {
+    if (uv_payment_provider() === 'airwallex') {
+        $cfg = uv_config();
+        $site = rtrim($cfg['site_url'], '/');
+        return [
+            'url' => $site . '/booking/pay.php?code=' . rawurlencode($booking['code'])
+                   . '&sig=' . uv_pay_sig($booking['code']),
+            'session_id' => 'awx',
+        ];
+    }
     if (uv_payment_provider() !== 'stripe') return null;
     $cfg = uv_config();
     $site = rtrim($cfg['site_url'], '/');

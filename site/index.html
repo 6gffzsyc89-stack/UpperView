@@ -73,8 +73,12 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
 .uv-rtbtn.on { background:#F7F0E9; color:#3D4C36; font-weight:500; }
 /* room result cards (Nobu-style select-a-room) */
 .uv-roomcard { border:1px solid rgba(247,240,233,.18); }
+.uv-rc-galwrap { position:relative; }
 .uv-rc-gal { display:flex; overflow-x:auto; scroll-snap-type:x mandatory; scrollbar-width:none; }
 .uv-rc-gal::-webkit-scrollbar { display:none; }
+.uv-rc-arrow { position:absolute; top:50%; transform:translateY(-50%); width:38px; height:38px; border:none; border-radius:50%; background:rgba(26,30,22,.55); color:#F7F0E9; font-size:22px; line-height:36px; cursor:pointer; z-index:2; font-family:inherit; }
+.uv-rc-prev { left:10px; } .uv-rc-next { right:10px; }
+.uv-rc-count { position:absolute; right:10px; bottom:10px; background:rgba(26,30,22,.55); color:#F7F0E9; font-size:11px; letter-spacing:.14em; padding:4px 10px; z-index:2; }
 .uv-rc-gal img { flex:0 0 100%; width:100%; aspect-ratio:3/2; object-fit:cover; scroll-snap-align:start; }
 .uv-rc-body { padding:16px 18px 18px; }
 .uv-roomcard h3 { margin:0 0 4px; font-family:'Jost','Noto Sans Thai',sans-serif; font-weight:400; text-transform:uppercase; letter-spacing:.08em; font-size:18px; color:#F7F0E9; }
@@ -477,6 +481,6 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
   <span data-i18n="reserve">Reserve</span>
 </button>
 
-<script type="module" src="app.js?v=aer5"></script>
+<script type="module" src="app.js?v=nb1"></script>
 </body>
 </html>

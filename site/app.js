@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=aer5';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=nb1';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -459,10 +459,11 @@ function bkError(msg, which) {
 
 /* Nobu-style flow: dates -> available rooms (with photo sliders) -> details */
 const ROOM_IMGS = {
-  villa: ['photos/upper-view-106.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-133.jpg', 'photos/upper-view-131.jpg'],
-  superior: ['photos/upper-view-044.jpg', 'photos/upper-view-066.jpg'],
-  deluxe: ['photos/upper-view-066.jpg', 'photos/upper-view-044.jpg'],
-  king: ['photos/upper-view-044.jpg', 'photos/upper-view-066.jpg'],
+  // one photo set per physical room, grouped from the photographer's batches
+  villa: ['photos/upper-view-106.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-084.jpg', 'photos/upper-view-073.jpg', 'photos/upper-view-133.jpg', 'photos/upper-view-131.jpg'],
+  superior: ['photos/upper-view-038.jpg', 'photos/upper-view-043.jpg', 'photos/upper-view-041.jpg', 'photos/upper-view-045.jpg', 'photos/upper-view-047.jpg'],
+  deluxe: ['photos/upper-view-044.jpg', 'photos/upper-view-042.jpg', 'photos/upper-view-046.jpg', 'photos/upper-view-048.jpg'],
+  king: ['photos/upper-view-060.jpg', 'photos/upper-view-054.jpg', 'photos/upper-view-053.jpg', 'photos/upper-view-055.jpg', 'photos/upper-view-057.jpg'],
 };
 const ROOM_SIZE = { villa: '40 m²', superior: '50 m²', deluxe: '40 m²', king: '60 m²' };
 
@@ -493,14 +494,39 @@ function bkRenderResults(q) {
   q.rooms.forEach((room) => {
     const card = document.createElement('div');
     card.className = 'uv-roomcard' + (room.available ? '' : ' uv-rc-soldout');
+    const imgs = ROOM_IMGS[room.type] || [];
+    const wrap = document.createElement('div');
+    wrap.className = 'uv-rc-galwrap';
     const gal = document.createElement('div');
     gal.className = 'uv-rc-gal';
-    (ROOM_IMGS[room.type] || []).forEach((src) => {
+    imgs.forEach((src) => {
       const img = document.createElement('img');
       img.src = src; img.alt = room.name; img.loading = 'lazy';
       gal.appendChild(img);
     });
-    card.appendChild(gal);
+    wrap.appendChild(gal);
+    if (imgs.length > 1) {
+      // same slider furniture as every gallery on the site: arrows + counter
+      const prev = document.createElement('button');
+      prev.type = 'button'; prev.className = 'uv-rc-arrow uv-rc-prev';
+      prev.setAttribute('aria-label', 'Previous photo'); prev.innerHTML = '‹';
+      const next = document.createElement('button');
+      next.type = 'button'; next.className = 'uv-rc-arrow uv-rc-next';
+      next.setAttribute('aria-label', 'Next photo'); next.innerHTML = '›';
+      const count = document.createElement('div');
+      count.className = 'uv-rc-count';
+      count.textContent = '1 / ' + imgs.length;
+      const idx = () => Math.max(0, Math.min(imgs.length - 1, Math.round(gal.scrollLeft / gal.clientWidth)));
+      const go = (d) => {
+        const i = Math.max(0, Math.min(imgs.length - 1, idx() + d));
+        gal.scrollTo({ left: i * gal.clientWidth, behavior: 'smooth' });
+      };
+      prev.addEventListener('click', () => go(-1));
+      next.addEventListener('click', () => go(1));
+      gal.addEventListener('scroll', () => { count.textContent = (idx() + 1) + ' / ' + imgs.length; }, { passive: true });
+      wrap.appendChild(prev); wrap.appendChild(next); wrap.appendChild(count);
+    }
+    card.appendChild(wrap);
     const body = document.createElement('div');
     body.className = 'uv-rc-body';
     const h = document.createElement('h3');
@@ -529,8 +555,33 @@ function bkRenderResults(q) {
       btn.type = 'button';
       btn.className = 'uv-rc-book';
       btn.textContent = t('p_book') || 'Book now';
-      btn.addEventListener('click', () => {
+      btn.addEventListener('click', async () => {
         BK.type = room.type; BK.sel = room;
+        // Nobu flow: go straight to the checkout page; guest details and the
+        // card are collected there. Falls back to the inline details step
+        // while no payment provider is configured.
+        btn.disabled = true; btn.style.opacity = '.6';
+        try {
+          const r = await fetch('booking/api.php?action=book', {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({
+              type: room.type, checkin: BK.ci, checkout: BK.co,
+              guests: Number($('#uv-gst').value),
+            }),
+          });
+          const j = await r.json();
+          if (j.mode === 'pay' && j.url) {
+            if (window.matchMedia('(min-width: 880px)').matches) {
+              const w = window.open(j.url, '_blank');
+              if (!w) window.location.href = j.url;
+            } else {
+              window.location.href = j.url;
+            }
+            return;
+          }
+        } catch (e) { /* fall through to inline details */ }
+        finally { btn.disabled = false; btn.style.opacity = '1'; }
         $('#uv-selsum').textContent = (t(bkTypeKey(room.type)) || room.name) + ' · '
           + q.from + ' → ' + q.to + ' · ' + q.nights + ' ' + (t('p_nights') || 'nights')
           + (room.total ? ' · ฿' + bkFmt(room.total) : '');

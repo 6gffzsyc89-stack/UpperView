@@ -149,3 +149,41 @@ function b24_create_booking(array $b): ?int {
         . 'Last error: ' . (uv_meta_get('b24_last_error') ?? json_encode($res)));
     return null;
 }
+
+/**
+ * Live total for a stay: Beds24 nightly price1 summed * direct multiplier,
+ * with minimum availability across the range. Local fallback uses config
+ * rates. Returns ['free'=>int,'total'=>int|null] — total in whole THB.
+ */
+function uv_live_total(string $type, string $from, string $to): array {
+    $cfg = uv_config();
+    $nights = (int)((strtotime($to) - strtotime($from)) / 86400);
+    $mult = $cfg['direct_multiplier'] ?? 0.90;
+    $roomId = $cfg['beds24']['room_map'][$type] ?? null;
+    if ($roomId !== null && b24_enabled()) {
+        $lastDate = date('Y-m-d', strtotime($to . ' -1 day'));
+        $res = b24_api('GET', '/inventory/rooms/calendar?roomId=' . $roomId
+            . '&startDate=' . $from . '&endDate=' . $lastDate
+            . '&includeNumAvail=true&includePrices=true');
+        if (is_array($res) && isset($res['data'][0]['calendar'])) {
+            $freeMin = PHP_INT_MAX; $sum = 0.0; $covered = 0;
+            foreach ($res['data'][0]['calendar'] as $r) {
+                $n = max(0, (int)($r['numAvail'] ?? 0));
+                $p = (float)($r['price1'] ?? 0);
+                for ($d = max($r['from'], $from); $d <= min($r['to'], $lastDate);
+                     $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+                    $freeMin = min($freeMin, $n);
+                    $sum += $p; $covered++;
+                }
+            }
+            if ($covered === $nights && $sum > 0) {
+                return ['free' => $freeMin === PHP_INT_MAX ? 0 : $freeMin,
+                        'total' => (int)round($sum * $mult)];
+            }
+        }
+    }
+    $f = uv_avail($type, $from, $to);
+    $free = $f ? min($f) : 0;
+    $rate = $cfg['rates'][$type] ?? 0;
+    return ['free' => $free, 'total' => $rate > 0 ? $rate * $nights : null];
+}
