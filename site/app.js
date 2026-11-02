@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=aer4';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=aer4c';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -145,8 +145,15 @@ function advance() {
   state.vidIdx = next;
   setTimeout(() => {
     const nn = (next + 1) % list.length;
-    if (toB) vA.src = list[nn];
-    else vB.src = list[nn];
+    // the outgoing element must be fully invisible before its file changes,
+    // or the incoming clip's first frame can flash mid-fade
+    const hid = toB ? vA : vB;
+    hid.style.transition = 'none';
+    hid.style.opacity = '0';
+    hid.src = list[nn];
+    requestAnimationFrame(() => requestAnimationFrame(() => {
+      hid.style.transition = 'opacity .9s ease';
+    }));
     state.switching = false;
   }, 1100);
 }
