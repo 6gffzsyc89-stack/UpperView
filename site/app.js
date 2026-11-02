@@ -311,8 +311,8 @@ document
   });
 
 /* ---------- booking ---------- */
-const OPENING_DATE = '2027-01-01';      // first bookable night
-const OPENING_TAG_UNTIL = '2027-02-01'; // notice disappears after January 2027
+const OPENING_DATE = '2026-12-20';      // first bookable night (late December opening)
+const OPENING_TAG_UNTIL = '2026-12-27'; // notice disappears once the hotel is open
 const today = new Date().toISOString().slice(0, 10);
 const minStay = today < OPENING_DATE ? OPENING_DATE : today;
 $('#uv-arr').min = minStay;
