@@ -44,49 +44,60 @@ function uv_confirmation_email_html(array $b): string {
     $name  = htmlspecialchars($b['name'] ?: 'Guest');
     $ci    = uv_fmt_date_long($b['checkin']);
     $co    = uv_fmt_date_long($b['checkout']);
-    $green = '#3D4C36'; $cream = '#F7F0E9'; $ink = '#2b2b26';
+    // Site palette + typography (index.html): green #4F6446, cream #F7F0E9,
+    // Jost for display/labels, Archivo for body. Email-safe fallbacks included.
+    $green = '#4F6446'; $cream = '#F7F0E9'; $ink = '#2b2b26';
+    $muted = '#8a8376';                      // muted label tone on light panels
+    $fcream70 = '#C4C6B8'; $fcream60 = '#B4B8A8'; // cream at .7/.6 over green (site footer)
+    $disp = "'Jost','Archivo','Helvetica Neue',Helvetica,Arial,sans-serif";
+    $body = "'Archivo','Jost','Helvetica Neue',Helvetica,Arial,sans-serif";
+    $base = 'https://upperviewsamui.com';
 
     $rows = '';
     $rows .= '<tr><td style="padding:10px 0;border-bottom:1px solid #e4dcd2;">'
         . $type . ' &middot; ' . $nights . ' night' . ($nights > 1 ? 's' : '')
-        . '<br><span style="color:#8a8376;font-size:12px;">' . uv_fmt_thb($nightly)
+        . '<br><span style="color:' . $muted . ';font-size:12px;">' . uv_fmt_thb($nightly)
         . ' per night &times; ' . $nights . '</span></td>'
         . '<td align="right" style="padding:10px 0;border-bottom:1px solid #e4dcd2;">'
         . uv_fmt_thb($total) . '</td></tr>';
-    $rows .= '<tr><td style="padding:10px 0;color:#8a8376;font-size:12px;">Taxes and fees</td>'
-        . '<td align="right" style="padding:10px 0;color:#8a8376;font-size:12px;">Included</td></tr>';
-    $rows .= '<tr><td style="padding:14px 0;border-top:2px solid ' . $green . ';font-weight:bold;">Total paid</td>'
-        . '<td align="right" style="padding:14px 0;border-top:2px solid ' . $green . ';font-weight:bold;">'
+    $rows .= '<tr><td style="padding:10px 0;color:' . $muted . ';font-size:12px;">Taxes and fees</td>'
+        . '<td align="right" style="padding:10px 0;color:' . $muted . ';font-size:12px;">Included</td></tr>';
+    $rows .= '<tr><td style="padding:14px 0;border-top:2px solid ' . $green . ';font-weight:600;">Total paid</td>'
+        . '<td align="right" style="padding:14px 0;border-top:2px solid ' . $green . ';font-weight:600;">'
         . uv_fmt_thb($total) . ' THB</td></tr>';
 
-    return '<!doctype html><html><body style="margin:0;padding:0;background:' . $cream . ';">
-<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' . $cream . ';padding:24px 0;">
+    $label = 'font-family:' . $disp . ';font-size:11px;letter-spacing:.3em;text-transform:uppercase;color:' . $green . ';';
+
+    return '<!doctype html><html><head><meta charset="utf-8">
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+</head><body style="margin:0;padding:0;background:' . $green . ';">
+<table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="background:' . $green . ';padding:24px 0;">
 <tr><td align="center">
 <table role="presentation" width="600" cellpadding="0" cellspacing="0"
-  style="max-width:600px;width:100%;background:#ffffff;font-family:Georgia,\'Times New Roman\',serif;color:' . $ink . ';">
-  <tr><td style="background:' . $green . ';padding:34px 40px;text-align:center;">
-    <div style="color:' . $cream . ';font-size:22px;letter-spacing:.35em;">UPPER VIEW</div>
-    <div style="color:#b9c0ae;font-size:10px;letter-spacing:.3em;margin-top:6px;">KOH SAMUI</div>
+  style="max-width:600px;width:100%;background:#ffffff;font-family:' . $body . ';color:' . $ink . ';">
+  <tr><td style="background:' . $green . ';padding:30px 40px 26px;text-align:center;">
+    <img src="' . $base . '/brand/logo-stack-cream.png" alt="Upper View &mdash; Boutique Hotel, Koh Samui"
+      width="150" style="width:150px;height:auto;display:inline-block;border:0;">
   </td></tr>
   <tr><td style="padding:40px 40px 10px;text-align:center;">
-    <div style="font-size:11px;letter-spacing:.3em;color:#8a8376;">RESERVATION CONFIRMED</div>
-    <div style="font-size:26px;margin-top:12px;">We look forward to welcoming you, ' . $name . '</div>
-    <div style="font-size:12px;color:#8a8376;margin-top:14px;letter-spacing:.1em;">CONFIRMATION NUMBER</div>
-    <div style="font-size:20px;letter-spacing:.2em;margin-top:4px;">' . $code . '</div>
+    <div style="' . $label . '">Reservation confirmed</div>
+    <div style="font-family:' . $disp . ';font-weight:400;font-size:25px;letter-spacing:.02em;margin-top:12px;">We look forward to welcoming you, ' . $name . '</div>
+    <div style="' . $label . 'font-size:10px;margin-top:16px;">Confirmation number</div>
+    <div style="font-family:' . $disp . ';font-size:20px;letter-spacing:.2em;margin-top:4px;">' . $code . '</div>
   </td></tr>
   <tr><td style="padding:26px 40px 0;">
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;font-family:' . $body . ';">
       <tr>
         <td width="50%" style="padding:14px;background:' . $cream . ';">
-          <div style="font-size:10px;letter-spacing:.25em;color:#8a8376;">CHECK-IN</div>
+          <div style="' . $label . 'font-size:10px;letter-spacing:.25em;">Check-in</div>
           <div style="margin-top:6px;">' . $ci . '</div>
-          <div style="color:#8a8376;font-size:12px;">from 3:00 PM</div>
+          <div style="color:' . $muted . ';font-size:12px;">from 3:00 PM</div>
         </td>
         <td width="4"></td>
         <td width="50%" style="padding:14px;background:' . $cream . ';">
-          <div style="font-size:10px;letter-spacing:.25em;color:#8a8376;">CHECK-OUT</div>
+          <div style="' . $label . 'font-size:10px;letter-spacing:.25em;">Check-out</div>
           <div style="margin-top:6px;">' . $co . '</div>
-          <div style="color:#8a8376;font-size:12px;">by 12:00 PM</div>
+          <div style="color:' . $muted . ';font-size:12px;">by 12:00 PM</div>
         </td>
       </tr>
     </table>
@@ -94,29 +105,33 @@ function uv_confirmation_email_html(array $b): string {
         . (int) $b['guests'] . ' guest' . ((int)$b['guests'] > 1 ? 's' : '') . '</div>
   </td></tr>
   <tr><td style="padding:30px 40px 0;">
-    <div style="font-size:11px;letter-spacing:.3em;color:#8a8376;border-bottom:2px solid ' . $green . ';padding-bottom:8px;">YOUR INVOICE</div>
-    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;">' . $rows . '</table>
-    <div style="font-size:11px;color:#8a8376;">Charged to your card as <b>Upper View Samui</b>. All prices include taxes and fees.</div>
+    <div style="' . $label . 'border-bottom:2px solid ' . $green . ';padding-bottom:8px;">Your invoice</div>
+    <table role="presentation" width="100%" cellpadding="0" cellspacing="0" style="font-size:14px;font-family:' . $body . ';">' . $rows . '</table>
+    <div style="font-size:11px;color:' . $muted . ';">Charged to your card as <b>Upper View Samui</b>. All prices include taxes and fees.</div>
   </td></tr>
   <tr><td style="padding:30px 40px 0;">
-    <div style="font-size:11px;letter-spacing:.3em;color:#8a8376;border-bottom:1px solid #e4dcd2;padding-bottom:8px;">YOUR STAY</div>
+    <div style="' . $label . 'border-bottom:1px solid #e4dcd2;padding-bottom:8px;">Your stay</div>
     <p style="font-size:14px;line-height:1.7;">A hillside boutique resort above Bophut with panoramic views across
     the Gulf toward Koh Phangan — an infinity-edge lap pool, a clubhouse lobby lounge,
     a strength-and-cardio gym and a peaceful north-coast setting.</p>
   </td></tr>
   <tr><td style="padding:16px 40px 34px;">
-    <div style="font-size:11px;letter-spacing:.3em;color:#8a8376;border-bottom:1px solid #e4dcd2;padding-bottom:8px;">GETTING HERE</div>
+    <div style="' . $label . 'border-bottom:1px solid #e4dcd2;padding-bottom:8px;">Getting here</div>
     <p style="font-size:14px;line-height:1.7;">161/40 Moo 1, Bophut Hills Soi Pho Tha 1, Bo Phut,<br>
     Koh Samui, Surat Thani 84320, Thailand<br>
     15 minutes from Samui International Airport (USM).</p>
-    <p style="font-size:13px;line-height:1.7;color:#8a8376;">Questions or special requests? Reply to this email or write to
+    <p style="font-size:13px;line-height:1.7;color:' . $muted . ';">Questions or special requests? Reply to this email or write to
     <a href="mailto:bookings@upperviewsamui.com" style="color:' . $green . ';">bookings@upperviewsamui.com</a>
     with your confirmation number.</p>
-    <p style="font-size:12px;line-height:1.6;color:#8a8376;">Free cancellation until 3:00 PM (hotel time) one day before
+    <p style="font-size:12px;line-height:1.6;color:' . $muted . ';">Free cancellation until 3:00 PM (hotel time) one day before
     check-in; later cancellations are charged one night.</p>
   </td></tr>
-  <tr><td style="background:' . $green . ';padding:18px 40px;text-align:center;color:#b9c0ae;font-size:11px;letter-spacing:.2em;">
-    UPPER VIEW SAMUI &middot; UPPERVIEWSAMUI.COM
+  <tr><td style="background:' . $green . ';border-top:1px solid #68795f;padding:44px 40px 40px;text-align:center;">
+    <img src="' . $base . '/brand/logo-lockup-cream.png" alt="Upper View &mdash; Boutique Hotel, Koh Samui"
+      width="170" style="width:170px;height:auto;display:inline-block;border:0;opacity:.95;">
+    <div style="margin-top:18px;"><a href="mailto:bookings@upperviewsamui.com"
+      style="font-family:' . $body . ';color:' . $fcream70 . ';font-size:13px;letter-spacing:.06em;text-decoration:none;">bookings@upperviewsamui.com</a></div>
+    <div style="margin-top:12px;font-family:' . $body . ';color:' . $fcream60 . ';font-size:11px;letter-spacing:.14em;">&copy; 2026 Upper View &middot; upperviewsamui.com</div>
   </td></tr>
 </table>
 </td></tr></table></body></html>';
