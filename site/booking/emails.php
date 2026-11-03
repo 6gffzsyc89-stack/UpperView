@@ -11,21 +11,21 @@ require_once __DIR__ . '/lib.php';
 function uv_notify_emails(): array {
     $cfg = uv_config();
     if (!empty($cfg['notify_emails']) && is_array($cfg['notify_emails'])) return $cfg['notify_emails'];
-    return array('management@ableab.com', 'bookings@upperviewsamui.com', 'upperviewsamui@gmail.com');
+    return array('management@ableab.com', 'booking@upperviewsamui.com', 'upperviewsamui@gmail.com');
 }
 
 function uv_mail_html(string $to, string $subject, string $html): void {
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return;
     $headers = "MIME-Version: 1.0\r\n"
              . "Content-Type: text/html; charset=UTF-8\r\n"
-             . "From: Upper View Samui <bookings@upperviewsamui.com>\r\n"
-             . "Reply-To: bookings@upperviewsamui.com";
+             . "From: Upper View Samui <booking@upperviewsamui.com>\r\n"
+             . "Reply-To: booking@upperviewsamui.com";
     @mail($to, $subject, $html, $headers);
 }
 
 function uv_notify_all(string $subject, string $body): void {
     foreach (uv_notify_emails() as $to) {
-        @mail($to, $subject, $body, 'From: bookings@upperviewsamui.com');
+        @mail($to, $subject, $body, 'From: booking@upperviewsamui.com');
     }
 }
 
@@ -121,16 +121,17 @@ function uv_confirmation_email_html(array $b): string {
     Koh Samui, Surat Thani 84320, Thailand<br>
     15 minutes from Samui International Airport (USM).</p>
     <p style="font-size:13px;line-height:1.7;color:' . $muted . ';">Questions or special requests? Reply to this email or write to
-    <a href="mailto:bookings@upperviewsamui.com" style="color:' . $green . ';">bookings@upperviewsamui.com</a>
+    <a href="mailto:booking@upperviewsamui.com" style="color:' . $green . ';">booking@upperviewsamui.com</a>
     with your confirmation number.</p>
-    <p style="font-size:12px;line-height:1.6;color:' . $muted . ';">Free cancellation until 3:00 PM (hotel time) one day before
-    check-in; later cancellations are charged one night.</p>
+    <p style="font-size:12px;line-height:1.6;color:' . $muted . ';">Cancellation policy: free cancellation until 14 days before
+    check-in. Cancellations within 14 days of check-in are charged 50% of the stay; within 7 days, or in case of
+    no-show, the full amount is charged.</p>
   </td></tr>
   <tr><td style="background:' . $green . ';border-top:1px solid #68795f;padding:44px 40px 40px;text-align:center;">
     <img src="' . $base . '/brand/logo-lockup-cream.png" alt="Upper View &mdash; Boutique Hotel, Koh Samui"
       width="170" style="width:170px;height:auto;display:inline-block;border:0;opacity:.95;">
-    <div style="margin-top:18px;"><a href="mailto:bookings@upperviewsamui.com"
-      style="font-family:' . $body . ';color:' . $fcream70 . ';font-size:13px;letter-spacing:.06em;text-decoration:none;">bookings@upperviewsamui.com</a></div>
+    <div style="margin-top:18px;"><a href="mailto:booking@upperviewsamui.com"
+      style="font-family:' . $body . ';color:' . $fcream70 . ';font-size:13px;letter-spacing:.06em;text-decoration:none;">booking@upperviewsamui.com</a></div>
     <div style="margin-top:12px;font-family:' . $body . ';color:' . $fcream60 . ';font-size:11px;letter-spacing:.14em;">&copy; 2026 Upper View &middot; upperviewsamui.com</div>
   </td></tr>
 </table>
