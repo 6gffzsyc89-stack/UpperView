@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=nb2';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=nb3';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -459,8 +459,9 @@ function bkError(msg, which) {
 
 /* Nobu-style flow: dates -> available rooms (with photo sliders) -> details */
 const ROOM_IMGS = {
-  // one photo set per physical room, grouped from the photographer's batches
-  villa: ['photos/upper-view-106.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-084.jpg', 'photos/upper-view-073.jpg', 'photos/upper-view-133.jpg', 'photos/upper-view-131.jpg'],
+  // villa set = exactly the Mini Villas gallery slider (vgal) on the site
+  villa: ['photos/upper-view-092.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-077.jpg', 'photos/upper-view-074.jpg', 'photos/upper-view-097.jpg', 'photos/upper-view-084.jpg', 'photos/upper-view-079.jpg', 'photos/upper-view-095.jpg', 'photos/upper-view-089.jpg', 'photos/upper-view-106.jpg', 'photos/upper-view-133.jpg'],
+  // suites: per-room groups from the studio gallery's photo pool (Andy to confirm)
   superior: ['photos/upper-view-038.jpg', 'photos/upper-view-043.jpg', 'photos/upper-view-041.jpg', 'photos/upper-view-045.jpg', 'photos/upper-view-047.jpg'],
   deluxe: ['photos/upper-view-044.jpg', 'photos/upper-view-042.jpg', 'photos/upper-view-046.jpg', 'photos/upper-view-048.jpg'],
   king: ['photos/upper-view-060.jpg', 'photos/upper-view-054.jpg', 'photos/upper-view-053.jpg', 'photos/upper-view-055.jpg', 'photos/upper-view-057.jpg'],
@@ -494,39 +495,48 @@ function bkRenderResults(q) {
   q.rooms.forEach((room) => {
     const card = document.createElement('div');
     card.className = 'uv-roomcard' + (room.available ? '' : ' uv-rc-soldout');
+    // identical component to every other gallery on the site: same arrows,
+    // same uv-count chip, same 3:2 slides with the next-photo peek, looping
     const imgs = ROOM_IMGS[room.type] || [];
     const wrap = document.createElement('div');
-    wrap.className = 'uv-rc-galwrap';
+    wrap.style.position = 'relative';
+    const galId = 'rcgal-' + room.type;
     const gal = document.createElement('div');
-    gal.className = 'uv-rc-gal';
+    gal.id = galId;
+    gal.setAttribute('data-gal', '');
+    gal.style.cssText = 'display:flex;gap:10px;overflow-x:auto;scroll-snap-type:x mandatory;scrollbar-width:none';
     imgs.forEach((src) => {
       const img = document.createElement('img');
       img.src = src; img.alt = room.name; img.loading = 'lazy';
+      img.style.cssText = 'flex:0 0 min(440px,84%);aspect-ratio:3/2;object-fit:cover;scroll-snap-align:start';
       gal.appendChild(img);
     });
     wrap.appendChild(gal);
     if (imgs.length > 1) {
-      // same slider furniture as every gallery on the site: arrows + counter
-      const prev = document.createElement('button');
-      prev.type = 'button'; prev.className = 'uv-rc-arrow uv-rc-prev';
-      prev.setAttribute('aria-label', 'Previous photo'); prev.innerHTML = '‹';
-      const next = document.createElement('button');
-      next.type = 'button'; next.className = 'uv-rc-arrow uv-rc-next';
-      next.setAttribute('aria-label', 'Next photo'); next.innerHTML = '›';
-      const count = document.createElement('div');
-      count.className = 'uv-rc-count';
-      count.textContent = '1 / ' + imgs.length;
-      const idx = () => Math.max(0, Math.min(imgs.length - 1, Math.round(gal.scrollLeft / gal.clientWidth)));
-      const go = (d) => {
-        const i = Math.max(0, Math.min(imgs.length - 1, idx() + d));
-        gal.scrollTo({ left: i * gal.clientWidth, behavior: 'smooth' });
+      const mkArrow = (dir) => {
+        const b = document.createElement('button');
+        b.type = 'button';
+        b.setAttribute('aria-label', dir < 0 ? 'Previous' : 'Next');
+        b.innerHTML = dir < 0 ? '&lsaquo;' : '&rsaquo;';
+        b.style.cssText = 'position:absolute;' + (dir < 0 ? 'left' : 'right')
+          + ':10px;top:50%;transform:translateY(-50%);z-index:2;width:44px;height:44px;border:none;'
+          + 'background:rgba(17,17,17,.45);color:#F7F0E9;font-size:22px;cursor:pointer;display:flex;'
+          + 'align-items:center;justify-content:center;padding:0;transition:background .25s';
+        b.addEventListener('click', () => scrollGal(gal, dir));
+        b.addEventListener('mouseenter', () => (b.style.background = 'rgba(17,17,17,.7)'));
+        b.addEventListener('mouseleave', () => (b.style.background = 'rgba(17,17,17,.45)'));
+        return b;
       };
-      prev.addEventListener('click', () => go(-1));
-      next.addEventListener('click', () => go(1));
-      gal.addEventListener('scroll', () => { count.textContent = (idx() + 1) + ' / ' + imgs.length; }, { passive: true });
-      wrap.appendChild(prev); wrap.appendChild(next); wrap.appendChild(count);
+      const count = document.createElement('span');
+      count.className = 'uv-count';
+      count.setAttribute('aria-hidden', 'true');
+      count.textContent = '1 / ' + imgs.length;
+      wrap.appendChild(mkArrow(-1));
+      wrap.appendChild(mkArrow(1));
+      wrap.appendChild(count);
     }
     card.appendChild(wrap);
+    card._galId = imgs.length > 1 ? galId : null;
     const body = document.createElement('div');
     body.className = 'uv-rc-body';
     const h = document.createElement('h3');
@@ -592,6 +602,7 @@ function bkRenderResults(q) {
     body.appendChild(row);
     card.appendChild(body);
     box.appendChild(card);
+    if (card._galId) setupLoop(card._galId); // element must be in the DOM first
   });
 }
 
