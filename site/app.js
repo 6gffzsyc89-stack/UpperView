@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=nb3';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=nb4';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -462,9 +462,9 @@ const ROOM_IMGS = {
   // villa set = exactly the Mini Villas gallery slider (vgal) on the site
   villa: ['photos/upper-view-092.jpg', 'photos/upper-view-072.jpg', 'photos/upper-view-077.jpg', 'photos/upper-view-074.jpg', 'photos/upper-view-097.jpg', 'photos/upper-view-084.jpg', 'photos/upper-view-079.jpg', 'photos/upper-view-095.jpg', 'photos/upper-view-089.jpg', 'photos/upper-view-106.jpg', 'photos/upper-view-133.jpg'],
   // suites: per-room groups from the studio gallery's photo pool (Andy to confirm)
-  superior: ['photos/upper-view-038.jpg', 'photos/upper-view-043.jpg', 'photos/upper-view-041.jpg', 'photos/upper-view-045.jpg', 'photos/upper-view-047.jpg'],
-  deluxe: ['photos/upper-view-044.jpg', 'photos/upper-view-042.jpg', 'photos/upper-view-046.jpg', 'photos/upper-view-048.jpg'],
-  king: ['photos/upper-view-060.jpg', 'photos/upper-view-054.jpg', 'photos/upper-view-053.jpg', 'photos/upper-view-055.jpg', 'photos/upper-view-057.jpg'],
+  superior: ['photos/suite-superior-01.jpg', 'photos/suite-superior-02.jpg', 'photos/suite-superior-03.jpg', 'photos/suite-superior-04.jpg', 'photos/suite-superior-05.jpg', 'photos/suite-superior-06.jpg'],
+  deluxe: ['photos/suite-deluxe-01.jpg', 'photos/suite-deluxe-02.jpg', 'photos/suite-deluxe-03.jpg', 'photos/suite-deluxe-04.jpg', 'photos/suite-deluxe-05.jpg', 'photos/suite-deluxe-06.jpg'],
+  king: ['photos/upper-view-038.jpg', 'photos/upper-view-060.jpg', 'photos/upper-view-056.jpg', 'photos/upper-view-057.jpg', 'photos/upper-view-055.jpg', 'photos/upper-view-047.jpg'],
 };
 const ROOM_SIZE = { villa: '40 m²', superior: '50 m²', deluxe: '40 m²', king: '60 m²' };
 
