@@ -15,7 +15,7 @@ const HERO_CLIPS_MOBILE = [
   'video/64a52140.mp4', // coconut/loungers (original take)
   'video/dcac0ba3.mp4', // villa bedroom (regen from real photo, no door)
   'video/85f4fddb.mp4', // rooftop deck (original take)
-  'video/9b230ee6.mp4', // aerial (regen from real drone photo, 8 villas)
+  'video/60386f15.mp4', // aerial (furnished roof decks, Kling pinned to original first/last frames)
 ];
 
 const state = {
