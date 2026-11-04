@@ -5,7 +5,7 @@ Working log. Updated by Claude Code as items progress. (2026-11-03)
 | # | Request | Status |
 |---|---|---|
 | 1 | MCP address: upperviewsamui.com/mcp or mcp.upperviewsamui.com | **DONE** — live at `https://upperviewsamui.com/mcp/?k=…` after CDN bot-shield lowered. Subdomain optional, not created (Hostinger API outage). |
-| 2 | Booking.com photo cleanup (each suite keeps its 6) | **BLOCKED on Andy** — extranet session expired; tab sits at SMS verification. Room 3 selection must be redone after login, then Rooms 1 & 2. |
+| 2 | Booking.com photo cleanup (each suite keeps its 6) | **DONE 2026-11-04** — Room 1 → 6 (Superior 935040883/884/885/886/888/889), Room 3 → 6 (Deluxe 935040928/930/931/932/933/934), Room 2 → 6 (King 935040962/963/964/965/966/968), Villa 4 untouched (12). Removed photos remain in the main gallery (69). Verified by ID audit. |
 | 3 | Beds24 MCP not working | **DONE** — cause was Hostinger CDN bot verification; Andy set CDN security to low; verified end-to-end. README documents it for Yomied. |
 | 4 | Airwallex: Pinkai payment activation approved? | **BLOCKED on Andy** — tab waits at "confirm in Airwallex app" 2FA. Application was "under review (1–2 business days)" at submission. |
 | 5 | Hero video comparison / furnished aerial | **DONE** — desktop `ae92da70.mp4` + mobile `60386f15.mp4` live; Kling pinned to the July originals' first/last frames (furnished, stacks removed); QC frame-by-frame passed; comparisons in Andy's Downloads. No single merged MP4 (Andy's decision). |
