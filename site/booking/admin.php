@@ -4,8 +4,12 @@ declare(strict_types=1);
 require __DIR__ . '/lib.php';
 
 $cfg = uv_config();
-if (!hash_equals($cfg['admin_key'], $_GET['k'] ?? '')) { http_response_code(403); exit('forbidden'); }
-$k = htmlspecialchars($cfg['admin_key']);
+$k2 = (string) uv_meta_get('admin_key2');
+$kin = (string) ($_GET['k'] ?? '');
+if (!hash_equals($cfg['admin_key'], $kin) && ($k2 === '' || !hash_equals($k2, $kin))) {
+    http_response_code(403); exit('forbidden');
+}
+$k = htmlspecialchars($kin);
 $db = uv_db();
 $msg = '';
 
