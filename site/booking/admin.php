@@ -31,6 +31,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = 'Confirmed ' . htmlspecialchars($_POST['code']) . '.';
     }
     if ($act === 'refresh') { uv_refresh_ota(true); $msg = 'OTA calendars refreshed.'; }
+    if ($act === 'stripekey') {
+        $sk = trim((string)($_POST['sk'] ?? ''));
+        if (preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$/', $sk)) {
+            uv_meta_set('stripe_secret_key', $sk);
+            uv_meta_set('payment_provider', 'stripe');
+            $msg = 'Stripe key saved (…' . htmlspecialchars(substr($sk, -4)) . '). Payment provider set to Stripe.';
+        } else {
+            $msg = 'That does not look like a Stripe secret/restricted key (sk_… or rk_…). Nothing saved.';
+        }
+    }
+    if ($act === 'provider' && in_array($_POST['provider'] ?? '', ['stripe', 'airwallex'], true)) {
+        uv_meta_set('payment_provider', $_POST['provider']);
+        $msg = 'Payment provider set to ' . htmlspecialchars($_POST['provider']) . '.';
+    }
 }
 
 $rows = $db->query("SELECT * FROM bookings WHERE status != 'cancelled'
@@ -72,6 +86,16 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:
 <form class="inline" method="post" onsubmit="return confirm('Cancel <?= $r['code'] ?>?')"><input type="hidden" name="act" value="cancel"><input type="hidden" name="code" value="<?= $r['code'] ?>"><button style="background:#a33">Cancel</button></form>
 </td></tr>
 <?php endforeach; ?></table>
+
+<h2>Payments</h2>
+<?php $pskSet = uv_meta_get('stripe_secret_key'); $pprov = uv_meta_get('payment_provider'); ?>
+<p>Active provider: <b><?= htmlspecialchars($pprov ?: 'auto') ?></b> ·
+Stripe key: <b><?= $pskSet ? 'saved (…' . htmlspecialchars(substr($pskSet, -4)) . ')' : 'NOT SET' ?></b></p>
+<form method="post"><input type="hidden" name="act" value="stripekey">
+<input name="sk" type="password" placeholder="Paste Stripe secret key (sk_live_… or rk_live_…)" style="width:380px" autocomplete="off">
+<button>Save Stripe key</button></form>
+<form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="stripe"><button>Use Stripe</button></form>
+<form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="airwallex"><button>Use Airwallex</button></form>
 
 <h2>Block dates (maintenance, phone bookings…)</h2>
 <form method="post"><input type="hidden" name="act" value="block">

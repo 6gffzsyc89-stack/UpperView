@@ -9,6 +9,7 @@
 require_once __DIR__ . '/lib.php';
 require_once __DIR__ . '/beds24.php';
 require_once __DIR__ . '/airwallex.php';
+require_once __DIR__ . '/stripe.php';
 require_once __DIR__ . '/emails.php';
 
 $code = isset($_GET['code']) ? (string) $_GET['code'] : '';
@@ -46,6 +47,12 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'news'    => !empty($in['news']),
     )));
     $b['email'] = $email;
+    if (uv_pay_provider() === 'stripe') {
+        $sess = st_checkout_for($b);
+        if (!$sess) { http_response_code(502); echo '{"error":"payment unavailable"}'; exit; }
+        echo json_encode(array('checkout_url' => $sess['url']));
+        exit;
+    }
     $intent = aw_enabled() ? aw_intent_for($b) : null;
     if (!$intent) { http_response_code(502); echo '{"error":"payment unavailable"}'; exit; }
     echo json_encode(array(
@@ -59,12 +66,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
 /* ---- return / confirmation state ---- */
 $confirmed = ($b['status'] === 'confirmed');
 if (!$confirmed && isset($_GET['done'])) {
-    $raw = uv_meta_get('aw_intent_' . $code);
-    $stI = $raw ? json_decode($raw, true) : null;
-    if (is_array($stI) && !empty($stI['intent_id'])) {
-        $live = aw_intent_status($stI['intent_id']);
-        if (is_array($live) && isset($live['status']) && $live['status'] === 'SUCCEEDED') {
-            $confirmed = true; // webhook finalises Beds24 + emails
+    if (st_booking_paid($code)) {
+        $confirmed = true; // webhook finalises Beds24 + emails
+    } else {
+        $raw = uv_meta_get('aw_intent_' . $code);
+        $stI = $raw ? json_decode($raw, true) : null;
+        if (is_array($stI) && !empty($stI['intent_id'])) {
+            $live = aw_intent_status($stI['intent_id']);
+            if (is_array($live) && isset($live['status']) && $live['status'] === 'SUCCEEDED') {
+                $confirmed = true; // webhook finalises Beds24 + emails
+            }
         }
     }
 }
@@ -263,6 +274,7 @@ input:focus,select:focus{outline:1px solid var(--green)}
         city: v('f_city'), zip: v('f_zip'), news: document.getElementById('f_news').checked })
     }).then(function(r){ if(!r.ok) throw 0; return r.json(); })
     .then(function(d){
+      if (d.checkout_url) { location.href = d.checkout_url; return; }
       document.getElementById('paySec').classList.add('on');
       btn.style.display = 'none';
       return window.AirwallexComponentsSDK.init({ env: '<?php echo $awEnv; ?>', enabledElements: ['payments'] })

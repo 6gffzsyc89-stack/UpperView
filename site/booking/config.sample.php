@@ -17,12 +17,16 @@ return [
     'rates' => ['villa' => 4900, 'studio' => 3200],   // PLACEHOLDER — Andy must confirm
     'rates_confirmed' => false,
 
-    // Payment (adapter seam: stripe today, airwallex later).
-    // Keys are created in Andy's own browser session, pasted here on the server
-    // directly — never through chat.
+    // Payment (adapter seam). Active provider: 'stripe' or 'airwallex'.
+    // May also live in the meta table ('payment_provider') — set from admin.php.
+    'payment_provider' => 'stripe',
+    // Keys are created in Andy's own browser session and pasted either here on
+    // the server directly or into admin.php's Payments form — never through chat.
     'stripe' => [
-        'secret_key' => '',        // sk_live_... or sk_test_...
-        'webhook_secret' => '',    // whsec_... for /booking/webhook.php
+        'secret_key' => '',        // sk_live_... / rk_live_... (or meta 'stripe_secret_key')
+    ],
+    'airwallex' => [
+        'client_id' => '', 'api_key' => '', 'webhook_secret' => '', 'env' => 'prod',
     ],
 
     // OTA iCal imports — one entry per unit per platform. Paste export URLs
