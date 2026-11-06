@@ -117,3 +117,11 @@ manual blocks kept deliberately (suites/Booking.com/Trip bookings are not
 feed-visible yet; over-blocking is safe, under-blocking overbooks). Remove
 feeds + manual blocks once Beds24 channel sync is live and verified.
 Technique credit: Sonata session (12-feed union).
+
+## v2.6 — 2026-11-07 · Beds24 inventory-rows gotcha documented
+Sonata session found the root cause of API-created rooms reading zero
+availability: no inventory rows (panel rooms get ~2 years seeded; API
+numAvail writes to missing rows no-op with success). Upper View's rooms
+are seeded until 2028-11-01 — re-extend from the panel before then
+(365-day max per write). Billing corrected: pay-as-you-go daily fees,
+no subscription to activate; channel sync unlocks at trial end.

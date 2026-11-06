@@ -1,6 +1,20 @@
-# New property website playbook — v1.1 (2026-11-06)
+# New property website playbook — v1.2 (2026-11-07)
 
 Changelog:
+- v1.2 (2026-11-07) — Beds24 inventory-rows gotcha (root cause of the
+  366403 zero-availability mystery, found by the Sonata session): rooms
+  created via the Beds24 API get NO inventory rows — availability reads
+  false/0 although the panel shows Inventory 1, and API numAvail writes
+  to missing rows return success and do nothing. Rooms created in the
+  control panel are seeded ~2 years. Fix: panel → Calendar → Inventory
+  cell → Apply to all rooms → end date → Save (creates rows, but max
+  365 days per write; longer ranges silently truncate). Track the
+  inventory horizon (e.g. config beds24.inventory_until) and re-extend
+  before it rolls; past the horizon treat Beds24 as blind and let OTA
+  feeds decide. Upper View's panel-created rooms run out 2028-11-01.
+  Also corrected: Beds24 billing is pay-as-you-go daily fees from the
+  account balance — there is no subscription to "activate"; channel
+  sync unlocks when the free trial ends.
 - v1.1 (2026-11-06) — reconciled with Sonata's build: distinct-unit
   combination model beside the pooled "N ×" model (§2); hold/details
   order relaxed to either sequence with server re-validation (§4);
@@ -211,12 +225,9 @@ Beds24, reports the Beds24 block id or a loud failure), Payments
    aggregated: run `beds24.source` = `local` (OTA iCal feeds) or
    `both`, and use manual blocks for anything the feeds miss. Switch
    to `beds24` only after the verification passes. Known gotcha
-   (open question, property 366403): an API-created property can read
-   numAvail 0 / availability false on every date while offers show
-   unitsAvailable 1 and calendar POSTs report success without effect —
-   likely a control-panel activation/subscription step (the trial may
-   cover one property); resolve in the Beds24 control panel before
-   relying on that property.
+   (SOLVED, see v1.2 changelog): API-created rooms have no inventory
+   rows — seed them from the panel (Calendar → Inventory → Apply to all
+   rooms, max 365 days/write) and track the inventory horizon.
 9. Remote MCP tokens for the AI assistant; send the integration README.
 10. CHANGELOG.md started; cross-brand sync message sent; tracker row
     opened for anything left with the owner.
