@@ -19,11 +19,27 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'block' && uv_valid_date($_POST['ci'] ?? null) && uv_valid_date($_POST['co'] ?? null)
         && uv_valid_type($_POST['type'] ?? '') && $_POST['co'] > $_POST['ci']) {
         $now = gmdate('Y-m-d H:i:s');
+        $code = uv_booking_code();
         $db->prepare("INSERT INTO bookings (code,type,checkin,checkout,guests,name,status,source,currency,created_at,updated_at)
                       VALUES (?,?,?,?,0,?,'blocked','admin',?,?,?)")
-           ->execute([uv_booking_code(), $_POST['type'], $_POST['ci'], $_POST['co'],
+           ->execute([$code, $_POST['type'], $_POST['ci'], $_POST['co'],
                       $_POST['note'] ?? 'manual block', $cfg['currency'], $now, $now]);
-        $msg = 'Dates blocked.';
+        // Beds24 is master: the block is only real once it exists there too
+        // (that is what closes the OTA calendars).
+        $b24id = null;
+        if (b24_enabled()) {
+            $roomId = b24_cfg()['room_map'][$_POST['type']] ?? null;
+            $res = $roomId ? b24_api('POST', '/bookings', [[
+                'roomId' => $roomId, 'status' => 'black',
+                'arrival' => $_POST['ci'], 'departure' => $_POST['co'],
+                'firstName' => 'BLOCK', 'lastName' => $_POST['note'] ?? 'maintenance',
+                'apiReference' => $code,
+            ]]) : null;
+            $b24id = $res[0]['new']['id'] ?? ($res[0]['id'] ?? null);
+        }
+        $msg = $b24id
+            ? "Dates blocked ($code) — written to Beds24 (#$b24id), OTA calendars closed for that unit."
+            : "Dates blocked ($code) locally, but the Beds24 write FAILED — the block is NOT live on the OTA calendars. Retry or block it in Beds24 directly.";
     }
     if ($act === 'cancel' && !empty($_POST['code'])) {
         $db->prepare("UPDATE bookings SET status='cancelled', updated_at=datetime('now') WHERE code=?")
@@ -76,6 +92,20 @@ $rows = $db->query("SELECT * FROM bookings WHERE status != 'cancelled'
 $ota = $db->query("SELECT source, unit_key, type, dtstart, dtend FROM ota_busy
                    WHERE dtend >= date('now') ORDER BY dtstart LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
 $fetched = uv_meta_get('ota_fetched_at');
+
+/* Live view of the master system: every booking/block in Beds24, all channels. */
+$b24rows = [];
+$roomNames = [];
+foreach ((b24_cfg()['room_map'] ?? []) as $t => $rid) $roomNames[$rid] = uv_type_name($t);
+if (b24_enabled()) {
+    $res = b24_api('GET', '/bookings?arrivalFrom=' . date('Y-m-d', strtotime('-7 days'))
+        . '&arrivalTo=' . date('Y-m-d', strtotime('+365 days')));
+    foreach (($res['data'] ?? []) as $bb) {
+        if (($bb['status'] ?? '') === 'cancelled') continue;
+        $b24rows[] = $bb;
+    }
+    usort($b24rows, function ($x, $y) { return strcmp($x['arrival'] ?? '', $y['arrival'] ?? ''); });
+}
 ?><!doctype html>
 <meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
 <meta name="robots" content="noindex,nofollow">
@@ -127,8 +157,32 @@ Stripe key: <b><?= $pskSet ? 'saved (…' . htmlspecialchars(substr($pskSet, -4)
 <input type="date" name="ci" required> → <input type="date" name="co" required>
 <input name="note" placeholder="note"><button>Block</button></form>
 
-<h2>OTA busy dates (imported)</h2>
+<h2>Beds24 — live bookings &amp; blocks (all channels)</h2>
+<p style="font-size:12.5px;color:#555;margin:0 0 8px">This is the master system's view (next 12 months). Any entry here closes the
+OTA calendars for its unit automatically. Website bookings appear after payment or after "Confirm + close OTAs".</p>
+<?php if (!b24_enabled()): ?>
+<p>Beds24 not connected.</p>
+<?php elseif ($b24rows === []): ?>
+<p>No upcoming bookings or blocks in Beds24.</p>
+<?php else: ?>
+<table><tr><th>Beds24 #</th><th>Channel</th><th>Room</th><th>Arrival</th><th>Departure</th><th>Guest</th><th>Status</th><th>Ref</th></tr>
+<?php foreach ($b24rows as $bb): ?>
+<tr><td><?= (int)($bb['id'] ?? 0) ?></td>
+<td><?= htmlspecialchars((string)($bb['apiSource'] ?: ($bb['channel'] ?? ''))) ?></td>
+<td><?= htmlspecialchars($roomNames[$bb['roomId'] ?? 0] ?? (string)($bb['roomId'] ?? '')) ?></td>
+<td><?= htmlspecialchars((string)($bb['arrival'] ?? '')) ?></td>
+<td><?= htmlspecialchars((string)($bb['departure'] ?? '')) ?></td>
+<td><?= htmlspecialchars(trim(($bb['firstName'] ?? '') . ' ' . ($bb['lastName'] ?? ''))) ?></td>
+<td><?= htmlspecialchars((string)($bb['status'] ?? '')) ?></td>
+<td><?= htmlspecialchars((string)($bb['apiReference'] ?? '')) ?></td></tr>
+<?php endforeach; ?></table>
+<?php endif; ?>
+
+<?php if ($ota !== []): ?>
+<h2>iCal fallback — imported busy dates</h2>
+<p style="font-size:12.5px;color:#555;margin:0 0 8px">Only used if Beds24 is down (local fallback engine).</p>
 <table><tr><th>Source</th><th>Unit</th><th>Type</th><th>From</th><th>To</th></tr>
 <?php foreach ($ota as $o): ?>
 <tr><td><?= $o['source'] ?></td><td><?= $o['unit_key'] ?></td><td><?= $o['type'] ?></td><td><?= $o['dtstart'] ?></td><td><?= $o['dtend'] ?></td></tr>
 <?php endforeach; ?></table>
+<?php endif; ?>
