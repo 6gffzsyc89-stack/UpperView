@@ -1,4 +1,13 @@
-# New property website playbook — v1.0 (2026-11-06)
+# New property website playbook — v1.1 (2026-11-06)
+
+Changelog:
+- v1.1 (2026-11-06) — reconciled with Sonata's build: distinct-unit
+  combination model beside the pooled "N ×" model (§2); hold/details
+  order relaxed to either sequence with server re-validation (§4);
+  tri-state availability source `local | both | beds24` as the channel
+  transition mode (§3, §10 step 8); one account-wide remote MCP across
+  brands (§8); i18n launch scope per brand (§1).
+- v1.0 (2026-11-06) — first issue.
 
 How to stand up a complete direct-booking hotel website from zero, with
 everything Andy's brands (Upper View Samui, Sonata Samui) learned and
@@ -25,8 +34,10 @@ properties stay consistent, and is recorded in that repo's CHANGELOG.md.
   (`config.php`, `bookings.sqlite`). Never in git, never web-readable.
 - Git repo per property; GitHub remote; commit per change; CHANGELOG.md
   as the human-readable record. Git history is the changelog of record.
-- i18n: one `i18n.js` with a key map per language (Upper View ships 10).
-  EVERY new UI string gets all languages at introduction time.
+- i18n: one `i18n.js` with a key map per language (Upper View ships 10;
+  a brand may deliberately launch English-only, e.g. Sonata). Whatever
+  languages a site has, EVERY new UI string ships in all of them at
+  introduction time.
 
 ## 2. Inventory model (get this right first)
 
@@ -36,18 +47,30 @@ properties stay consistent, and is recorded in that repo's CHANGELOG.md.
 - Occupancy: hard cap per unit, enforced server-side by REJECTION (never
   silently clamp), mirrored in the UI selector. Options like baby cots
   are explicit flags (DB column), limited to the types that offer them.
-- Multi-room parties (W/Nobu pattern): rooms = ceil(guests / cap). The
-  POOLED type offers "N × <type>" (price ×N, availability needs N free
-  units every night); single-unit types show "Sleeps 2" guidance
-  instead of a dead end. Server re-validates all of it.
+- Multi-room parties (W/Nobu pattern) — two shapes, pick by inventory:
+  (a) POOLED identical units (Upper View Mini Villa ×8): rooms =
+  ceil(guests / cap), offer "N × <type>" (price ×N, availability needs
+  N free units every night); other single-unit types show "Sleeps 2"
+  guidance instead of a dead end. (b) DISTINCT single units with
+  different capacities (Sonata: three villas sleeping 4/4/6): return
+  minimal COMBINATIONS of units that sleep the party (one row per unit,
+  grouped by a group_code; one checkout and one confirmation per group;
+  one channel-manager booking per unit with a MULTI-VILLA note), with a
+  hard party ceiling above which the flow hands to WhatsApp/staff.
+  Either shape: the server re-validates all of it.
 
 ## 3. Beds24 — the master calendar
 
 - One Beds24 account, one property per brand, one room type per real
-  type with correct quantity. The website NEVER keeps its own
-  availability truth while Beds24 is enabled — it reads Beds24 live on
-  every search (prices via calendar `price1` × direct multiplier, e.g.
-  0.90) and falls back to a local iCal engine only if Beds24 is down.
+  type with correct quantity. Availability truth is a tri-state
+  `beds24.source` setting: `local` (OTA iCal feeds per unit — correct
+  while channels are NOT yet connected), `both` (a date is free only if
+  Beds24 AND the OTA feeds agree — the safe TRANSITION mode while
+  channels come online), `beds24` (Beds24 alone once every channel is
+  connected and verified). In `beds24` mode the site reads Beds24 live
+  on every search (prices via calendar `price1` × direct multiplier,
+  e.g. 0.90) and falls back to the local iCal engine only if Beds24 is
+  down. Never run `beds24` mode before §10 step 8 passes.
 - Auth: invite code → refresh token stored server-side (SQLite meta);
   access tokens cached ~24h. Setup script: `booking/beds24-setup.php`.
 - Writes: ONLY these create Beds24 bookings (which is what closes OTA
@@ -71,8 +94,12 @@ properties stay consistent, and is recorded in that repo's CHANGELOG.md.
 ## 4. Booking engine (`site/booking/`)
 
 - `api.php` — public: `availability`, `quote` (per-type free units +
-  live totals), `book` (creates a hold; routes to pay mode when a
-  provider is live, else records an unpaid inquiry). Admin actions
+  live totals), and a hold-creating request endpoint. Guest details may
+  be collected BEFORE the hold (Sonata: in the booking sheet, request
+  returns {mode:'pay', url} straight to a prefilled checkout) or AFTER
+  it (Upper View: Nobu order, details on the checkout page) — either is
+  fine as long as the checkout POST re-validates everything server-side
+  and an unpaid inquiry is recorded when no provider is live. Admin actions
   behind `k=` admin key (occupancy, bookings, block, rate, full Beds24
   GET/write mirror, send-email, notify-list). Accept a secondary admin
   key from meta (`admin_key2`) so the owner gets access without the
@@ -130,6 +157,12 @@ Beds24, reports the Beds24 block id or a loud failure), Payments
 
 - Local stdio MCP (`mcp/index.js`, Node) for Claude sessions on trusted
   machines; admin key from `~/.config/<brand>/admin_key`.
+- ONE account-wide remote MCP serves ALL brands: the Beds24 token is
+  account-level, so every property is reachable by id through the same
+  endpoint (Upper View hosts it; Sonata has none of its own). A second
+  brand's SITE backend (its own requests/enquiries/admin) is separate —
+  give the assistant access via a token for that site's api.php or a
+  thin additional MCP only when actually needed.
 - Remote MCP (Streamable HTTP, `site/mcp/index.php`) at
   `https://<domain>/mcp/?k=<token>` for Yomied/ChatGPT/team: per-member
   tokens in config `mcp_tokens` with read vs manage roles. Tools:
@@ -175,7 +208,15 @@ Beds24, reports the Beds24 block id or a loud failure), Payments
 8. Beds24 control panel: connect each OTA channel (owner authorizes);
    then VERIFY an OTA test booking appears in Beds24 and reduces
    website availability — until this passes, availability is NOT
-   aggregated and manual blocks are required.
+   aggregated: run `beds24.source` = `local` (OTA iCal feeds) or
+   `both`, and use manual blocks for anything the feeds miss. Switch
+   to `beds24` only after the verification passes. Known gotcha
+   (open question, property 366403): an API-created property can read
+   numAvail 0 / availability false on every date while offers show
+   unitsAvailable 1 and calendar POSTs report success without effect —
+   likely a control-panel activation/subscription step (the trial may
+   cover one property); resolve in the Beds24 control panel before
+   relying on that property.
 9. Remote MCP tokens for the AI assistant; send the integration README.
 10. CHANGELOG.md started; cross-brand sync message sent; tracker row
     opened for anything left with the owner.
