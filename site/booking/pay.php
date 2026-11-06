@@ -145,6 +145,8 @@ input:focus,select:focus{outline:1px solid var(--green)}
 .ack label{display:flex;gap:10px;align-items:flex-start;font-size:13px;color:var(--ink);letter-spacing:0;margin:10px 0;cursor:pointer}
 .ack input{margin-top:3px}
 .cta{display:block;width:100%;background:var(--green);color:var(--cream);border:none;padding:18px;font-size:12px;letter-spacing:.3em;cursor:pointer;margin-top:18px;font-family:inherit;text-transform:uppercase}
+.helpline{margin-top:16px;text-align:center;font-size:12.5px;color:var(--mut);letter-spacing:.04em}
+.helpline a{color:var(--green);font-weight:600;text-decoration:none;border-bottom:1px solid var(--green)}
 .cta[disabled]{opacity:.45;cursor:default}
 .err{color:#a33;font-size:13px;margin-top:10px;display:none}
 #dropIn{margin-top:8px;min-height:60px}
@@ -215,6 +217,12 @@ input:focus,select:focus{outline:1px solid var(--green)}
         </div>
         <button class="cta" id="toPay" type="submit">CONTINUE TO PAYMENT</button>
         <div class="err" id="err1">Please complete all required fields and acknowledgements.</div>
+        <div class="helpline">Still have questions?
+          <a href="mailto:booking@upperviewsamui.com?subject=Question%20about%20booking%20<?php echo h($b['code']); ?>">Email us</a>
+          &nbsp;·&nbsp;
+          <a href="https://wa.me/66620132003?text=<?php echo rawurlencode('Hello Upper View — I have a question about my booking ' . $b['code']); ?>" target="_blank" rel="noopener">WhatsApp us</a>
+          — we reply any time.
+        </div>
       </form>
       <div class="sec steps" id="paySec">
         <h2>Payment</h2>

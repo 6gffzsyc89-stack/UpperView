@@ -206,6 +206,7 @@ document.querySelectorAll('.uv-open-reserve').forEach((b) =>
 $('#uv-close').addEventListener('click', () => body.classList.remove('reserve-open'));
 $('#uv-overlay').addEventListener('click', () => body.classList.remove('reserve-open'));
 $('#uv-helptab').addEventListener('click', () => body.classList.toggle('help-open'));
+$('#uv-bkhelp').addEventListener('click', () => body.classList.add('help-open'));
 $('#uv-helpclose').addEventListener('click', () => body.classList.remove('help-open'));
 document.addEventListener('keydown', (e) => {
   if (e.key === 'Escape') body.classList.remove('help-open', 'reserve-open', 'menu-open');
