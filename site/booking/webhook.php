@@ -42,6 +42,8 @@ if (($event['type'] ?? '') === 'checkout.session.completed') {
                 'code' => $code, 'type' => $b['type'], 'checkin' => $b['checkin'],
                 'checkout' => $b['checkout'], 'guests' => $b['guests'], 'name' => (string)$b['name'],
                 'email' => (string)$b['email'], 'phone' => (string)$b['phone'], 'status' => 'confirmed',
+                'paid' => true, 'amount' => (int)$b['amount'], 'provider' => 'Stripe',
+                'cot' => (int)($b['cot'] ?? 0),
             ]);
             $summary = uv_type_name($b['type'])
                 . " | {$b['checkin']} -> {$b['checkout']} | {$b['name']} | {$b['email']} | code $code | PAID";

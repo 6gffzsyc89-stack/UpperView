@@ -102,7 +102,8 @@ function uv_confirmation_email_html(array $b): string {
       </tr>
     </table>
     <div style="font-size:14px;margin-top:16px;">' . $type . ' &middot; '
-        . (int) $b['guests'] . ' guest' . ((int)$b['guests'] > 1 ? 's' : '') . '</div>
+        . (int) $b['guests'] . ' guest' . ((int)$b['guests'] > 1 ? 's' : '')
+        . (!empty($b['cot']) ? ' &middot; baby cot (complimentary)' : '') . '</div>
   </td></tr>
   <tr><td style="padding:30px 40px 0;">
     <div style="' . $label . 'border-bottom:2px solid ' . $green . ';padding-bottom:8px;">Your invoice</div>
@@ -139,13 +140,15 @@ function uv_confirmation_email_html(array $b): string {
 }
 
 /** Send guest confirmation + internal copies for a paid booking row. */
-function uv_send_confirmation(array $b): void {
+function uv_send_confirmation(array $b, string $provider = 'card'): void {
     $html = uv_confirmation_email_html($b);
     uv_mail_html((string) $b['email'],
         'Upper View Samui — reservation confirmed (' . $b['code'] . ')', $html);
     $nights = (int)((strtotime($b['checkout']) - strtotime($b['checkin'])) / 86400);
     uv_notify_all('Upper View: PAID booking ' . $b['code'],
         uv_type_name($b['type']) . " | {$b['checkin']} -> {$b['checkout']} ($nights nights)"
-        . " | {$b['guests']} guests | {$b['name']} | {$b['email']} | {$b['phone']}"
-        . ' | ' . uv_fmt_thb((int) $b['amount']) . " THB paid via Airwallex | code {$b['code']}");
+        . " | {$b['guests']} guests" . (!empty($b['cot']) ? ' + baby cot' : '')
+        . " | {$b['name']} | {$b['email']} | {$b['phone']}"
+        . ' | ' . uv_fmt_thb((int) $b['amount']) . " THB PAID via $provider | code {$b['code']}"
+        . "\n\nWritten to Beds24 — OTA calendars closed automatically.");
 }

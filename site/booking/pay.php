@@ -231,7 +231,7 @@ input:focus,select:focus{outline:1px solid var(--green)}
           <b><?php echo h($type); ?></b>
           <div class="mut">Direct Rate · Room Only</div>
           <div class="mut"><?php echo h($ciL); ?> – <?php echo h($coL); ?> · <?php echo $nights; ?> night<?php echo $nights > 1 ? 's' : ''; ?> stay</div>
-          <div class="mut"><?php echo (int) $b['guests']; ?> Adults</div>
+          <div class="mut"><?php echo (int) $b['guests']; ?> Adult<?php echo (int)$b['guests'] > 1 ? 's' : ''; ?><?php echo !empty($b['cot']) ? ' · Baby cot' : ''; ?></div>
         </div>
       </div>
       <div class="price">

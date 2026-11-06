@@ -76,13 +76,16 @@ Public (no key):
 - `action=quote&from=YYYY-MM-DD&to=YYYY-MM-DD` — per-type availability +
   live direct prices (THB, taxes included). THE call for "what does X cost".
 - `action=availability&type=villa&from=..&to=..` — free units per date.
-- `action=book` (POST JSON `{type, checkin, checkout, guests}`) — creates a
-  hold and returns `{mode:"pay", code, url, total}`. **Send that `url` to a
-  guest on WhatsApp and they get the full Upper View checkout** (guest
-  details + card, Airwallex) on their phone; payment auto-confirms the
-  booking into Beds24 and emails the invoice. (Until the Airwallex key is
-  configured the API instead expects `name`,`email`,`phone` and returns
-  `mode:"inquiry"`.)
+- `action=book` (POST JSON `{type, checkin, checkout, guests, cot?}`) —
+  creates a hold and returns `{mode:"pay", code, url, total}`. **Send that
+  `url` to a guest on WhatsApp and they get the full Upper View checkout**
+  (guest details + card, Stripe or Airwallex) on their phone; payment
+  auto-confirms the booking into Beds24 and emails the invoice. (Until a
+  payment key is configured the API instead expects `name`,`email`,`phone`
+  and returns `mode:"inquiry"` — an unpaid request that is NOT written to
+  Beds24.) **Occupancy is capped at 2 guests per suite or mini villa**
+  (`guests` > 2 is rejected). `cot: 1` requests a complimentary baby cot —
+  suites only, ignored for the mini villa.
 
 Admin (append `&k=`):
 - `admin-occupancy&from=..&to=..`
@@ -115,7 +118,39 @@ per-member tokens and per-token permissions (read-only vs manage). Then:
 Ask the Upper View Claude session to build this when wanted — the backend
 API already exists, so it is a thin authenticated proxy.
 
-## 6. Ground rules for automated callers (Yomied included)
+## 6. Reading a website booking in Beds24: source, payment, OTA status
+
+Every booking the website writes to Beds24 carries a structured note
+(visible in the Beds24 booking's **notes** field, readable via the Beds24
+API `GET /bookings` `notes` property). Lines, in order:
+
+```
+SOURCE: direct website upperviewsamui.com — ref UVXXXXXX
+PAYMENT: PAID 9,800 THB via Stripe (verified online payment)
+         — or —
+PAYMENT: NOT TAKEN — manually confirmed from the admin page, collect payment separately
+OTA CALENDARS: CLOSED automatically by this Beds24 booking (availability reduced on Booking.com / Agoda / Airbnb / all channels)
+BABY COT requested (free option, suites only)        ← only when requested
+```
+
+How to interpret any booking:
+- **Where it was made / source**: website bookings have `referer =
+  upperviewsamui.com`, `apiReference = UV…` code, and the SOURCE note line.
+  OTA bookings arrive from the channel itself and have none of these —
+  their Beds24 `channel`/`referer` names the OTA (booking.com, agoda…).
+- **Payment taken?** Read the PAYMENT note line. Paid online bookings also
+  carry invoice lines (a charge + a payment) on the Beds24 invoice tab.
+  If a booking has no PAYMENT line and came from an OTA, payment is per
+  that OTA's own policy.
+- **OTA calendars closed?** Any booking that EXISTS in Beds24 closes the
+  OTA calendars automatically (Beds24 pushes availability −1 to all
+  channels). Unpaid website requests are NOT in Beds24 at all — calendars
+  stay OPEN until staff presses "Confirm + close OTAs" on
+  `/booking/admin.php` (manual) or the guest pays online (automatic).
+  Unpaid requests are visible via `list_bookings` / `admin-bookings`
+  (status `inquiry`), not in Beds24.
+
+## 7. Ground rules for automated callers (Yomied included)
 
 - Beds24 is master: never write availability anywhere else; `block_dates`
   and paid bookings are the only write paths.

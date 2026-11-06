@@ -578,6 +578,7 @@ function bkRenderResults(q) {
             body: JSON.stringify({
               type: room.type, checkin: BK.ci, checkout: BK.co,
               guests: Number($('#uv-gst').value),
+              cot: $('#uv-cot') && $('#uv-cot').checked ? 1 : 0,
             }),
           });
           const j = await r.json();
@@ -649,6 +650,7 @@ $('#uv-confirm').addEventListener('click', async () => {
       body: JSON.stringify({
         type: BK.type, checkin: BK.ci, checkout: BK.co,
         guests: Number($('#uv-gst').value), name, email,
+        cot: $('#uv-cot') && $('#uv-cot').checked ? 1 : 0,
         phone: $('#uv-phone').value.trim(),
       }),
     });

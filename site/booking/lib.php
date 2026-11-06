@@ -59,6 +59,9 @@ function uv_db(): PDO {
             PRIMARY KEY (source, unit_key, dtstart, dtend, uid)
         )');
         $db->exec('CREATE TABLE IF NOT EXISTS meta (k TEXT PRIMARY KEY, v TEXT)');
+        // lazy migration: baby-cot flag on bookings (0/1)
+        try { $db->exec('ALTER TABLE bookings ADD COLUMN cot INTEGER NOT NULL DEFAULT 0'); }
+        catch (PDOException $e) { /* column already exists */ }
     }
     return $db;
 }
@@ -233,9 +236,12 @@ function uv_booking_code(): string {
 
 function uv_notify(string $subject, string $body): void {
     $cfg = uv_config();
-    $to = $cfg['notify_email'] ?? '';
-    if ($to === '') return;
-    @mail($to, $subject, $body, 'From: bookings@upperviewsamui.com');
+    $list = (!empty($cfg['notify_emails']) && is_array($cfg['notify_emails']))
+        ? $cfg['notify_emails']
+        : [(string)($cfg['notify_email'] ?? '')];
+    foreach (array_unique(array_filter($list)) as $to) {
+        @mail($to, $subject, $body, 'From: booking@upperviewsamui.com');
+    }
 }
 
 function uv_mail_guest(string $email, string $subject, string $body): void {

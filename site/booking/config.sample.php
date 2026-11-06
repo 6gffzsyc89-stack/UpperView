@@ -7,7 +7,9 @@
 return [
     'site_url' => 'https://upperviewsamui.com',
     'opening_date' => '2026-12-20',
-    'notify_email' => 'andy@ableab.com',
+    'notify_email' => 'andy@ableab.com',   // legacy single-address fallback
+    // ALL booking notifications go to every address in this list.
+    'notify_emails' => ['management@ableab.com', 'booking@upperviewsamui.com', 'upperviewsamui@gmail.com'],
 
     // Interchangeable units per room type.
     'inventory' => ['villa' => 8, 'studio' => 3],

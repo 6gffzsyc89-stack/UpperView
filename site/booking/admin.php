@@ -2,6 +2,7 @@
 /** Minimal admin: list bookings, block dates, cancel. Key-protected. */
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
+require __DIR__ . '/beds24.php';
 
 $cfg = uv_config();
 $k2 = (string) uv_meta_get('admin_key2');
@@ -30,9 +31,28 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $msg = 'Cancelled ' . htmlspecialchars($_POST['code']) . '.';
     }
     if ($act === 'confirm' && !empty($_POST['code'])) {
-        $db->prepare("UPDATE bookings SET status='confirmed', updated_at=datetime('now') WHERE code=?")
-           ->execute([$_POST['code']]);
-        $msg = 'Confirmed ' . htmlspecialchars($_POST['code']) . '.';
+        // Manual close: confirming an unpaid request writes it to Beds24,
+        // which closes the OTA calendars. Paid bookings do this automatically.
+        $st = $db->prepare('SELECT * FROM bookings WHERE code=?');
+        $st->execute([$_POST['code']]);
+        $b = $st->fetch(PDO::FETCH_ASSOC);
+        if ($b) {
+            $db->prepare("UPDATE bookings SET status='confirmed', updated_at=datetime('now') WHERE code=?")
+               ->execute([$b['code']]);
+            $b24id = b24_create_booking([
+                'code' => $b['code'], 'type' => $b['type'],
+                'checkin' => $b['checkin'], 'checkout' => $b['checkout'],
+                'guests' => (int)$b['guests'], 'name' => (string)$b['name'],
+                'email' => (string)$b['email'], 'phone' => (string)$b['phone'],
+                'status' => 'confirmed', 'manual' => true,
+                'cot' => (int)($b['cot'] ?? 0),
+            ]);
+            $msg = 'Confirmed ' . htmlspecialchars($b['code'])
+                 . ($b24id ? " — written to Beds24 (#$b24id), OTA calendars now closed."
+                           : ' — WARNING: Beds24 write failed, OTA calendars are still OPEN. Close them manually in Beds24.');
+        } else {
+            $msg = 'Unknown booking code.';
+        }
     }
     if ($act === 'refresh') { uv_refresh_ota(true); $msg = 'OTA calendars refreshed.'; }
     if ($act === 'stripekey') {
@@ -78,14 +98,14 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:
 <table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th></th></tr>
 <?php foreach ($rows as $r): ?>
 <tr><td><?= htmlspecialchars($r['code']) ?></td><td><?= $r['type'] ?></td>
-<td><?= $r['checkin'] ?></td><td><?= $r['checkout'] ?></td><td><?= $r['guests'] ?></td>
+<td><?= $r['checkin'] ?></td><td><?= $r['checkout'] ?></td><td><?= $r['guests'] ?><?= !empty($r['cot']) ? ' +cot' : '' ?></td>
 <td><?= htmlspecialchars((string)$r['name']) ?></td>
 <td><?= htmlspecialchars((string)$r['email']) ?> <?= htmlspecialchars((string)$r['phone']) ?></td>
 <td class="s-<?= $r['status'] ?>"><?= $r['status'] ?></td>
 <td><?= $r['amount'] ? number_format((float)$r['amount']) . ' ' . $r['currency'] : '—' ?></td>
 <td>
 <?php if ($r['status'] === 'inquiry'): ?>
-<form class="inline" method="post"><input type="hidden" name="act" value="confirm"><input type="hidden" name="code" value="<?= $r['code'] ?>"><button>Confirm</button></form>
+<form class="inline" method="post" onsubmit="return confirm('Confirm <?= $r['code'] ?> and close OTA calendars?')"><input type="hidden" name="act" value="confirm"><input type="hidden" name="code" value="<?= $r['code'] ?>"><button>Confirm + close OTAs</button></form>
 <?php endif; ?>
 <form class="inline" method="post" onsubmit="return confirm('Cancel <?= $r['code'] ?>?')"><input type="hidden" name="act" value="cancel"><input type="hidden" name="code" value="<?= $r['code'] ?>"><button style="background:#a33">Cancel</button></form>
 </td></tr>

@@ -127,6 +127,21 @@ function b24_create_booking(array $b): ?int {
     $sp = strrpos($name, ' ');
     $first = $sp ? substr($name, 0, $sp) : $name;
     $last = $sp ? substr($name, $sp + 1) : '';
+    // Notes written so the AI assistant (Yomied) can read, per booking:
+    // where it was made, whether payment was taken, and OTA calendar status.
+    $notes = ['SOURCE: direct website upperviewsamui.com — ref ' . $b['code']];
+    if (!empty($b['paid'])) {
+        $notes[] = 'PAYMENT: PAID'
+            . (!empty($b['amount']) ? ' ' . number_format((int)$b['amount']) . ' THB' : '')
+            . ' via ' . ($b['provider'] ?? 'card') . ' (verified online payment)';
+    } else {
+        $notes[] = 'PAYMENT: NOT TAKEN — '
+            . (!empty($b['manual']) ? 'manually confirmed from the admin page, collect payment separately'
+                                    : 'unpaid request');
+    }
+    $notes[] = 'OTA CALENDARS: CLOSED automatically by this Beds24 booking '
+             . '(availability reduced on Booking.com / Agoda / Airbnb / all channels)';
+    if (!empty($b['cot'])) $notes[] = 'BABY COT requested (free option, suites only)';
     $payload = [[
         'roomId' => $roomId,
         'status' => $b['status'] === 'confirmed' ? 'confirmed' : 'new',
@@ -139,11 +154,28 @@ function b24_create_booking(array $b): ?int {
         'mobile' => $b['phone'],
         'referer' => 'upperviewsamui.com',
         'apiReference' => $b['code'],
-        'notes' => 'Direct website booking ' . $b['code'],
+        'notes' => implode("\n", $notes),
     ]];
     $res = b24_api('POST', '/bookings', $payload);
-    if (is_array($res) && isset($res[0]['new']['id'])) return (int)$res[0]['new']['id'];
-    if (is_array($res) && isset($res[0]['success']) && $res[0]['success'] && isset($res[0]['id'])) return (int)$res[0]['id'];
+    $newId = null;
+    if (is_array($res) && isset($res[0]['new']['id'])) $newId = (int)$res[0]['new']['id'];
+    elseif (is_array($res) && isset($res[0]['success']) && $res[0]['success'] && isset($res[0]['id'])) $newId = (int)$res[0]['id'];
+    if ($newId !== null) {
+        // Best-effort: record the charge + payment on the Beds24 invoice so
+        // payment status is visible in the booking's money tab, not only notes.
+        if (!empty($b['paid']) && !empty($b['amount'])) {
+            b24_api('POST', '/bookings', [[
+                'id' => $newId,
+                'invoiceItems' => [
+                    ['type' => 'charge', 'description' => 'Direct booking ' . $b['code'],
+                     'qty' => 1, 'amount' => (int)$b['amount']],
+                    ['type' => 'payment', 'description' => 'Paid online via ' . ($b['provider'] ?? 'card'),
+                     'amount' => (int)$b['amount']],
+                ],
+            ]]);
+        }
+        return $newId;
+    }
     uv_notify('Upper View: Beds24 booking write FAILED for ' . $b['code'],
         'The booking exists on the website DB but NOT in Beds24. Add it manually. '
         . 'Last error: ' . (uv_meta_get('b24_last_error') ?? json_encode($res)));

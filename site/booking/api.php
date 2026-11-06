@@ -3,6 +3,8 @@
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/beds24.php';
+require __DIR__ . '/airwallex.php';
+require __DIR__ . '/stripe.php';
 
 $action = $_GET['action'] ?? '';
 
@@ -83,7 +85,12 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $in = json_decode(file_get_contents('php://input'), true) ?: [];
     $type = $in['type'] ?? '';
     $ci = $in['checkin'] ?? ''; $co = $in['checkout'] ?? '';
-    $guests = max(1, min(6, (int)($in['guests'] ?? 2)));
+    // Hard occupancy cap: every suite and mini villa sleeps a maximum of 2.
+    $guests = (int)($in['guests'] ?? 2);
+    if ($guests > 2) uv_json(['error' => 'max 2 guests per suite or villa'], 400);
+    $guests = max(1, $guests);
+    // Baby cot: optional, offered on the three suites only (not the mini villa).
+    $cot = (!empty($in['cot']) && $type !== 'villa') ? 1 : 0;
     $name = trim((string)($in['name'] ?? ''));
     $email = trim((string)($in['email'] ?? ''));
     $phone = trim((string)($in['phone'] ?? ''));
@@ -99,8 +106,9 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     /* Nobu-style flow: guest details + card are collected on the checkout
-       page (booking/pay.php), so a hold is created without them. */
-    if (uv_payment_provider() === 'airwallex') {
+       page (booking/pay.php), so a hold is created without them.
+       Applies to whichever payment provider is active (Stripe or Airwallex). */
+    if (in_array(uv_pay_provider(), ['stripe', 'airwallex'], true)) {
         $q = uv_live_total($type, $ci, $co);
         if (($q['free'] ?? 0) < 1) uv_json(['error' => 'no availability'], 409);
         if (empty($q['total'])) uv_json(['error' => 'no rate for these dates'], 409);
@@ -108,12 +116,13 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $code = uv_booking_code();
         $now = gmdate('Y-m-d H:i:s');
         uv_db()->prepare('INSERT INTO bookings
-            (code,type,checkin,checkout,guests,name,email,phone,status,source,amount,currency,created_at,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-            ->execute([$code, $type, $ci, $co, $guests, $name, $email, $phone,
+            (code,type,checkin,checkout,guests,cot,name,email,phone,status,source,amount,currency,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute([$code, $type, $ci, $co, $guests, $cot, $name, $email, $phone,
                        'pending', 'direct', $amount, $cfg['currency'], $now, $now]);
-        $checkout = uv_checkout_create(['code' => $code]);
-        uv_json(['mode' => 'pay', 'code' => $code, 'url' => $checkout['url'],
+        $payUrl = rtrim($cfg['site_url'], '/') . '/booking/pay.php?code='
+                . rawurlencode($code) . '&sig=' . uv_pay_sig($code);
+        uv_json(['mode' => 'pay', 'code' => $code, 'url' => $payUrl,
                  'total' => $amount, 'currency' => $cfg['currency']]);
     }
 
@@ -126,14 +135,15 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = uv_booking_code();
     $now = gmdate('Y-m-d H:i:s');
     uv_db()->prepare('INSERT INTO bookings
-        (code,type,checkin,checkout,guests,name,email,phone,status,source,amount,currency,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-        ->execute([$code, $type, $ci, $co, $guests, $name, $email, $phone,
+        (code,type,checkin,checkout,guests,cot,name,email,phone,status,source,amount,currency,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$code, $type, $ci, $co, $guests, $cot, $name, $email, $phone,
                    $paid ? 'pending' : 'inquiry', 'direct',
                    $amount, $cfg['currency'], $now, $now]);
 
     $summary = uv_type_name($type)
-        . " | $ci -> $co ($nights nights) | $guests guests | $name | $email | $phone | code $code";
+        . " | $ci -> $co ($nights nights) | $guests guests" . ($cot ? ' + baby cot' : '')
+        . " | $name | $email | $phone | code $code";
 
     if ($paid) {
         $checkout = uv_checkout_create([
@@ -147,18 +157,21 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         uv_json(['mode' => 'pay', 'code' => $code, 'url' => $checkout['url']]);
     }
 
-    $b24id = b24_create_booking([
-        'code' => $code, 'type' => $type, 'checkin' => $ci, 'checkout' => $co,
-        'guests' => $guests, 'name' => $name, 'email' => $email, 'phone' => $phone,
-        'status' => 'new',
-    ]);
-    uv_notify("Upper View: NEW BOOKING REQUEST $code", $summary
-        . ($b24id ? "\n\nSynced to Beds24 (booking $b24id) — OTA calendars close automatically."
-                  : "\n\nNOT in Beds24 — block OTA calendars manually."));
+    /* UNPAID request: do NOT write to Beds24 and do NOT touch OTA calendars.
+       Closing calendars for an unpaid request is a manual decision (admin page
+       "Confirm + close OTAs"). Paid bookings close them automatically via the
+       Stripe/Airwallex webhooks. */
+    uv_notify("Upper View: NEW BOOKING REQUEST $code (unpaid)", $summary
+        . "\n\nNO payment has been taken — this is a request only."
+        . "\nOTA calendars are still OPEN (nothing was written to Beds24)."
+        . "\nTo accept it and close the OTA calendars, open the admin page"
+        . " (upperviewsamui.com/booking/admin.php) and press Confirm + close OTAs."
+        . "\nIf the guest pays online instead, the calendars close automatically.");
     uv_mail_guest($email, 'Upper View — booking request received',
         "Thank you $name!\n\nWe received your request for a "
         . uv_type_name($type)
-        . " from $ci to $co ($nights nights, $guests guests).\n"
+        . " from $ci to $co ($nights nights, $guests guest" . ($guests > 1 ? 's' : '')
+        . ($cot ? ', baby cot requested' : '') . ").\n"
         . "Your reference is $code. We will confirm by email shortly.\n\nUpper View Samui");
     uv_json(['mode' => 'inquiry', 'code' => $code]);
 }

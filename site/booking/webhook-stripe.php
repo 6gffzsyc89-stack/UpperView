@@ -60,10 +60,14 @@ $b24id = b24_create_booking(array(
     'email' => (string) $b['email'],
     'phone' => (string) $b['phone'],
     'status' => 'confirmed',
+    'paid' => true,
+    'amount' => (int) $b['amount'],
+    'provider' => 'Stripe',
+    'cot' => (int) ($b['cot'] ?? 0),
 ));
 uv_meta_set('st_paid_' . $code, (string) time());
 
-uv_send_confirmation($b);
+uv_send_confirmation($b, 'Stripe');
 if (!$b24id) {
     uv_notify_all('Upper View: paid booking ' . $code . ' NOT in Beds24',
         'Payment captured (Stripe) but the Beds24 write failed — add it manually and close OTA calendars.');
