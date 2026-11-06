@@ -178,7 +178,11 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
 
 /* ---------- admin API: backend for the Upper View MCP ---------- */
 if (strpos($action, 'admin-') === 0) {
-    if (!hash_equals(uv_config()['admin_key'], $_GET['k'] ?? '')) uv_json(['error' => 'forbidden'], 403);
+    $k2 = (string) uv_meta_get('admin_key2');
+    $kin = (string) ($_GET['k'] ?? '');
+    if (!hash_equals(uv_config()['admin_key'], $kin) && ($k2 === '' || !hash_equals($k2, $kin))) {
+        uv_json(['error' => 'forbidden'], 403);
+    }
 
     if ($action === 'admin-occupancy') {
         $from = uv_valid_date($_GET['from'] ?? null) ? $_GET['from'] : date('Y-m-d');
@@ -262,6 +266,78 @@ if (strpos($action, 'admin-') === 0) {
             'last_error' => uv_meta_get('b24_last_error'),
         ]);
     }
+
+    /* ---- Generic Beds24 API v2 mirror (full read/write for trusted callers).
+       Exposes every endpoint the Beds24 API offers (channel settings, guest
+       messages, invoices, properties, fixed prices, ...) without the token
+       ever leaving the server. ---- */
+    if ($action === 'admin-beds24-get') {
+        if (!b24_enabled()) uv_json(['error' => 'beds24 not enabled'], 409);
+        $path = (string)($_GET['path'] ?? '');
+        if (!preg_match('#^/[A-Za-z0-9/._-]*$#', $path)) uv_json(['error' => 'bad path (must start with /)'], 400);
+        $qs = (string)($_GET['query'] ?? '');
+        if ($qs !== '' && !preg_match('/^[A-Za-z0-9=&%._,+\[\]-]*$/', $qs)) uv_json(['error' => 'bad query string'], 400);
+        $res = b24_api('GET', $path . ($qs !== '' ? '?' . $qs : ''));
+        uv_json($res !== null ? $res
+            : ['error' => 'beds24 request failed', 'detail' => uv_meta_get('b24_last_error')], $res !== null ? 200 : 502);
+    }
+    if ($action === 'admin-beds24-write' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        if (!b24_enabled()) uv_json(['error' => 'beds24 not enabled'], 409);
+        $in = json_decode(file_get_contents('php://input'), true) ?: [];
+        $path = (string)($in['path'] ?? '');
+        $method = strtoupper((string)($in['method'] ?? 'POST'));
+        if (!preg_match('#^/[A-Za-z0-9/._-]*$#', $path)) uv_json(['error' => 'bad path (must start with /)'], 400);
+        if (!in_array($method, ['POST', 'PATCH', 'DELETE'], true)) uv_json(['error' => 'method must be POST/PATCH/DELETE'], 400);
+        $qs = (string)($in['query'] ?? '');
+        if ($qs !== '' && !preg_match('/^[A-Za-z0-9=&%._,+\[\]-]*$/', $qs)) uv_json(['error' => 'bad query string'], 400);
+        $res = b24_api($method, $path . ($qs !== '' ? '?' . $qs : ''), $in['body'] ?? null);
+        uv_json($res !== null ? $res
+            : ['error' => 'beds24 request failed', 'detail' => uv_meta_get('b24_last_error')], $res !== null ? 200 : 502);
+    }
+
+    /* ---- Email: send as booking@upperviewsamui.com (guest replies etc.) ---- */
+    if ($action === 'admin-send-email' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+        $in = json_decode(file_get_contents('php://input'), true) ?: [];
+        $tos = is_array($in['to'] ?? null) ? $in['to'] : [(string)($in['to'] ?? '')];
+        $subject = trim((string)($in['subject'] ?? ''));
+        $body = (string)($in['body'] ?? '');
+        $isHtml = !empty($in['html']);
+        if ($subject === '' || $body === '') uv_json(['error' => 'subject and body required'], 400);
+        $sent = []; $failed = [];
+        foreach ($tos as $to) {
+            $to = trim((string)$to);
+            if (!filter_var($to, FILTER_VALIDATE_EMAIL)) { $failed[] = $to; continue; }
+            if ($isHtml) {
+                $headers = "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\n"
+                         . "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com";
+            } else {
+                $headers = "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com";
+            }
+            $ok = @mail($to, $subject, $body, $headers, '-f booking@upperviewsamui.com');
+            $ok ? $sent[] = $to : $failed[] = $to;
+        }
+        uv_json(['sent' => $sent, 'failed' => $failed]);
+    }
+
+    /* ---- Notification recipient list: read / change without server access ---- */
+    if ($action === 'admin-notify-emails') {
+        if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+            $in = json_decode(file_get_contents('php://input'), true) ?: [];
+            $emails = $in['emails'] ?? null;
+            if (!is_array($emails) || $emails === []) uv_json(['error' => 'emails: non-empty array required'], 400);
+            $clean = [];
+            foreach ($emails as $e) {
+                $e = trim((string)$e);
+                if (!filter_var($e, FILTER_VALIDATE_EMAIL)) uv_json(['error' => "invalid email: $e"], 400);
+                $clean[] = $e;
+            }
+            uv_meta_set('notify_emails', json_encode(array_values(array_unique($clean))));
+            uv_json(['ok' => true, 'notify_emails' => $clean]);
+        }
+        uv_json(['notify_emails' => uv_notify_list(),
+                 'source' => uv_meta_get('notify_emails') !== null ? 'meta (set via API)' : 'config.php']);
+    }
+
     uv_json(['error' => 'unknown admin action'], 404);
 }
 

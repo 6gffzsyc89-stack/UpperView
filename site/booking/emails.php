@@ -9,9 +9,9 @@
 require_once __DIR__ . '/lib.php';
 
 function uv_notify_emails(): array {
-    $cfg = uv_config();
-    if (!empty($cfg['notify_emails']) && is_array($cfg['notify_emails'])) return $cfg['notify_emails'];
-    return array('management@ableab.com', 'booking@upperviewsamui.com', 'upperviewsamui@gmail.com');
+    $l = uv_notify_list();
+    return $l !== [] ? $l
+        : array('management@ableab.com', 'booking@upperviewsamui.com', 'upperviewsamui@gmail.com');
 }
 
 function uv_mail_html(string $to, string $subject, string $html): void {
@@ -20,12 +20,14 @@ function uv_mail_html(string $to, string $subject, string $html): void {
              . "Content-Type: text/html; charset=UTF-8\r\n"
              . "From: Upper View Samui <booking@upperviewsamui.com>\r\n"
              . "Reply-To: booking@upperviewsamui.com";
-    @mail($to, $subject, $html, $headers);
+    @mail($to, $subject, $html, $headers, '-f booking@upperviewsamui.com');
 }
 
 function uv_notify_all(string $subject, string $body): void {
     foreach (uv_notify_emails() as $to) {
-        @mail($to, $subject, $body, 'From: booking@upperviewsamui.com');
+        @mail($to, $subject, $body,
+              "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
+              '-f booking@upperviewsamui.com');
     }
 }
 

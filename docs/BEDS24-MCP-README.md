@@ -50,6 +50,27 @@ credentials stay server-side and every caller sees one consistent API.
 | `block_dates` | `type`, `checkin`, `checkout`, `note?` | Blocks one unit (maintenance/phone booking) on site + Beds24. |
 | `set_nightly_rate` | `type`, `from`, `to`, `price` (THB) | Writes nightly price to Beds24 for the range. |
 | `beds24_status` | — | Connection health; site auto-falls back to iCal engine on failure. |
+| `beds24_get` | `path`, `query?` | **Full READ mirror of the Beds24 API v2** — any GET endpoint: `/channels/settings` (channel manager config), `/properties`, `/bookings`, `/bookings/messages`, `/bookings/invoices`, `/inventory/*`, `/channels/airbnb/*`, `/channels/booking/reviews`, … |
+| `beds24_write` | `path`, `method?`, `query?`, `body` | **Full WRITE mirror** — POST/PATCH/DELETE any endpoint. Real writes that sync to OTAs; explicit human instruction only. |
+| `send_email` | `to`, `subject`, `body`, `html?` | Sends an email **from booking@upperviewsamui.com** via the website server. |
+| `get_notify_emails` / `set_notify_emails` | — / `emails[]` | Read / replace the booking-notification recipient list (stored server-side, takes effect immediately). |
+
+The REMOTE MCP (`https://upperviewsamui.com/mcp/?k=<token>` — what Yomied
+connects to) has the same power plus named conveniences:
+`get_channel_settings` (propertyId 365322), `get_guest_messages`,
+`get_invoices`, `send_guest_message` (replies to a guest THROUGH their OTA
+channel: Booking.com/Airbnb messaging), `send_email`, `get/set_notify_emails`,
+`beds24_get`, `beds24_write`. Read-role tokens get the read tools; manage-role
+tokens get everything.
+
+**API limits (honest):** the Beds24 API does not expose every control-panel
+screen. `GET /channels/settings` is an Alpha endpoint covering iCal export/
+import, Airbnb and VRBO connection settings. Booking.com/Agoda connection
+internals (mapping screens, auto-close rules) live only in the Beds24 control
+panel UI — no API client can read them. What Yomied CAN determine: which OTAs
+actually deliver bookings (each booking's `channel`/`apiSource` fields), and
+calendar closing is uniform — any booking existing in Beds24 reduces
+availability on ALL connected channels automatically (see section 6).
 
 Run it from any project on this Mac — `.mcp.json`:
 

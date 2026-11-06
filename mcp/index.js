@@ -41,7 +41,7 @@ const asResult = (text) => ({ content: [{ type: "text", text }] });
 const DATE = z.string().regex(/^\d{4}-\d{2}-\d{2}$/, "YYYY-MM-DD");
 const TYPE = z.enum(["villa", "superior", "deluxe", "king"]);
 
-const server = new McpServer({ name: "upperview", version: "1.0.0" });
+const server = new McpServer({ name: "upperview", version: "1.1.0" });
 
 server.tool(
   "get_availability",
@@ -86,6 +86,55 @@ server.tool(
   "Health of the Beds24 connection (enabled, token stored, last API error). The site falls back to its own iCal engine when Beds24 fails.",
   {},
   async () => asResult(await call("admin-beds24-status"))
+);
+
+server.tool(
+  "beds24_get",
+  "Read ANY Beds24 API v2 GET endpoint (full read mirror of Beds24, property 365322). Key paths: /channels/settings (channel manager: which OTAs are linked per room, channel config), /properties (property + room setup, booking rules; add query includeAllRooms=true), /bookings (query filters like arrivalFrom=YYYY-MM-DD), /bookings/messages (guest messages; query bookingId=... or filter=unread), /bookings/invoices (invoice + payment lines per booking), /inventory/rooms/calendar (prices/availability; needs roomId, startDate, endDate), /inventory/fixedPrices, /channels/booking/reviews, /accounts. 'query' is a raw query string without the leading '?'.",
+  { path: z.string().regex(/^\/[A-Za-z0-9/._-]*$/), query: z.string().optional() },
+  async ({ path, query }) =>
+    asResult(await call("admin-beds24-get", { params: { path, query } }))
+);
+
+server.tool(
+  "beds24_write",
+  "Write to ANY Beds24 API v2 endpoint (POST/PATCH/DELETE) — full write mirror. 'body' is the JSON payload Beds24 expects (usually an ARRAY of objects). Examples: send a guest a message through their OTA channel: path=/bookings/messages, body=[{bookingId: 95735792, message: 'Hello...'}]; modify a booking: path=/bookings, body=[{id: 95735792, status: 'cancelled'}]; change channel settings: path=/channels/settings. REAL writes that sync to OTAs — only on explicit human instruction, never speculatively.",
+  {
+    path: z.string().regex(/^\/[A-Za-z0-9/._-]*$/),
+    method: z.enum(["POST", "PATCH", "DELETE"]).optional(),
+    query: z.string().optional(),
+    body: z.any().optional(),
+  },
+  async ({ path, method, query, body }) =>
+    asResult(await call("admin-beds24-write", { method: "POST", body: { path, method, query, body } }))
+);
+
+server.tool(
+  "send_email",
+  "Send an email FROM booking@upperviewsamui.com (the hotel's address) via the website server. Use for replying to guests by email, sending booking info, etc. 'to' is one address or an array. Plain text by default; set html=true if body is HTML. Only send on explicit human/staff instruction.",
+  {
+    to: z.union([z.string(), z.array(z.string())]),
+    subject: z.string().min(1),
+    body: z.string().min(1),
+    html: z.boolean().optional(),
+  },
+  async ({ to, subject, body, html }) =>
+    asResult(await call("admin-send-email", { method: "POST", body: { to, subject, body, html } }))
+);
+
+server.tool(
+  "get_notify_emails",
+  "The list of addresses that receive ALL booking notification emails (new requests, paid bookings, failures).",
+  {},
+  async () => asResult(await call("admin-notify-emails"))
+);
+
+server.tool(
+  "set_notify_emails",
+  "Replace the booking-notification email list. Takes the FULL new list (not a delta). Only on explicit human instruction.",
+  { emails: z.array(z.string().email()).min(1) },
+  async ({ emails }) =>
+    asResult(await call("admin-notify-emails", { method: "POST", body: { emails } }))
 );
 
 await server.connect(new StdioServerTransport());

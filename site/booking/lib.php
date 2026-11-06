@@ -234,19 +234,34 @@ function uv_booking_code(): string {
     return 'UV' . strtoupper(substr(bin2hex(random_bytes(4)), 0, 6));
 }
 
-function uv_notify(string $subject, string $body): void {
+/** Effective notification list: meta override (set via admin API) wins,
+ *  then config 'notify_emails', then legacy single 'notify_email'. */
+function uv_notify_list(): array {
+    $meta = uv_meta_get('notify_emails');
+    if ($meta !== null) {
+        $j = json_decode($meta, true);
+        if (is_array($j) && $j !== []) return array_values(array_unique(array_filter($j)));
+    }
     $cfg = uv_config();
     $list = (!empty($cfg['notify_emails']) && is_array($cfg['notify_emails']))
         ? $cfg['notify_emails']
         : [(string)($cfg['notify_email'] ?? '')];
-    foreach (array_unique(array_filter($list)) as $to) {
-        @mail($to, $subject, $body, 'From: booking@upperviewsamui.com');
+    return array_values(array_unique(array_filter($list)));
+}
+
+function uv_notify(string $subject, string $body): void {
+    foreach (uv_notify_list() as $to) {
+        @mail($to, $subject, $body,
+              "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
+              '-f booking@upperviewsamui.com');
     }
 }
 
 function uv_mail_guest(string $email, string $subject, string $body): void {
     if ($email === '' || !filter_var($email, FILTER_VALIDATE_EMAIL)) return;
-    @mail($email, $subject, $body, 'From: bookings@upperviewsamui.com');
+    @mail($email, $subject, $body,
+          "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
+          '-f booking@upperviewsamui.com');
 }
 
 /* ---------- Payment adapter seam (stripe today, airwallex later) ---------- */
