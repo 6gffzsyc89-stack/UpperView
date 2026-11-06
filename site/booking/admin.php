@@ -62,6 +62,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 'email' => (string)$b['email'], 'phone' => (string)$b['phone'],
                 'status' => 'confirmed', 'manual' => true,
                 'cot' => (int)($b['cot'] ?? 0),
+                'rooms' => (int)($b['rooms'] ?? 1),
             ]);
             $msg = 'Confirmed ' . htmlspecialchars($b['code'])
                  . ($b24id ? " — written to Beds24 (#$b24id), OTA calendars now closed."
@@ -127,7 +128,7 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:
 <h2>Bookings &amp; blocks</h2>
 <table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th></th></tr>
 <?php foreach ($rows as $r): ?>
-<tr><td><?= htmlspecialchars($r['code']) ?></td><td><?= $r['type'] ?></td>
+<tr><td><?= htmlspecialchars($r['code']) ?></td><td><?= (int)($r['rooms'] ?? 1) > 1 ? (int)$r['rooms'] . ' × ' : '' ?><?= $r['type'] ?></td>
 <td><?= $r['checkin'] ?></td><td><?= $r['checkout'] ?></td><td><?= $r['guests'] ?><?= !empty($r['cot']) ? ' +cot' : '' ?></td>
 <td><?= htmlspecialchars((string)$r['name']) ?></td>
 <td><?= htmlspecialchars((string)$r['email']) ?> <?= htmlspecialchars((string)$r['phone']) ?></td>

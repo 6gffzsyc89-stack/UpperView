@@ -58,6 +58,7 @@ $b24id = b24_create_booking(array(
     'amount' => (int) $b['amount'],
     'provider' => 'Airwallex',
     'cot' => (int) ($b['cot'] ?? 0),
+    'rooms' => (int) ($b['rooms'] ?? 1),
 ));
 uv_meta_set('aw_paid_' . $code, (string) time());
 

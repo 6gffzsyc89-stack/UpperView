@@ -493,7 +493,23 @@ function bkRenderResults(q) {
     + ' · ' + $('#uv-gst').value + ' ' + (t('p_gst') || 'Guests');
   box.appendChild(sum);
 
-  q.rooms.forEach((room) => {
+  // One room sleeps 2: parties of 3+ take several mini villas (suites exist once).
+  const gstN = Number($('#uv-gst').value) || 2;
+  const roomsNeeded = Math.ceil(gstN / 2);
+
+  q.rooms.forEach((roomSrc) => {
+    const room = Object.assign({}, roomSrc);
+    let multiNote = null;
+    if (roomsNeeded > 1) {
+      if (room.type === 'villa') {
+        room.available = room.available && room.free >= roomsNeeded;
+        if (room.nightly) room.nightly *= roomsNeeded;
+        if (room.total) room.total *= roomsNeeded;
+      } else {
+        room.available = false;
+        multiNote = t('p_sleeps2') || 'Sleeps 2 — for your party, book neighbouring Mini Villas.';
+      }
+    }
     const card = document.createElement('div');
     card.className = 'uv-roomcard' + (room.available ? '' : ' uv-rc-soldout');
     // identical component to every other gallery on the site: same arrows,
@@ -541,12 +557,22 @@ function bkRenderResults(q) {
     const body = document.createElement('div');
     body.className = 'uv-rc-body';
     const h = document.createElement('h3');
-    h.textContent = t(bkTypeKey(room.type)) || room.name;
+    h.textContent = (roomsNeeded > 1 && room.type === 'villa' ? roomsNeeded + ' × ' : '')
+      + (t(bkTypeKey(room.type)) || room.name);
     body.appendChild(h);
     const facts = document.createElement('p');
     facts.className = 'uv-rc-facts';
-    facts.textContent = (ROOM_SIZE[room.type] || '') + ' · 2 ' + (t('p_gst') || 'Guests');
+    facts.textContent = (roomsNeeded > 1 && room.type === 'villa')
+      ? (ROOM_SIZE[room.type] || '') + ' · ' + roomsNeeded + ' × 2 ' + (t('p_gst') || 'Guests')
+      : (ROOM_SIZE[room.type] || '') + ' · 2 ' + (t('p_gst') || 'Guests');
     body.appendChild(facts);
+    if (multiNote) {
+      const mn = document.createElement('p');
+      mn.className = 'uv-rc-facts';
+      mn.style.color = '#E8B4A8';
+      mn.textContent = multiNote;
+      body.appendChild(mn);
+    }
     const row = document.createElement('div');
     row.className = 'uv-rc-row';
     const price = document.createElement('div');

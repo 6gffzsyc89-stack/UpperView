@@ -142,8 +142,11 @@ function b24_create_booking(array $b): ?int {
     $notes[] = 'OTA CALENDARS: CLOSED automatically by this Beds24 booking '
              . '(availability reduced on Booking.com / Agoda / Airbnb / all channels)';
     if (!empty($b['cot'])) $notes[] = 'BABY COT requested (free option, suites only)';
+    $qty = max(1, (int)($b['rooms'] ?? 1));
+    if ($qty > 1) $notes[] = "MULTI-UNIT: $qty mini villas booked together (party of " . (int)$b['guests'] . ')';
     $payload = [[
         'roomId' => $roomId,
+        'roomQty' => $qty,
         'status' => $b['status'] === 'confirmed' ? 'confirmed' : 'new',
         'arrival' => $b['checkin'],
         'departure' => $b['checkout'],

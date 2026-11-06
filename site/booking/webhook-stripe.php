@@ -64,6 +64,7 @@ $b24id = b24_create_booking(array(
     'amount' => (int) $b['amount'],
     'provider' => 'Stripe',
     'cot' => (int) ($b['cot'] ?? 0),
+    'rooms' => (int) ($b['rooms'] ?? 1),
 ));
 uv_meta_set('st_paid_' . $code, (string) time());
 

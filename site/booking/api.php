@@ -86,9 +86,14 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $type = $in['type'] ?? '';
     $ci = $in['checkin'] ?? ''; $co = $in['checkout'] ?? '';
     // Hard occupancy cap: every suite and mini villa sleeps a maximum of 2.
-    $guests = (int)($in['guests'] ?? 2);
-    if ($guests > 2) uv_json(['error' => 'max 2 guests per suite or villa'], 400);
-    $guests = max(1, $guests);
+    // Larger parties book MULTIPLE mini villas (W/Nobu-style multi-room):
+    // rooms = ceil(guests / 2), villas only (suites exist once each).
+    $guests = max(1, (int)($in['guests'] ?? 2));
+    if ($guests > 6) uv_json(['error' => 'max 6 guests (3 mini villas) — contact us for larger groups'], 400);
+    $rooms = intdiv($guests + 1, 2);
+    if ($rooms > 1 && ($in['type'] ?? '') !== 'villa') {
+        uv_json(['error' => 'suites sleep a maximum of 2 — for more guests book mini villas'], 400);
+    }
     // Baby cot: optional, offered on the three suites only (not the mini villa).
     $cot = (!empty($in['cot']) && $type !== 'villa') ? 1 : 0;
     $name = trim((string)($in['name'] ?? ''));
@@ -102,7 +107,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $nights = (int)((strtotime($co) - strtotime($ci)) / 86400);
     if ($nights > 30) uv_json(['error' => 'too long'], 400);
     foreach (uv_avail($type, $ci, $co) as $d => $free) {
-        if ($free < 1) uv_json(['error' => 'no availability', 'date' => $d], 409);
+        if ($free < $rooms) uv_json(['error' => 'no availability', 'date' => $d], 409);
     }
 
     /* Nobu-style flow: guest details + card are collected on the checkout
@@ -110,15 +115,15 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
        Applies to whichever payment provider is active (Stripe or Airwallex). */
     if (in_array(uv_pay_provider(), ['stripe', 'airwallex'], true)) {
         $q = uv_live_total($type, $ci, $co);
-        if (($q['free'] ?? 0) < 1) uv_json(['error' => 'no availability'], 409);
+        if (($q['free'] ?? 0) < $rooms) uv_json(['error' => 'no availability'], 409);
         if (empty($q['total'])) uv_json(['error' => 'no rate for these dates'], 409);
-        $amount = (int) $q['total'];
+        $amount = (int) $q['total'] * $rooms;
         $code = uv_booking_code();
         $now = gmdate('Y-m-d H:i:s');
         uv_db()->prepare('INSERT INTO bookings
-            (code,type,checkin,checkout,guests,cot,name,email,phone,status,source,amount,currency,created_at,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-            ->execute([$code, $type, $ci, $co, $guests, $cot, $name, $email, $phone,
+            (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            ->execute([$code, $type, $ci, $co, $guests, $cot, $rooms, $name, $email, $phone,
                        'pending', 'direct', $amount, $cfg['currency'], $now, $now]);
         $payUrl = rtrim($cfg['site_url'], '/') . '/booking/pay.php?code='
                 . rawurlencode($code) . '&sig=' . uv_pay_sig($code);
@@ -135,13 +140,13 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $code = uv_booking_code();
     $now = gmdate('Y-m-d H:i:s');
     uv_db()->prepare('INSERT INTO bookings
-        (code,type,checkin,checkout,guests,cot,name,email,phone,status,source,amount,currency,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
-        ->execute([$code, $type, $ci, $co, $guests, $cot, $name, $email, $phone,
+        (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        ->execute([$code, $type, $ci, $co, $guests, $cot, $rooms, $name, $email, $phone,
                    $paid ? 'pending' : 'inquiry', 'direct',
                    $amount, $cfg['currency'], $now, $now]);
 
-    $summary = uv_type_name($type)
+    $summary = ($rooms > 1 ? $rooms . ' × ' : '') . uv_type_name($type)
         . " | $ci -> $co ($nights nights) | $guests guests" . ($cot ? ' + baby cot' : '')
         . " | $name | $email | $phone | code $code";
 

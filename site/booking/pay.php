@@ -236,7 +236,7 @@ input:focus,select:focus{outline:1px solid var(--green)}
       <div class="sumcard">
         <img src="<?php echo h($img); ?>" alt="<?php echo h($type); ?>">
         <div class="pad">
-          <b><?php echo h($type); ?></b>
+          <b><?php $roomsN = max(1, (int)($b['rooms'] ?? 1)); echo ($roomsN > 1 ? $roomsN . ' × ' : '') . h($type); ?></b>
           <div class="mut">Direct Rate · Room Only</div>
           <div class="mut"><?php echo h($ciL); ?> – <?php echo h($coL); ?> · <?php echo $nights; ?> night<?php echo $nights > 1 ? 's' : ''; ?> stay</div>
           <div class="mut"><?php echo (int) $b['guests']; ?> Adult<?php echo (int)$b['guests'] > 1 ? 's' : ''; ?><?php echo !empty($b['cot']) ? ' · Baby cot' : ''; ?></div>
@@ -246,7 +246,7 @@ input:focus,select:focus{outline:1px solid var(--green)}
         <h2>Price Details</h2>
         <div class="rows">
           <div class="r">
-            <div class="l"><?php echo h($type); ?><small><?php echo uv_fmt_thb($nightly); ?> per night × <?php echo $nights; ?></small></div>
+            <div class="l"><?php echo ($roomsN > 1 ? $roomsN . ' × ' : '') . h($type); ?><small><?php echo uv_fmt_thb($nightly); ?> per night × <?php echo $nights; ?><?php echo $roomsN > 1 ? ' (' . $roomsN . ' villas)' : ''; ?></small></div>
             <div><?php echo uv_fmt_thb($total); ?></div>
           </div>
           <div class="r"><div class="l" style="color:var(--mut);font-size:12.5px">Taxes and fees</div>

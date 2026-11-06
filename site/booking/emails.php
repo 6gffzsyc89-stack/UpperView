@@ -39,6 +39,8 @@ function uv_fmt_date_long(string $d): string { return date('l, F j, Y', strtotim
 function uv_confirmation_email_html(array $b): string {
     $cfg   = uv_config();
     $type  = uv_type_name($b['type']);
+    $roomsN = max(1, (int)($b['rooms'] ?? 1));
+    if ($roomsN > 1) $type = $roomsN . ' × ' . $type;
     $nights = (int)((strtotime($b['checkout']) - strtotime($b['checkin'])) / 86400);
     $total  = (int) $b['amount'];
     $nightly = $nights > 0 ? (int) round($total / $nights) : $total;
@@ -148,7 +150,7 @@ function uv_send_confirmation(array $b, string $provider = 'card'): void {
         'Upper View Samui — reservation confirmed (' . $b['code'] . ')', $html);
     $nights = (int)((strtotime($b['checkout']) - strtotime($b['checkin'])) / 86400);
     uv_notify_all('Upper View: PAID booking ' . $b['code'],
-        uv_type_name($b['type']) . " | {$b['checkin']} -> {$b['checkout']} ($nights nights)"
+        ((int)($b['rooms'] ?? 1) > 1 ? (int)$b['rooms'] . ' × ' : '') . uv_type_name($b['type']) . " | {$b['checkin']} -> {$b['checkout']} ($nights nights)"
         . " | {$b['guests']} guests" . (!empty($b['cot']) ? ' + baby cot' : '')
         . " | {$b['name']} | {$b['email']} | {$b['phone']}"
         . ' | ' . uv_fmt_thb((int) $b['amount']) . " THB PAID via $provider | code {$b['code']}"

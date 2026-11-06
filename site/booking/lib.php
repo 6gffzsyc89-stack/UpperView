@@ -62,6 +62,9 @@ function uv_db(): PDO {
         // lazy migration: baby-cot flag on bookings (0/1)
         try { $db->exec('ALTER TABLE bookings ADD COLUMN cot INTEGER NOT NULL DEFAULT 0'); }
         catch (PDOException $e) { /* column already exists */ }
+        // lazy migration: number of units booked (multi-villa parties)
+        try { $db->exec('ALTER TABLE bookings ADD COLUMN rooms INTEGER NOT NULL DEFAULT 1'); }
+        catch (PDOException $e) { /* column already exists */ }
     }
     return $db;
 }
