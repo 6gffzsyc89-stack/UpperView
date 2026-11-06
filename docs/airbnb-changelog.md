@@ -18,7 +18,13 @@ listings were created:
 4. Sonata Villa #3 New Designer Luxury 3BR Pool Villa — "Sonata Villa Three"
 5. Upper View Brand New Mini Villa#2 Stunning Seaview — "Upper View Villa 2"
 6. Upper View Brand New Mini Villa#3 Stunning Seaview — "Upper View Villa 3"
-7. Upper View Brand New Mini Villa#4 Stunning Seaview — "Upper View Villa 4" (TEMPLATE, id 1810117481404650858 — NEVER modified)
+7. Upper View Brand New Mini Villa#4 Stunning Seaview — "Upper View Villa 4" (TEMPLATE — NEVER modified)
+
+CORRECTION 2026-11-06: id 1810117481404650858 is VILLA #2 (verified in its
+listing editor: title "Upper View Brand New Mini Villa#2"), not the template.
+Template #4's real listing id still to be captured. Villa 2 editor-verified
+settings: ฿4,875/night (OTA low rate), max 2 guests, House, 2–365 nights,
+auto-approve, 40% monthly discount.
 8. Villa Akasha Massive Designer Luxury 3BR Pool w/BF — "Akasha 3-bedroom"
 
 Upper View villas 1, 5, 6, 7, 8: DO NOT EXIST yet (to be created by

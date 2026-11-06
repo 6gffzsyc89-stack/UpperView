@@ -87,7 +87,23 @@ function b24_http(string $method, string $path, ?array $body, array $headers) {
 function uv_avail(string $type, string $from, string $to): array {
     if (b24_enabled()) {
         $a = b24_availability($type, $from, $to);
-        if ($a !== null) return $a;
+        if ($a !== null) {
+            /* TRANSITION MODE ("both"): while the OTA channels are not yet
+               connected in Beds24, Beds24 is blind to OTA bookings. If OTA
+               iCal feeds are configured for this type, intersect: a date is
+               only as free as the most pessimistic source says. Remove the
+               feeds from config once Beds24 channel sync is live+verified. */
+            $hasFeeds = false;
+            foreach ((uv_config()['ical_feeds'] ?? []) as $f) {
+                if (($f['type'] ?? '') === $type && !empty($f['url'])) { $hasFeeds = true; break; }
+            }
+            if ($hasFeeds) {
+                uv_refresh_ota();
+                $local = uv_availability($type, $from, $to);
+                foreach ($a as $d => $n) $a[$d] = min($n, $local[$d] ?? $n);
+            }
+            return $a;
+        }
         uv_notify('Upper View: Beds24 availability FAILED, using local fallback',
             'Check /booking/beds24-setup.php status. Last error: ' . (uv_meta_get('b24_last_error') ?? '?'));
     }
