@@ -106,3 +106,14 @@ Beds24 roomQty=N + MULTI-UNIT note); suites stay capped at 2 with a
 2027 OTA bookings (Suite 1 + villas 2/3/4) manually blocked in Beds24
 (95788234/35/37/38) pending channel connections — Beds24↔OTA channel
 wiring is the known open gap (Beds24 holds no OTA bookings yet).
+
+## v2.5 — 2026-11-06 · Live OTA availability via Airbnb iCal union
+Availability transition mode live: uv_avail() intersects Beds24 with the
+local iCal engine when feeds are configured (most pessimistic source wins).
+Airbnb export links harvested for villas 2/3/4 and wired into the server
+config (tokened URLs live only in data/config.php, never in git); 14 real
+busy ranges imported, website villa counts verified against them. Jan 1–4
+manual blocks kept deliberately (suites/Booking.com/Trip bookings are not
+feed-visible yet; over-blocking is safe, under-blocking overbooks). Remove
+feeds + manual blocks once Beds24 channel sync is live and verified.
+Technique credit: Sonata session (12-feed union).

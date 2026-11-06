@@ -22,7 +22,7 @@ listings were created:
 
 CORRECTION 2026-11-06: id 1810117481404650858 is VILLA #2 (verified in its
 listing editor: title "Upper View Brand New Mini Villa#2"), not the template.
-Template #4's real listing id still to be captured. Villa 2 editor-verified
+Template #4's real listing id: 1785378677836491379 (captured 2026-11-06). Villa 3: 1808445310818586358. Villa 2: 1810117481404650858. Villa 2 editor-verified
 settings: ฿4,875/night (OTA low rate), max 2 guests, House, 2–365 nights,
 auto-approve, 40% monthly discount.
 8. Villa Akasha Massive Designer Luxury 3BR Pool w/BF — "Akasha 3-bedroom"
