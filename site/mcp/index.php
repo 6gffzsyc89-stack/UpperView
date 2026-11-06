@@ -109,7 +109,11 @@ if ($rpc === 'initialize') {
             . 'send_email sends as booking@upperviewsamui.com.',
     ]);
 }
-if ($rpc === 'ping') mcp_reply($id, (object)[]);
+if ($rpc === 'ping') {
+    header('Content-Type: application/json');
+    echo json_encode(['jsonrpc' => '2.0', 'id' => $id, 'result' => (object)[]]);
+    exit;
+}
 
 /* ---------- tool definitions ---------- */
 $READ_TOOLS = [
