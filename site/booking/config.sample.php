@@ -16,6 +16,7 @@ return [
 
     // Nightly rates in whole THB. NOT live until rates_confirmed is true.
     'currency' => 'THB',
+    'direct_multiplier' => 0.72,  // website = Beds24 price1 (OTA +25%) x 0.72 = base -10% (rates doc 2026-11-02)
     'rates' => ['villa' => 4900, 'studio' => 3200],   // PLACEHOLDER — Andy must confirm
     'rates_confirmed' => false,
 
