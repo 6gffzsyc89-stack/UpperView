@@ -25,7 +25,7 @@ if ($action === 'availability') {
         'rates_confirmed' => (bool)($cfg['rates_confirmed'] ?? false),
         'nightly' => ($cfg['rates_confirmed'] ?? false) ? $cfg['rates'][$type] : null,
         'currency' => $cfg['currency'],
-        'payment' => uv_payment_provider(),
+        'payment' => uv_pay_provider(),   // meta-aware (admin-saved key), not just config
     ]);
 }
 
