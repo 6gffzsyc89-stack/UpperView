@@ -125,3 +125,14 @@ numAvail writes to missing rows no-op with success). Upper View's rooms
 are seeded until 2028-11-01 — re-extend from the panel before then
 (365-day max per write). Billing corrected: pay-as-you-go daily fees,
 no subscription to activate; channel sync unlocks at trial end.
+
+## v2.7 — 2026-11-07 · Unified cancellation policy (OTA "Firm" terms)
+Three divergent policies were in circulation (checkout: free until 1 day
+before; email: 14d/50%/7d-100%; Airbnb: Firm). Unified on the confirmed
+Airbnb-set Firm terms (full refund >=30d before check-in, 50% >=7d, none
+after, 24h free-cancel grace for bookings made >7d out; 28+ night stays
+stricter). Checkout now shows a bold stay-specific summary with computed
+dates + link; new standalone /policies.html carries the full policy
+(index.html untouched); confirmation email matches and links it.
+Booking.com's own wording still unverified (extranet behind WAF) — to be
+reconciled when reachable.

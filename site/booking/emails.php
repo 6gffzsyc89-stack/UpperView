@@ -128,9 +128,11 @@ function uv_confirmation_email_html(array $b): string {
     <p style="font-size:13px;line-height:1.7;color:' . $muted . ';">Questions or special requests? Reply to this email or write to
     <a href="mailto:booking@upperviewsamui.com" style="color:' . $green . ';">booking@upperviewsamui.com</a>
     with your confirmation number.</p>
-    <p style="font-size:12px;line-height:1.6;color:' . $muted . ';">Cancellation policy: free cancellation until 14 days before
-    check-in. Cancellations within 14 days of check-in are charged 50% of the stay; within 7 days, or in case of
-    no-show, the full amount is charged.</p>
+    <p style="font-size:12px;line-height:1.6;color:' . $muted . ';"><b style="color:' . $ink . ';">Cancellation policy:</b>
+    free cancellation until 30 days before check-in; 50% refund until 7 days before check-in;
+    non-refundable within 7 days of check-in or in case of no-show. Bookings made more than 7 days
+    before check-in may be cancelled free within 24 hours of booking.
+    <a href="' . $base . '/policies.html" style="color:' . $green . ';">Full cancellation &amp; refund policy</a>.</p>
   </td></tr>
   <tr><td style="background:' . $green . ';border-top:1px solid #68795f;padding:44px 40px 40px;text-align:center;">
     <img src="' . $base . '/brand/logo-lockup-cream.png" alt="Upper View &mdash; Boutique Hotel, Koh Samui"

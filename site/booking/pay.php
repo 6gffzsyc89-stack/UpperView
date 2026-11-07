@@ -87,7 +87,11 @@ $total  = (int) $b['amount'];
 $nightly = $nights > 0 ? (int) round($total / $nights) : $total;
 $ciL = date('D, M j, Y', strtotime($b['checkin']));
 $coL = date('D, M j, Y', strtotime($b['checkout']));
-$cancelBy = date('M j, Y', strtotime($b['checkin'] . ' -1 day'));
+/* Cancellation policy (unified 2026-11-07, mirrors the OTA "Firm" terms):
+   full refund >=30 days before check-in, 50% >=7 days, none after. */
+$polFree = strtotime($b['checkin'] . ' -30 days');
+$polHalf = strtotime($b['checkin'] . ' -7 days');
+$polNow  = time();
 $roomImgs = array(
     'villa'    => 'upper-view-106.jpg',
     'superior' => 'upper-view-043.jpg',
@@ -203,10 +207,20 @@ input:focus,select:focus{outline:1px solid var(--green)}
           <h2>Policies</h2>
           <div class="pol">
             <b>Check-in</b> after 3:00 PM &nbsp;·&nbsp; <b>Check-out</b> before 12:00 PM<br><br>
-            <b><?php echo strtoupper(h($type)); ?></b><br>
-            Reservation confirmation requires a valid credit card. Cancel for free until 3:00 PM (hotel local time)
-            on <?php echo h($cancelBy); ?> — one day before arrival. Cancellations after that time are charged one
-            night (<?php echo uv_fmt_thb($nightly); ?>).
+            <b>Cancellation policy</b><br>
+            <?php if ($polNow < $polFree): ?>
+            <b>Free cancellation</b> until <?php echo date('M j, Y', $polFree); ?> (30 days before check-in).<br>
+            <b>50% refund</b> for cancellations until <?php echo date('M j, Y', $polHalf); ?> (7 days before check-in).<br>
+            <b>Non-refundable</b> after <?php echo date('M j, Y', $polHalf); ?> and in case of no-show.
+            <?php elseif ($polNow < $polHalf): ?>
+            <b>50% refund</b> for cancellations until <?php echo date('M j, Y', $polHalf); ?> (7 days before check-in).<br>
+            <b>Non-refundable</b> after <?php echo date('M j, Y', $polHalf); ?> and in case of no-show.
+            <?php else: ?>
+            This reservation is <b>non-refundable</b> (check-in is less than 7 days away).
+            <?php endif; ?>
+            <br>Bookings made more than 7 days before check-in may be cancelled <b>free of charge within
+            24 hours of booking</b>.<br>
+            <a href="/policies.html" target="_blank" rel="noopener" style="color:var(--green);font-weight:600">Read the full cancellation &amp; refund policy</a>
           </div>
         </div>
         <div class="sec ack">
