@@ -156,3 +156,22 @@ session was not running). Found while comparing the two checkouts.
 - No real charge was made to test this. Rates are still unconfirmed, so no card
   is charged until Andy confirms them. Check the first live payment amount in
   the Stripe dashboard.
+
+## v2.9 — 2026-11-08 · Admin payments panel (from the Sonata session)
+Made from the Sonata Samui session on Andy's authority ("same change should be reflected on
+the Upper View website"). Andy saved a Stripe key on Sonata's admin and nothing showed it had
+worked; Upper View's admin had the same weakness.
+- `booking/admin.php`: a green/amber bar at the top, "Online card payments: ON/OFF"; the Payments
+  section shows badges (key saved with its last 4 characters, Stripe accepts the key — checked
+  live and read-only, re-checked hourly — provider in effect, card payments ON/OFF) and a
+  "Test Stripe connection" button (lists one Checkout Session; charges nothing). Every form now
+  redirects back to its own section with a green/red message (post / redirect / get), so a
+  refresh never re-submits.
+- Verified live: Upper View's saved restricted key (ending …gqR8) is accepted by Stripe; Stripe
+  is the provider in effect; card payments ON.
+- Deployed over SSH (only this file). The live file matched the repo before upload; backup
+  `domains/upperviewsamui.com/data/admin.php.bak-2026-11-08`.
+- Also added: `docs/promo-codes-from-sonata_v1.0_2026-11-08.md` (how Sonata built promo codes
+  and the promotion bar, for Upper View to match) and BEDS24-MCP-README §6a (how the WhatsApp
+  agent reads PROMO / SERVICE TO ARRANGE lines). No promo code is live on Upper View yet.
+

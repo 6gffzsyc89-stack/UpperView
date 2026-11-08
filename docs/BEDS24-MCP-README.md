@@ -171,6 +171,21 @@ How to interpret any booking:
   Unpaid requests are visible via `list_bookings` / `admin-bookings`
   (status `inquiry`), not in Beds24.
 
+### 6a. Promo codes and services (Sonata Samui bookings, from 2026-11-08)
+Sonata website bookings (`referer = sonatasamui.com`, `apiReference = SN…`, property 366403)
+can carry a promo code set on Sonata's own admin page. When they do, the Beds24 booking has:
+```
+PROMO: TRANSFER26 — Included: Airport transfer on arrival
+SERVICE TO ARRANGE: Airport transfer on arrival          ← only for service promos
+PROMO: SUMMER10 — 10% off the room rate (−4,436 THB on this villa)   ← discount promos
+```
+plus an info item `PROMO` with the same text, the guest's own message in `comments`, and
+invoice lines: the villa at the direct rate, a "Promo …" line (negative amount for a discount,
+0 for an included service) and the payment when paid. Use `list_bookings` (notes / infoItems)
+and `get_invoices` to answer "which promo was used and what does the guest get". Upper View
+bookings will use the same lines once Upper View adds promo codes
+(see `docs/promo-codes-from-sonata_v1.0_2026-11-08.md`).
+
 ## 7. Ground rules for automated callers (Yomied included)
 
 - Beds24 is master: never write availability anywhere else; `block_dates`

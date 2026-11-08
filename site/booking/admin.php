@@ -1,8 +1,13 @@
 <?php
-/** Minimal admin: list bookings, block dates, cancel. Key-protected. */
+/** Minimal admin: list bookings, block dates, cancel. Key-protected.
+ *  Payments panel (2026-11-08, from the Sonata session on Andy's authority): clear status
+ *  badges, a read-only "Test Stripe connection", and every save returns to the section it
+ *  came from with the message shown there (post / redirect / get). */
 declare(strict_types=1);
 require __DIR__ . '/lib.php';
 require __DIR__ . '/beds24.php';
+require_once __DIR__ . '/stripe.php';
+if (is_file(__DIR__ . '/airwallex.php')) require_once __DIR__ . '/airwallex.php';
 
 $cfg = uv_config();
 $k2 = (string) uv_meta_get('admin_key2');
@@ -12,7 +17,17 @@ if (!hash_equals($cfg['admin_key'], $kin) && ($k2 === '' || !hash_equals($k2, $k
 }
 $k = htmlspecialchars($kin);
 $db = uv_db();
-$msg = '';
+$msg = ''; $ok = true; $anchor = '';
+$self = '?k=' . rawurlencode($kin);
+
+/** Live check of the saved Stripe key: lists one Checkout Session (read-only, charges nothing). */
+function uv_admin_stripe_check(): array {
+    if (!st_enabled()) { $r = ['ok' => false, 'at' => time(), 'why' => 'no key saved']; uv_meta_set('stripe_check', json_encode($r)); return $r; }
+    list($http, $data) = st_http('GET', '/v1/checkout/sessions?limit=1');
+    $r = ['ok' => $http === 200, 'at' => time(), 'why' => $http === 200 ? '' : ('HTTP ' . $http . ' ' . ($data['error']['message'] ?? ''))];
+    uv_meta_set('stripe_check', json_encode($r));
+    return $r;
+}
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $act = $_POST['act'] ?? '';
@@ -77,16 +92,40 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         if (preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$/', $sk)) {
             uv_meta_set('stripe_secret_key', $sk);
             uv_meta_set('payment_provider', 'stripe');
-            $msg = 'Stripe key saved (…' . htmlspecialchars(substr($sk, -4)) . '). Payment provider set to Stripe.';
+            $chk = uv_admin_stripe_check(); $ok = $chk['ok'];
+            $msg = 'Stripe key saved (ending …' . htmlspecialchars(substr($sk, -4)) . ') and Stripe is the payment provider. '
+                 . ($chk['ok'] ? 'Stripe accepted the key.' : 'But Stripe did not accept it: ' . htmlspecialchars($chk['why']) . ' — check the key\'s permissions (Checkout Sessions: Write).');
         } else {
-            $msg = 'That does not look like a Stripe secret/restricted key (sk_… or rk_…). Nothing saved.';
+            $msg = 'That does not look like a Stripe secret/restricted key (sk_… or rk_…). Nothing saved.'; $ok = false;
         }
+        $anchor = 'payments';
+    }
+    if ($act === 'stripetest') {
+        $chk = uv_admin_stripe_check(); $ok = $chk['ok']; $anchor = 'payments';
+        $msg = $chk['ok'] ? 'Stripe connection OK — the saved key works.' : 'Stripe connection FAILED: ' . htmlspecialchars($chk['why']);
     }
     if ($act === 'provider' && in_array($_POST['provider'] ?? '', ['stripe', 'airwallex'], true)) {
-        uv_meta_set('payment_provider', $_POST['provider']);
-        $msg = 'Payment provider set to ' . htmlspecialchars($_POST['provider']) . '.';
+        uv_meta_set('payment_provider', $_POST['provider']); $anchor = 'payments';
+        $msg = 'Payment provider set to ' . htmlspecialchars($_POST['provider']) . (uv_pay_provider() !== $_POST['provider'] ? ' — but it is not in effect (missing credentials or a config-file override).' : '.');
     }
+    if ($msg === '') $msg = 'Nothing changed.';
+    uv_meta_set('admin_flash', json_encode(['msg' => $msg, 'ok' => $ok, 'anchor' => $anchor]));
+    header('Location: ' . $self . ($anchor ? '#' . $anchor : ''), true, 303);
+    exit;
 }
+$flash = json_decode((string) uv_meta_get('admin_flash'), true);
+if ($flash) uv_meta_set('admin_flash', '');
+function uv_flash_box($where) {
+    global $flash;
+    if (!is_array($flash) || empty($flash['msg']) || ($flash['anchor'] ?? '') !== $where) return '';
+    return '<p class="msg ' . (!empty($flash['ok']) ? 'ok' : 'bad') . '">' . $flash['msg'] . '</p>';
+}
+function uv_badge($on, $yes, $no) { return '<span class="badge ' . ($on ? 'g' : 'a') . '">' . ($on ? $yes : $no) . '</span>'; }
+$pskSet = uv_meta_get('stripe_secret_key') ?: (uv_config()['stripe']['secret_key'] ?? '');
+$effProv = uv_pay_provider();
+$payOn = in_array($effProv, ['stripe', 'airwallex'], true);
+$stChk = json_decode((string) uv_meta_get('stripe_check'), true);
+if ($pskSet && (!$stChk || time() - (int)$stChk['at'] > 3600)) $stChk = uv_admin_stripe_check(); // re-check hourly on page load
 
 $rows = $db->query("SELECT * FROM bookings WHERE status != 'cancelled'
                     ORDER BY checkin ASC LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
@@ -118,10 +157,18 @@ th,td{border:1px solid #ddd;padding:6px 10px;text-align:left;font-size:13px}
 th{background:#4F6446;color:#fff;font-weight:500} .s-confirmed{color:#2c7a2c;font-weight:600}
 .s-inquiry{color:#b8860b;font-weight:600} .s-pending{color:#888} .s-blocked{color:#a33}
 form.inline{display:inline} input,select,button{font:inherit;padding:4px 8px;margin:2px}
-button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:#e7f0e7;padding:8px 12px;margin:0 0 16px}
+button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10px 14px;margin:0 0 14px;font-weight:500}
+.msg.ok{background:#dff0df;color:#1d5e1d;border:1px solid #9cc89c}.msg.bad{background:#f8e1dc;color:#8b2d14;border:1px solid #e0a493}
+.badge{display:inline-block;padding:3px 10px;border-radius:999px;font-size:12px;font-weight:600;margin:2px 4px 2px 0}
+.badge.g{background:#dff0df;color:#1d5e1d}.badge.a{background:#fbecd2;color:#8a5a00}
+.paystate{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin:0 0 14px;font-size:15px}
+.paystate.on{background:#1d5e1d;color:#fff}.paystate.off{background:#fbecd2;color:#5a3b00}
 </style>
 <h1>Upper View — bookings</h1>
-<?php if ($msg): ?><p class="msg"><?= $msg ?></p><?php endif; ?>
+<?= uv_flash_box('') ?>
+<div class="paystate <?= $payOn ? 'on' : 'off' ?>"><b>Online card payments: <?= $payOn ? 'ON' : 'OFF' ?></b>
+<span><?= $payOn ? 'Guests pay by card (' . htmlspecialchars($effProv) . ') on the checkout page.' : 'No payment provider in effect — guests send requests.' ?></span>
+<a href="#payments" style="color:inherit;text-decoration:underline">Payments settings</a></div>
 <p>OTA calendars last pulled: <?= $fetched ? gmdate('Y-m-d H:i', (int)$fetched) . ' UTC' : 'never' ?>
 <form class="inline" method="post"><input type="hidden" name="act" value="refresh"><button>Pull now</button></form></p>
 
@@ -142,13 +189,18 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{background:
 </td></tr>
 <?php endforeach; ?></table>
 
-<h2>Payments</h2>
-<?php $pskSet = uv_meta_get('stripe_secret_key'); $pprov = uv_meta_get('payment_provider'); ?>
-<p>Active provider: <b><?= htmlspecialchars($pprov ?: 'auto') ?></b> ·
-Stripe key: <b><?= $pskSet ? 'saved (…' . htmlspecialchars(substr($pskSet, -4)) . ')' : 'NOT SET' ?></b></p>
+<h2 id="payments">Payments</h2>
+<?= uv_flash_box('payments') ?>
+<p>
+<?= uv_badge((bool)$pskSet, 'Stripe key saved (ending …' . htmlspecialchars(substr((string)$pskSet, -4)) . ')', 'Stripe key not saved') ?>
+<?= $pskSet ? uv_badge(!empty($stChk['ok']), 'Stripe accepts the key · checked ' . htmlspecialchars(gmdate('d M H:i', (int)($stChk['at'] ?? 0))) . ' UTC', 'Stripe rejected the key: ' . htmlspecialchars($stChk['why'] ?? '')) : '' ?>
+<?= uv_badge($payOn, 'Provider in effect: ' . htmlspecialchars($effProv), 'No provider in effect') ?>
+<?= uv_badge($payOn, 'Card payments ON', 'Card payments OFF') ?>
+</p>
 <form method="post"><input type="hidden" name="act" value="stripekey">
 <input name="sk" type="password" placeholder="Paste Stripe secret key (sk_live_… or rk_live_…)" style="width:380px" autocomplete="off">
 <button>Save Stripe key</button></form>
+<?php if ($pskSet): ?><form class="inline" method="post"><input type="hidden" name="act" value="stripetest"><button style="background:#3D4C36">Test Stripe connection</button></form><?php endif; ?>
 <form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="stripe"><button>Use Stripe</button></form>
 <form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="airwallex"><button>Use Airwallex</button></form>
 
