@@ -136,3 +136,23 @@ dates + link; new standalone /policies.html carries the full policy
 (index.html untouched); confirmation email matches and links it.
 Booking.com's own wording still unverified (extranet behind WAF) — to be
 reconciled when reachable.
+
+## v2.8 — 2026-11-08 · Card amounts fixed (Stripe ×100, Airwallex pass-through)
+Made from the Sonata Samui session, on Andy's explicit authority (the Upper View
+session was not running). Found while comparing the two checkouts.
+- **Problem:** bookings store the price in WHOLE BAHT. `api.php` `book`
+  stores the quote total, e.g. 14800, and the emails format it as baht. But
+  `stripe.php` passed that number as Stripe `unit_amount`, which for THB is in
+  satang. `airwallex.php` divided it by 100 before sending major units. Either
+  provider would have charged 1/100 of the price, e.g. ฿148 for a ฿14,800 stay.
+- **Fix:** `stripe.php` sends `amount × 100`; `airwallex.php` sends `amount`
+  unchanged. The header comment that claimed bookings store satang is
+  corrected. The legacy `uv_checkout_create` path in `api.php`/`lib.php` already
+  multiplied by 100 and is unchanged.
+- **Deployed** over SSH to `domains/upperviewsamui.com/public_html/booking/`;
+  live files matched the repo before upload. Backups are
+  `domains/upperviewsamui.com/data/{stripe,airwallex}.php.bak-2026-11-08`.
+  Site and booking API verified responding afterwards.
+- No real charge was made to test this. Rates are still unconfirmed, so no card
+  is charged until Andy confirms them. Check the first live payment amount in
+  the Stripe dashboard.

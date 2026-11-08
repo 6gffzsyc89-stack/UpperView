@@ -77,7 +77,9 @@ function aw_create_intent($booking) {
     if (!$tok) return null;
     $cfg = uv_config();
     $site = rtrim($cfg['site_url'], '/');
-    $amountMajor = round($booking['amount'] / 100, 2);
+    // Bookings store WHOLE BAHT and Airwallex takes major units, so pass it through.
+    // (Fixed 2026-11-08: dividing by 100 would have charged 1/100 of the price.)
+    $amountMajor = round((float) $booking['amount'], 2);
     $payload = array(
         'request_id'        => 'uv-' . $booking['code'] . '-' . substr(md5(uniqid('', true)), 0, 8),
         'amount'            => $amountMajor,

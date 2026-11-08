@@ -10,8 +10,10 @@
  * or in the meta table key 'stripe_secret_key' (set via admin.php by the
  * owner pasting it directly — Claude never handles the key value).
  *
- * Amounts: bookings store minor units (satang); Stripe THB also uses
- * minor units, so amounts pass through unchanged.
+ * Amounts: bookings store WHOLE BAHT (the quote total, e.g. 14800); Stripe
+ * THB unit_amount is in satang, so the amount is multiplied by 100 here.
+ * (Fixed 2026-11-08: before, whole baht went straight through and Stripe
+ * would have charged 1/100 of the price.)
  */
 
 require_once __DIR__ . '/lib.php';
@@ -89,7 +91,7 @@ function st_checkout_for($booking) {
         'cancel_url'  => $ret,
         'line_items[0][quantity]' => 1,
         'line_items[0][price_data][currency]' => strtolower($booking['currency']),
-        'line_items[0][price_data][unit_amount]' => (int) $booking['amount'],
+        'line_items[0][price_data][unit_amount]' => (int) $booking['amount'] * 100, // baht -> satang
         'line_items[0][price_data][product_data][name]' =>
             'Upper View Samui — ' . uv_type_name($booking['type']),
         'line_items[0][price_data][product_data][description]' =>
