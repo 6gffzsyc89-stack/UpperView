@@ -33,6 +33,7 @@ function st_enabled() {
 function uv_pay_provider() {
     $cfg = uv_config();
     $p = isset($cfg['payment_provider']) ? $cfg['payment_provider'] : uv_meta_get('payment_provider');
+    if ($p === 'manual') return ''; // admin chose "email requests": no card payments (2026-11-08)
     if ($p === 'stripe' && st_enabled()) return 'stripe';
     if ($p === 'airwallex') return 'airwallex';
     // auto: prefer airwallex when configured, else stripe

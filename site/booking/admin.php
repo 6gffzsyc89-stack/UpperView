@@ -8,8 +8,13 @@ require __DIR__ . '/lib.php';
 require __DIR__ . '/beds24.php';
 require_once __DIR__ . '/stripe.php';
 if (is_file(__DIR__ . '/airwallex.php')) require_once __DIR__ . '/airwallex.php';
+require_once __DIR__ . '/network-local.php'; // admin network shared with Sonata (2026-11-08)
 
 $cfg = uv_config();
+// Arriving from another property's admin: a short-lived signed link opens this admin.
+if (isset($_GET['nt']) && !empty($cfg['admin_key']) && net_admin_token_ok((string) $_GET['nt'])) {
+    header('Location: ?k=' . rawurlencode($cfg['admin_key']), true, 303); exit;
+}
 $k2 = (string) uv_meta_get('admin_key2');
 $kin = (string) ($_GET['k'] ?? '');
 if (!hash_equals($cfg['admin_key'], $kin) && ($k2 === '' || !hash_equals($k2, $kin))) {
@@ -108,6 +113,31 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         uv_meta_set('payment_provider', $_POST['provider']); $anchor = 'payments';
         $msg = 'Payment provider set to ' . htmlspecialchars($_POST['provider']) . (uv_pay_provider() !== $_POST['provider'] ? ' — but it is not in effect (missing credentials or a config-file override).' : '.');
     }
+    /* ---- admin network: payment method and booking emails on this or other properties ---- */
+    $sites = array(net_self()['id'] => null); foreach (net_peers() as $pp) $sites[$pp['id']] = $pp;
+    $names = array(net_self()['id'] => net_self()['name']); foreach (net_peers() as $pp) $names[$pp['id']] = $pp['name'];
+    $run = function ($siteId, $op, $data) use ($sites) {
+        if (!array_key_exists($siteId, $sites)) return array('ok' => false, 'error' => 'unknown property');
+        if ($sites[$siteId] === null) return $op === 'set_provider' ? net_local_set_provider($data['provider']) : net_local_set_emails($data['emails']);
+        return net_call($sites[$siteId], $op, $data);
+    };
+    $report = function ($label, $results) use ($names) {
+        $parts = array(); $all = true;
+        foreach ($results as $id => $r) { $parts[] = htmlspecialchars($names[$id]) . ': ' . (!empty($r['ok']) ? 'done' : 'NOT done — ' . htmlspecialchars($r['error'] ?? 'no answer')); $all = $all && !empty($r['ok']); }
+        return array($label . ' ' . implode(' · ', $parts), $all);
+    };
+    if ($act === 'pm_set' && in_array($_POST['provider'] ?? '', array('stripe', 'airwallex', 'manual'), true)) {
+        $anchor = 'payments'; $target = (string) ($_POST['site'] ?? ''); $res = array();
+        foreach (($target === 'all' ? array_keys($sites) : array($target)) as $id) $res[$id] = $run($id, 'set_provider', array('provider' => $_POST['provider']));
+        list($msg, $ok) = $report('Payment method → ' . array('stripe' => 'Stripe', 'airwallex' => 'Airwallex', 'manual' => 'email requests (no card payments)')[$_POST['provider']] . '.', $res);
+    }
+    if ($act === 'emails_save') {
+        $anchor = 'emails';
+        $list = preg_split('/[\s,;]+/', (string) ($_POST['emails'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
+        $pick = isset($_POST['sites']) && is_array($_POST['sites']) ? array_values(array_intersect(array_map('strval', $_POST['sites']), array_keys($sites))) : array();
+        $res = array(); foreach ($pick as $id) $res[$id] = $run($id, 'set_emails', array('emails' => $list));
+        if (!$res) { $msg = 'Tick at least one property.'; $ok = false; } else list($msg, $ok) = $report('Booking emails saved.', $res);
+    }
     if ($msg === '') $msg = 'Nothing changed.';
     uv_meta_set('admin_flash', json_encode(['msg' => $msg, 'ok' => $ok, 'anchor' => $anchor]));
     header('Location: ' . $self . ($anchor ? '#' . $anchor : ''), true, 303);
@@ -126,6 +156,8 @@ $effProv = uv_pay_provider();
 $payOn = in_array($effProv, ['stripe', 'airwallex'], true);
 $stChk = json_decode((string) uv_meta_get('stripe_check'), true);
 if ($pskSet && (!$stChk || time() - (int)$stChk['at'] > 3600)) $stChk = uv_admin_stripe_check(); // re-check hourly on page load
+$net = net_all_status();          // this property + Sonata, read live
+$adminLinks = net_admin_links();
 
 $rows = $db->query("SELECT * FROM bookings WHERE status != 'cancelled'
                     ORDER BY checkin ASC LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
@@ -163,7 +195,11 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 .badge.g{background:#dff0df;color:#1d5e1d}.badge.a{background:#fbecd2;color:#8a5a00}
 .paystate{display:flex;align-items:center;gap:14px;flex-wrap:wrap;padding:12px 16px;margin:0 0 14px;font-size:15px}
 .paystate.on{background:#1d5e1d;color:#fff}.paystate.off{background:#fbecd2;color:#5a3b00}
+.props{margin:0 0 14px;font-size:13px}.props a{color:#3D4C36;font-weight:600}
+.pm .now{font-size:15px;font-weight:700}.pm button.cur{outline:3px solid #1d5e1d;outline-offset:1px}.pm button[disabled]{opacity:.35;cursor:not-allowed}
+.sites label{margin-right:16px;font-size:13px}
 </style>
+<p class="props">Properties: <b>Upper View (this admin)</b><?php foreach ($adminLinks as $al): ?> · <a href="<?= htmlspecialchars($al['url']) ?>"><?= htmlspecialchars($al['name']) ?> admin →</a><?php endforeach; ?></p>
 <h1>Upper View — bookings</h1>
 <?= uv_flash_box('') ?>
 <div class="paystate <?= $payOn ? 'on' : 'off' ?>"><b>Online card payments: <?= $payOn ? 'ON' : 'OFF' ?></b>
@@ -191,6 +227,27 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 
 <h2 id="payments">Payments</h2>
 <?= uv_flash_box('payments') ?>
+<p style="margin:0 0 8px"><b>Payment method in use, per property.</b> Switch one property, or all of them at once. "Email requests" turns card payments off and guests send a request instead.</p>
+<table class="pm"><tr><th>Property</th><th>In use now</th><th>Stripe key</th><th>Airwallex</th><th>Card payments</th><th>Switch to</th></tr>
+<?php foreach ($net as $n): $st = $n['status']; $sid = $n['site']['id']; ?>
+<tr><td><b><?= htmlspecialchars($n['site']['name']) ?></b><?= $n['self'] ? ' (this admin)' : '' ?></td>
+<?php if (!$st): ?><td colspan="5"><?= uv_badge(false, '', 'Could not reach ' . htmlspecialchars($n['site']['name']) . ': ' . htmlspecialchars($n['error'] ?? '')) ?></td>
+<?php else: $cur = $st['provider'] ?: 'manual'; ?>
+<td class="now"><?= $cur === 'stripe' ? 'Stripe' : ($cur === 'airwallex' ? 'Airwallex' : 'Email requests') ?></td>
+<td><?= $st['stripe']['saved'] ? uv_badge($st['stripe']['ok'] !== false, 'saved …' . htmlspecialchars($st['stripe']['last4']) . ($st['stripe']['ok'] ? ' · accepted' : ''), 'saved …' . htmlspecialchars($st['stripe']['last4']) . ' · REJECTED') : uv_badge(false, '', 'not saved') ?></td>
+<td><?= uv_badge(!empty($st['airwallex']['configured']), 'keys saved', 'not set up') ?></td>
+<td><?= uv_badge(!empty($st['card_on']), 'ON', 'OFF' . ($st['rates_confirmed'] === false ? ' (rates indicative)' : '')) ?></td>
+<td><?php foreach (array('stripe' => 'Stripe', 'airwallex' => 'Airwallex', 'manual' => 'Email requests') as $pv => $pl):
+  $can = $pv === 'manual' || ($pv === 'stripe' && $st['stripe']['saved']) || ($pv === 'airwallex' && !empty($st['airwallex']['configured'])); ?>
+<form class="inline" method="post"><input type="hidden" name="act" value="pm_set"><input type="hidden" name="site" value="<?= htmlspecialchars($sid) ?>"><input type="hidden" name="provider" value="<?= $pv ?>"><button class="<?= $cur === $pv ? 'cur' : '' ?>" <?= $can ? '' : 'disabled title="No ' . $pl . ' credentials on this property"' ?> style="background:<?= $pv === 'manual' ? '#6B7352' : '#4F6446' ?>"><?= $pl ?></button></form>
+<?php endforeach; ?></td>
+<?php endif; ?></tr>
+<?php endforeach; ?>
+<tr><td colspan="5" style="text-align:right"><b>All properties at once:</b></td><td>
+<?php foreach (array('stripe' => 'Stripe', 'airwallex' => 'Airwallex', 'manual' => 'Email requests') as $pv => $pl): ?>
+<form class="inline" method="post" onsubmit="return confirm('Switch EVERY property to <?= $pl ?>?')"><input type="hidden" name="act" value="pm_set"><input type="hidden" name="site" value="all"><input type="hidden" name="provider" value="<?= $pv ?>"><button style="background:#3D4C36"><?= $pl ?></button></form>
+<?php endforeach; ?></td></tr></table>
+<p style="margin:16px 0 6px"><b>This property's Stripe key</b></p>
 <p>
 <?= uv_badge((bool)$pskSet, 'Stripe key saved (ending …' . htmlspecialchars(substr((string)$pskSet, -4)) . ')', 'Stripe key not saved') ?>
 <?= $pskSet ? uv_badge(!empty($stChk['ok']), 'Stripe accepts the key · checked ' . htmlspecialchars(gmdate('d M H:i', (int)($stChk['at'] ?? 0))) . ' UTC', 'Stripe rejected the key: ' . htmlspecialchars($stChk['why'] ?? '')) : '' ?>
@@ -201,8 +258,17 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <input name="sk" type="password" placeholder="Paste Stripe secret key (sk_live_… or rk_live_…)" style="width:380px" autocomplete="off">
 <button>Save Stripe key</button></form>
 <?php if ($pskSet): ?><form class="inline" method="post"><input type="hidden" name="act" value="stripetest"><button style="background:#3D4C36">Test Stripe connection</button></form><?php endif; ?>
-<form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="stripe"><button>Use Stripe</button></form>
-<form class="inline" method="post"><input type="hidden" name="act" value="provider"><input type="hidden" name="provider" value="airwallex"><button>Use Airwallex</button></form>
+
+<h2 id="emails">Booking emails</h2>
+<?= uv_flash_box('emails') ?>
+<p style="margin:0 0 8px">Reservations, requests and payments are emailed to these addresses (guests' own confirmation emails are separate).</p>
+<table><tr><th>Property</th><th>Booking notifications go to</th></tr>
+<?php foreach ($net as $n): ?><tr><td><b><?= htmlspecialchars($n['site']['name']) ?></b></td><td><?= $n['status'] ? htmlspecialchars(implode(', ', $n['status']['emails'])) : 'could not reach' ?></td></tr><?php endforeach; ?></table>
+<form method="post"><input type="hidden" name="act" value="emails_save">
+<label style="display:block;font-size:12px;color:#666">New list (one per line or comma-separated)</label>
+<textarea name="emails" rows="3" style="width:100%;max-width:560px;font:inherit;padding:8px;border:1px solid #ccc"><?= htmlspecialchars(implode("\n", uv_notify_list())) ?></textarea>
+<p class="sites">Apply to: <?php foreach ($net as $n): ?><label><input type="checkbox" name="sites[]" value="<?= htmlspecialchars($n['site']['id']) ?>" <?= $n['self'] ? 'checked' : '' ?> <?= $n['status'] ? '' : 'disabled' ?>> <?= htmlspecialchars($n['site']['name']) ?></label><?php endforeach; ?></p>
+<button>Save booking emails</button></form>
 
 <h2>Block dates (maintenance, phone bookings…)</h2>
 <form method="post"><input type="hidden" name="act" value="block">

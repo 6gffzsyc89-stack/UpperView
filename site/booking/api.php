@@ -7,6 +7,7 @@ require __DIR__ . '/airwallex.php';
 require __DIR__ . '/stripe.php';
 
 $action = $_GET['action'] ?? '';
+if ($action === 'network') { require_once __DIR__ . '/network-local.php'; net_handle(); } // signed calls from the other properties' admins (2026-11-08)
 
 if ($action === 'availability') {
     $type = $_GET['type'] ?? 'villa';

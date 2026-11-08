@@ -175,3 +175,23 @@ worked; Upper View's admin had the same weakness.
   and the promotion bar, for Upper View to match) and BEDS24-MCP-README §6a (how the WhatsApp
   agent reads PROMO / SERVICE TO ARRANGE lines). No promo code is live on Upper View yet.
 
+## v3.0 — 2026-11-08 · One admin network with Sonata (from the Sonata session)
+Made from the Sonata Samui session on Andy's authority ("if you change the payment method in one
+place … change it in all places … record the change and let the Upper View session know").
+- New `site/booking/network.php` (IDENTICAL to Sonata's — keep the copies in sync) and
+  `site/booking/network-local.php` (Upper View's adapter); `api.php?action=network` handles calls
+  signed with a shared secret kept only in each site's database (meta `network_key`, set on the
+  server; never in git or chat); calls expire after 5 minutes.
+- `admin.php`: links to Sonata's admin at the top (15-minute signed link, no key pasting); the
+  Payments section shows a table of every property (method in use, Stripe key, Airwallex, card
+  payments) with Stripe / Airwallex / Email requests buttons per property or for all at once;
+  a new **Booking emails** section shows and edits `notify_emails` for one or both properties.
+  The old "Use Stripe / Use Airwallex" buttons are replaced by the table.
+- `stripe.php` `uv_pay_provider()`: `payment_provider = manual` now really means "email requests,
+  no card payments" (before, it fell through to Stripe whenever a key existed).
+- Promo codes are still not built here; Sonata's admin shows Upper View as "promo codes not built
+  there yet". To join: implement them (spec `docs/promo-codes-from-sonata_v1.0_2026-11-08.md`), add
+  `net_local_promo()` to `network-local.php` and `'promos'` to its `features`.
+- Deployed over SSH (5 files); live files matched the repo before upload; database backed up as
+  `data/bookings.sqlite.bak-2026-11-08-network`. Previous versions are in git (commit 38541d5).
+
