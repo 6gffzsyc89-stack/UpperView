@@ -34,6 +34,9 @@ const UV_CAL_SOURCES = [
 /** Which source a Beds24 booking came from. */
 function uv_cal_b24_source(array $b): string {
     if (($b['status'] ?? '') === 'black') return 'blocked';
+    // Beds24 'inquiry'/'request' = PENDING (own colour, does not close dates),
+    // whatever channel it came through — owner rule 2026-11-11.
+    if (in_array($b['status'] ?? '', ['inquiry', 'request'], true)) return 'request';
     $hay = strtolower(($b['channel'] ?? '') . ' ' . ($b['apiSource'] ?? '') . ' ' . ($b['referer'] ?? ''));
     foreach (['airbnb' => 'airbnb', 'booking' => 'booking', 'agoda' => 'agoda', 'trip' => 'trip', 'ctrip' => 'trip',
               'expedia' => 'expedia', 'vrbo' => 'vrbo', 'homeaway' => 'vrbo', 'upperviewsamui' => 'direct'] as $needle => $src) {

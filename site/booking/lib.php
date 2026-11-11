@@ -189,13 +189,16 @@ function uv_availability(string $type, string $from, string $to): array {
         if (isset($busy[$d])) $busy[$d] += count($units);
     }
 
-    // Direct bookings (confirmed, fresh pending, inquiries, admin blocks).
+    // Direct bookings (confirmed, fresh payment holds, admin blocks).
+    // UNPAID requests ('inquiry') do NOT block availability — owner rule
+    // 2026-11-11: an email/website request is PENDING until staff confirm it
+    // and take payment; only then are dates closed.
     // A multi-villa booking takes `rooms` units per night, not 1.
     // $GLOBALS['uv_avail_exclude'] (set by uv_clash_nights) leaves out one
     // booking's own row, so re-checking a booking never clashes with itself.
     $ex = isset($GLOBALS['uv_avail_exclude']) ? (string)$GLOBALS['uv_avail_exclude'] : '';
     $st = $db->prepare("SELECT checkin, checkout, rooms FROM bookings
-                        WHERE type=? AND status IN ('confirmed','pending','inquiry','blocked')
+                        WHERE type=? AND status IN ('confirmed','pending','blocked')
                         AND code != ? AND checkin < ? AND checkout > ?");
     $st->execute([$type, $ex, $to, $from]);
     foreach ($st as $row) {
