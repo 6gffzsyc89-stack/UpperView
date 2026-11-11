@@ -57,13 +57,24 @@ function uv_confirmation_email_html(array $b): string {
     $body = "'Archivo','Jost','Helvetica Neue',Helvetica,Arial,sans-serif";
     $base = 'https://upperviewsamui.com';
 
+    // Promo: the room line shows the gross (pre-code) rate; the code gets its own line.
+    $gross = (int)($b['gross'] ?? 0); if ($gross <= 0) $gross = $total;
+    $disc = (int)($b['discount'] ?? 0);
+    $grossNightly = $nights > 0 ? (int) round($gross / $nights) : $gross;
     $rows = '';
     $rows .= '<tr><td style="padding:10px 0;border-bottom:1px solid #e4dcd2;">'
         . $type . ' &middot; ' . $nights . ' night' . ($nights > 1 ? 's' : '')
-        . '<br><span style="color:' . $muted . ';font-size:12px;">' . uv_fmt_thb($nightly)
+        . '<br><span style="color:' . $muted . ';font-size:12px;">' . uv_fmt_thb($grossNightly)
         . ' per night &times; ' . $nights . '</span></td>'
         . '<td align="right" style="padding:10px 0;border-bottom:1px solid #e4dcd2;">'
-        . uv_fmt_thb($total) . '</td></tr>';
+        . uv_fmt_thb($gross) . '</td></tr>';
+    if (!empty($b['promo_code'])) {
+        $rows .= '<tr><td style="padding:10px 0;border-bottom:1px solid #e4dcd2;">Promo code <b>'
+            . htmlspecialchars((string)$b['promo_code']) . '</b><br><span style="color:' . $muted . ';font-size:12px;">'
+            . htmlspecialchars((string)$b['promo_note']) . '</span></td>'
+            . '<td align="right" style="padding:10px 0;border-bottom:1px solid #e4dcd2;">'
+            . ($disc ? '&minus;' . uv_fmt_thb($disc) : 'Included') . '</td></tr>';
+    }
     $rows .= '<tr><td style="padding:10px 0;color:' . $muted . ';font-size:12px;">Taxes and fees</td>'
         . '<td align="right" style="padding:10px 0;color:' . $muted . ';font-size:12px;">Included</td></tr>';
     $rows .= '<tr><td style="padding:14px 0;border-top:2px solid ' . $green . ';font-weight:600;">Total paid</td>'
@@ -156,5 +167,7 @@ function uv_send_confirmation(array $b, string $provider = 'card'): void {
         . " | {$b['guests']} guests" . (!empty($b['cot']) ? ' + baby cot' : '')
         . " | {$b['name']} | {$b['email']} | {$b['phone']}"
         . ' | ' . uv_fmt_thb((int) $b['amount']) . " THB PAID via $provider | code {$b['code']}"
+        . (!empty($b['promo_code']) ? "\nPROMO CODE: {$b['promo_code']} — {$b['promo_note']}"
+            . (!empty($b['discount']) ? ' (−' . uv_fmt_thb((int)$b['discount']) . ' THB, already off the total)' : '') : '')
         . "\n\nWritten to Beds24 — OTA calendars closed automatically.");
 }

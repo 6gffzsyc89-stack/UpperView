@@ -69,6 +69,24 @@ function uv_db(): PDO {
         // ("Reserved" = Airbnb guest, "Not available" = closed on Airbnb)
         try { $db->exec('ALTER TABLE ota_busy ADD COLUMN summary TEXT'); }
         catch (PDOException $e) { /* column already exists */ }
+        // promo codes (2026-11-11, ported from Sonata v2.7): what was applied
+        // to a booking and the price before it (amount stays the NET charged)
+        foreach (['promo_code TEXT', 'promo_note TEXT', 'gross INTEGER', 'discount INTEGER'] as $c) {
+            try { $db->exec('ALTER TABLE bookings ADD COLUMN ' . $c); }
+            catch (PDOException $e) { /* column already exists */ }
+        }
+        $db->exec('CREATE TABLE IF NOT EXISTS promos (
+            code TEXT PRIMARY KEY,             -- UPPERCASE letters/digits, e.g. TRANSFER26
+            title TEXT NOT NULL,               -- banner text
+            kind TEXT NOT NULL,                -- percent | service
+            percent INTEGER,                   -- kind=percent: % off the room rate
+            service TEXT,                      -- kind=service: what is included
+            valid_until TEXT,                  -- last booking date the code works, optional
+            min_nights INTEGER,                -- optional
+            banner INTEGER NOT NULL DEFAULT 0, -- show in the top promotion bar
+            active INTEGER NOT NULL DEFAULT 0, -- new codes start OFF (Andy, 2026-11-11)
+            created_at TEXT NOT NULL, updated_at TEXT NOT NULL
+        )');
     }
     return $db;
 }
@@ -290,6 +308,53 @@ function uv_rate_limit(string $bucket, int $max, int $windowSec): void {
     if (count($hits) >= $max) { http_response_code(429); exit('Too many requests, please try again later.'); }
     $hits[] = $now;
     uv_meta_set($k, implode(',', $hits));
+}
+
+/* ---------- promo codes (2026-11-11, ported from Sonata v2.7) ----------
+   Managed on our own admin page (not in Beds24): a code changes the website's
+   direct rate or adds an included service. The result (code, what it does,
+   discount) is stored on the booking, shown at checkout and on the invoice
+   email, and written to Beds24 (notes, info item, invoice lines) so staff and
+   the WhatsApp agent can see it. The feature ships SWITCHED OFF: no codes
+   exist, new codes start inactive, and the promotion bar only appears when an
+   active code is marked for it. */
+
+function uv_promo_code_clean(string $c): string { return strtoupper(preg_replace('/[^A-Za-z0-9]/', '', $c)); }
+
+/** What the promo does, in one line (invoice, emails, Beds24). */
+function uv_promo_note(array $p): string {
+    if ($p['kind'] === 'percent') return (int)$p['percent'] . '% off the room rate';
+    return 'Included: ' . trim((string)$p['service']);
+}
+
+/** Look up a code for a stay. Returns the promo row (+ 'note'), or ['error' => message]. */
+function uv_promo_find(string $code, ?string $ci = null, ?string $co = null): array {
+    $code = uv_promo_code_clean($code);
+    if ($code === '') return ['error' => 'empty'];
+    $st = uv_db()->prepare('SELECT * FROM promos WHERE code=?'); $st->execute([$code]);
+    $p = $st->fetch(PDO::FETCH_ASSOC);
+    if (!$p || !(int)$p['active']) return ['error' => 'This promo code is not valid.'];
+    if (!empty($p['valid_until']) && date('Y-m-d') > $p['valid_until']) return ['error' => 'This promo code has expired.'];
+    if ($ci && $co && (int)$p['min_nights'] > 0) {
+        $n = (int)((strtotime($co) - strtotime($ci)) / 86400);
+        if ($n < (int)$p['min_nights']) return ['error' => 'This code needs a stay of ' . (int)$p['min_nights'] . ' nights or more.'];
+    }
+    $p['note'] = uv_promo_note($p);
+    return $p;
+}
+
+/** Discount in whole baht for a gross amount (0 for service promos). */
+function uv_promo_discount(?array $p, int $gross): int {
+    if (!$p || isset($p['error']) || $p['kind'] !== 'percent') return 0;
+    $pct = max(0, min(90, (int)$p['percent']));
+    return (int)round($gross * $pct / 100);
+}
+
+/** Promotions shown in the bar at the top of the website. */
+function uv_promos_banner(): array {
+    $rows = uv_db()->query("SELECT code,title,kind,percent,service,valid_until FROM promos WHERE active=1 AND banner=1 ORDER BY created_at")->fetchAll(PDO::FETCH_ASSOC);
+    $today = date('Y-m-d');
+    return array_values(array_filter($rows, function ($p) use ($today) { return empty($p['valid_until']) || $p['valid_until'] >= $today; }));
 }
 
 /* ---------- Payment adapter seam (stripe today, airwallex later) ---------- */

@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=nb4';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=pr1';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -329,9 +329,49 @@ const BK = {
   type: 'villa',
   ci: null,
   co: null,
+  promo: '',                  // validated promo code (uppercase) for this quote
   month: minStay.slice(0, 7), // 'YYYY-MM' being shown
   avail: {},                  // per type: {free:{date:n}, nightly, currency, ...}
 };
+
+/* ---------- promotion bar (Hoxton-style): promos set on the admin page ----------
+   One line above the header; still when it fits, scrolling when too long.
+   Clicking a promotion opens Reserve with its code filled in. Absent while no
+   promo is switched on, so the page looks exactly as before. */
+(async function loadPromoBar() {
+  let list = [];
+  try { const r = await fetch('booking/api.php?action=promos'); if (r.ok) list = (await r.json()).promos || []; } catch (e) { }
+  const bar = $('#promobar'); if (!bar || !list.length) return;
+  const items = bar.querySelector('.pb-items');
+  const mk = () => {
+    items.innerHTML = '';
+    list.forEach((p) => {
+      const b = document.createElement('button');
+      b.type = 'button';
+      b.className = 'pb-item';
+      b.append(p.title + ' · ' + (t('p_puse') || 'Use code') + ' ');
+      const c = document.createElement('b'); c.textContent = p.code; b.appendChild(c);
+      b.addEventListener('click', () => {
+        const inp = $('#uv-promo'); if (inp) inp.value = p.code;
+        body.classList.add('reserve-open');
+      });
+      items.appendChild(b);
+    });
+  };
+  mk();
+  bar.hidden = false;
+  body.classList.add('has-promo');
+  // marquee only when the line overflows: duplicate it and scroll seamlessly
+  requestAnimationFrame(() => {
+    const track = bar.querySelector('.pb-track');
+    if (items.scrollWidth > track.clientWidth + 4) {
+      const w = items.scrollWidth;
+      list = list.concat(list); mk();
+      track.classList.add('scroll');
+      track.style.setProperty('--pb-dur', Math.max(18, Math.round(w / 55)) + 's');
+    }
+  });
+})();
 const bkLocale = () =>
   state.lang === 'zh' ? 'zh-Hans' : state.lang === 'tw' ? 'zh-Hant' : state.lang;
 
@@ -492,6 +532,13 @@ function bkRenderResults(q) {
   sum.textContent = q.from + ' → ' + q.to + ' · ' + q.nights + ' ' + (t('p_nights') || 'nights')
     + ' · ' + $('#uv-gst').value + ' ' + (t('p_gst') || 'Guests');
   box.appendChild(sum);
+  if (q.promo) {
+    const pn = document.createElement('p');
+    pn.style.cssText = 'margin:0;padding:10px 14px;background:rgba(247,240,233,.12);color:#F7F0E9;font-size:12.5px;letter-spacing:.04em';
+    pn.textContent = (t('p_papplied') || 'Code {c} applied — {n}')
+      .replace('{c}', q.promo.code).replace('{n}', q.promo.note);
+    box.appendChild(pn);
+  }
 
   // One room sleeps 2: parties of 3+ take several mini villas (suites exist once).
   const gstN = Number($('#uv-gst').value) || 2;
@@ -505,6 +552,8 @@ function bkRenderResults(q) {
         room.available = room.available && room.free >= roomsNeeded;
         if (room.nightly) room.nightly *= roomsNeeded;
         if (room.total) room.total *= roomsNeeded;
+        if (room.gross) room.gross *= roomsNeeded;
+        if (room.gross_nightly) room.gross_nightly *= roomsNeeded;
       } else {
         room.available = false;
         multiNote = t('p_sleeps2') || 'Sleeps 2 — for your party, book neighbouring Mini Villas.';
@@ -578,7 +627,10 @@ function bkRenderResults(q) {
     const price = document.createElement('div');
     price.className = 'uv-rc-price';
     if (room.available && room.nightly) {
-      price.innerHTML = '฿' + bkFmt(room.nightly) + ' <small>'
+      // promo: the old nightly rate struck through, then the discounted one
+      const struck = room.gross_nightly && room.gross_nightly > room.nightly
+        ? '<s style="opacity:.55">฿' + bkFmt(room.gross_nightly) + '</s> ' : '';
+      price.innerHTML = struck + '฿' + bkFmt(room.nightly) + ' <small>'
         + (t('p_pernight') || 'per night') + ' · ฿' + bkFmt(room.total)
         + ' ' + (t('p_total') || 'total') + '</small>';
     } else if (room.available) {
@@ -606,6 +658,7 @@ function bkRenderResults(q) {
               type: room.type, checkin: BK.ci, checkout: BK.co,
               guests: Number($('#uv-gst').value),
               cot: $('#uv-cot') && $('#uv-cot').checked ? 1 : 0,
+              promo: BK.promo,
             }),
           });
           const j = await r.json();
@@ -647,9 +700,15 @@ $('#uv-check').addEventListener('click', async () => {
   const btn = $('#uv-check');
   btn.disabled = true; btn.style.opacity = '.6';
   try {
-    const r = await fetch('booking/api.php?action=quote&from=' + BK.ci + '&to=' + BK.co);
+    const pIn = $('#uv-promo');
+    const code = pIn ? (pIn.value || '').toUpperCase().replace(/[^A-Z0-9]/g, '') : '';
+    if (pIn) pIn.value = code;
+    const r = await fetch('booking/api.php?action=quote&from=' + BK.ci + '&to=' + BK.co
+      + (code ? '&promo=' + encodeURIComponent(code) : ''));
     const q = await r.json();
     if (!q.rooms) throw new Error(q.error || 'quote failed');
+    if (code && q.promo_error) { BK.promo = ''; bkError(q.promo_error); return; }
+    BK.promo = q.promo ? q.promo.code : '';
     BK.quote = q;
     bkRenderResults(q);
     bkShowStep(2);
@@ -679,6 +738,7 @@ $('#uv-confirm').addEventListener('click', async () => {
         guests: Number($('#uv-gst').value), name, email,
         cot: $('#uv-cot') && $('#uv-cot').checked ? 1 : 0,
         phone: $('#uv-phone').value.trim(),
+        promo: BK.promo,
       }),
     });
     const j = await r.json();

@@ -30,12 +30,21 @@ if ($action === 'availability') {
     ]);
 }
 
+if ($action === 'promos') {   // public: the promotion bar's content
+    $out = [];
+    foreach (uv_promos_banner() as $p) $out[] = ['code' => $p['code'], 'title' => $p['title'], 'note' => uv_promo_note($p)];
+    uv_json(['promos' => $out]);
+}
+
 if ($action === 'quote') {
     $from = $_GET['from'] ?? ''; $to = $_GET['to'] ?? '';
     if (!uv_valid_date($from) || !uv_valid_date($to) || $to <= $from) uv_json(['error' => 'bad range'], 400);
     $cfg = uv_config();
     $nights = (int)((strtotime($to) - strtotime($from)) / 86400);
     $mult = $cfg['direct_multiplier'] ?? 0.90; // direct booking = base rate -10%
+    $promoIn = uv_promo_code_clean((string)($_GET['promo'] ?? ''));
+    $promo = $promoIn !== '' ? uv_promo_find($promoIn, $from, $to) : null;
+    $promoOk = ($promo && !isset($promo['error'])) ? $promo : null;
     $out = [];
     foreach ($cfg['inventory'] as $type => $units) {
         $roomId = $cfg['beds24']['room_map'][$type] ?? null;
@@ -66,6 +75,9 @@ if ($action === 'quote') {
             $f = uv_avail($type, $from, $to);
             $free = $f ? min($f) : 0;
         }
+        $gross = $total;
+        $disc = $total !== null ? uv_promo_discount($promoOk, (int)$total) : 0;
+        if ($disc > 0) $total = $gross - $disc;
         $out[] = [
             'type' => $type,
             'name' => uv_type_name($type),
@@ -75,11 +87,16 @@ if ($action === 'quote') {
             'nights' => $nights,
             'total' => $total,
             'nightly' => $total !== null && $nights ? (int)round($total / $nights) : null,
+            'gross' => $disc > 0 ? $gross : null,
+            'gross_nightly' => $disc > 0 && $nights ? (int)round($gross / $nights) : null,
             'currency' => $cfg['currency'],
         ];
     }
     uv_json(['from' => $from, 'to' => $to, 'nights' => $nights, 'rooms' => $out,
-             'source' => b24_enabled() ? 'beds24' : 'local']);
+             'source' => b24_enabled() ? 'beds24' : 'local',
+             'promo' => $promoOk ? ['code' => $promoOk['code'], 'title' => $promoOk['title'], 'note' => $promoOk['note'],
+                                    'kind' => $promoOk['kind'], 'percent' => (int)$promoOk['percent']] : null,
+             'promo_error' => ($promo && isset($promo['error'])) ? $promo['error'] : null]);
 }
 
 if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
@@ -110,6 +127,10 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     foreach (uv_avail($type, $ci, $co) as $d => $free) {
         if ($free < $rooms) uv_json(['error' => 'no availability', 'date' => $d], 409);
     }
+    // Promo code: re-validated server-side; a bad code is refused with the reason.
+    $promoIn = uv_promo_code_clean((string)($in['promo'] ?? ''));
+    $promo = $promoIn !== '' ? uv_promo_find($promoIn, $ci, $co) : null;
+    if ($promo && isset($promo['error'])) uv_json(['error' => $promo['error']], 400);
 
     /* Nobu-style flow: guest details + card are collected on the checkout
        page (booking/pay.php), so a hold is created without them.
@@ -118,14 +139,19 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         $q = uv_live_total($type, $ci, $co);
         if (($q['free'] ?? 0) < $rooms) uv_json(['error' => 'no availability'], 409);
         if (empty($q['total'])) uv_json(['error' => 'no rate for these dates'], 409);
-        $amount = (int) $q['total'] * $rooms;
+        $gross = (int) $q['total'] * $rooms;
+        $disc = uv_promo_discount($promo, $gross);
+        $amount = $gross - $disc;
         $code = uv_booking_code();
         $now = gmdate('Y-m-d H:i:s');
         uv_db()->prepare('INSERT INTO bookings
-            (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,created_at,updated_at)
-            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+            (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,
+             promo_code,promo_note,gross,discount,created_at,updated_at)
+            VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
             ->execute([$code, $type, $ci, $co, $guests, $cot, $rooms, $name, $email, $phone,
-                       'pending', 'direct', $amount, $cfg['currency'], $now, $now]);
+                       'pending', 'direct', $amount, $cfg['currency'],
+                       $promo ? $promo['code'] : null, $promo ? $promo['note'] : null,
+                       $disc > 0 ? $gross : null, $disc > 0 ? $disc : null, $now, $now]);
         $payUrl = rtrim($cfg['site_url'], '/') . '/booking/pay.php?code='
                 . rawurlencode($code) . '&sig=' . uv_pay_sig($code);
         uv_json(['mode' => 'pay', 'code' => $code, 'url' => $payUrl,
@@ -137,19 +163,25 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     }
 
     $paid = uv_payment_provider() !== 'none' && ($cfg['rates_confirmed'] ?? false);
-    $amount = $paid ? $nights * $cfg['rates'][$type] : null;
+    $grossL = $paid ? $nights * $cfg['rates'][$type] * $rooms : null;
+    $discL = $grossL !== null ? uv_promo_discount($promo, (int)$grossL) : 0;
+    $amount = $grossL !== null ? (int)$grossL - $discL : null;
     $code = uv_booking_code();
     $now = gmdate('Y-m-d H:i:s');
     uv_db()->prepare('INSERT INTO bookings
-        (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,created_at,updated_at)
-        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
+        (code,type,checkin,checkout,guests,cot,rooms,name,email,phone,status,source,amount,currency,
+         promo_code,promo_note,gross,discount,created_at,updated_at)
+        VALUES (?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?,?)')
         ->execute([$code, $type, $ci, $co, $guests, $cot, $rooms, $name, $email, $phone,
                    $paid ? 'pending' : 'inquiry', 'direct',
-                   $amount, $cfg['currency'], $now, $now]);
+                   $amount, $cfg['currency'],
+                   $promo ? $promo['code'] : null, $promo ? $promo['note'] : null,
+                   $discL > 0 ? (int)$grossL : null, $discL > 0 ? $discL : null, $now, $now]);
 
     $summary = ($rooms > 1 ? $rooms . ' × ' : '') . uv_type_name($type)
         . " | $ci -> $co ($nights nights) | $guests guests" . ($cot ? ' + baby cot' : '')
-        . " | $name | $email | $phone | code $code";
+        . " | $name | $email | $phone | code $code"
+        . ($promo ? "\nPROMO CODE: {$promo['code']} — {$promo['note']}" : '');
 
     if ($paid) {
         $checkout = uv_checkout_create([

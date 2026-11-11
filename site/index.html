@@ -98,9 +98,26 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
   /* sliver of the next photo: the strongest swipe cue */
   #vgal img, #sgal img, #ggal img, #pgal img { flex-basis: 94% !important; width: 94% !important; }
 }
+/* ---------- promotion bar (Hoxton-style; appears only when a promo is switched on) ---------- */
+#promobar{position:fixed;top:0;left:0;right:0;height:36px;z-index:96;background:#2E3A29;color:#F7F0E9;display:flex;align-items:center;overflow:hidden;font-size:12px;letter-spacing:.06em}
+#promobar[hidden]{display:none}
+.pb-track{flex:1;min-width:0;width:100%;overflow:hidden}
+.pb-items{display:flex;justify-content:center;gap:42px;white-space:nowrap;width:max-content;margin:0 auto;padding:0 16px}
+.pb-track.scroll .pb-items{justify-content:flex-start;margin:0;animation:pbscroll var(--pb-dur,30s) linear infinite}
+@media (hover:hover){.pb-track.scroll:hover .pb-items{animation-play-state:paused}}
+@keyframes pbscroll{from{transform:translateX(0)}to{transform:translateX(-50%)}}
+html[dir=rtl] .pb-track.scroll .pb-items{animation-name:pbscroll-rtl}
+@keyframes pbscroll-rtl{from{transform:translateX(0)}to{transform:translateX(50%)}}
+@media (prefers-reduced-motion:reduce){.pb-track.scroll{overflow-x:auto}.pb-track.scroll .pb-items{animation:none}}
+.pb-item{color:inherit;font-size:12px;letter-spacing:.06em;white-space:nowrap;background:none;border:none;cursor:pointer;padding:0;font-family:inherit}
+.pb-item b{font-weight:600;letter-spacing:.14em;text-decoration:underline;text-underline-offset:3px}
+body.has-promo #uv-header{transform:translateY(36px)}   /* header carries an inline top:0, so shift it instead */
 </style>
 </head>
 <body>
+
+<!-- Promotion bar: filled from the admin's promo codes; hidden while none are switched on -->
+<div id="promobar" hidden><div class="pb-track"><div class="pb-items"></div></div></div>
 
 <header id="uv-header" style="position:fixed;top:0;left:0;right:0;z-index:97;display:flex;align-items:center;justify-content:space-between;height:76px;padding:0 clamp(16px,3vw,32px);transition:background .5s ease, border-color .5s ease">
   <button id="uv-menubtn" aria-label="Menu" style="display:flex;flex-direction:column;gap:6px;width:44px;height:44px;justify-content:center;align-items:flex-start;background:none;border:none;cursor:pointer;padding:10px">
@@ -487,6 +504,6 @@ html[dir="rtl"] .uv-count { right:auto; left:12px; }
   <span data-i18n="reserve">Reserve</span>
 </button>
 
-<script type="module" src="app.js?v=nb4"></script>
+<script type="module" src="app.js?v=pr1"></script>
 </body>
 </html>

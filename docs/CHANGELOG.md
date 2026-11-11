@@ -237,3 +237,40 @@ Ported from Sonata v3.0 (Andy: "update Upper View's admin to match").
   account, switch lives in Sonata's admin, covers upperviewsamui.com — no
   Upper View code needed, nothing changes until the nameserver move.
 
+## v3.2 — 2026-11-11 · Pending-booking rule, promo codes (OFF by default), data reconciliation
+- **Owner rule: unpaid requests are PENDING, never close dates.** The local
+  engine stopped counting 'inquiry' rows; Beds24 'inquiry'/'request' statuses
+  draw in the pending colour (dashed) on the admin calendar; the three stale
+  'new' Beds24 bookings written from unpaid website requests (Mini Villa pool,
+  Dec 24–26 / Jan 7–12 / Jan 21–26) were converted to 'inquiry' with an
+  explanatory note — their dates are released. Confirm + take payment happens
+  manually (admin page, Beds24, or the WhatsApp assistant via the MCP).
+- **Data reconciliation vs the managers' Google Sheets (NikiStay):** after a
+  fresh feed pull the website's availability and calendar match the UPPERVIEW
+  RESERVATIONS sheet night-for-night on all three Airbnb villas for Dec/Jan —
+  unit mapping v2/v3/v4 → listings confirmed correct. Earlier divergence was
+  stale feed data (feeds refresh on site use) plus bookings made ~Nov 7 that
+  had not been pulled. Beds24 still holds no OTA bookings (channels trial-
+  locked), so the sheet's counterpart for OTA stays is the iCal layer.
+- **Promo codes (ported from Sonata v2.7/v2.8, Andy's go 2026-11-11), feature
+  SWITCHED OFF by default:** `promos` table + helpers in lib.php (new codes
+  start inactive; bar only shows active banner promos — none exist, so the
+  site looks unchanged); api.php `?action=promos`, promo-aware quote
+  (gross/discount/net, struck-through rates) and book (code re-validated,
+  stored on the booking; amount = net charged); checkout + confirmation email
+  show the room at the gross rate and the promo's own line; Beds24 gets
+  PROMO/SERVICE TO ARRANGE notes, a PROMO info item and invoice lines (charge
+  at gross, promo at −discount, payment at net; invoice lines now also written
+  for unpaid manual confirmations); Stripe description + metadata carry the
+  code; admin Promotions section (multi-property via the network — Sonata's
+  admin can now manage Upper View codes too, net_local_promo + 'promos'
+  feature); Hoxton-style #promobar + reserve-flow promo field wired
+  (#uv-promo existed, unwired), phrases in all ten languages. Tested live
+  with a hidden 10% code end-to-end (quote 13,689→12,320; checkout shows
+  −฿1,229; DB row net/gross/discount correct), then the test booking was
+  cancelled and the code deleted — nothing promotional is live.
+- BEDS24-MCP-README §6a updated (Upper View promo lines live) and §6b added:
+  guest-care info-item convention (ALLERGY / OCCASION / REQUEST / PICKUP /
+  TASK) so requests, allergies and birthdays live on the Beds24 booking,
+  readable by staff and the WhatsApp assistant — the managers' sheets remain
+  a human double-check, not the master.

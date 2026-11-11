@@ -289,10 +289,20 @@ input:focus,select:focus{outline:1px solid var(--green)}
       <div class="price">
         <h2>Price Details</h2>
         <div class="rows">
+          <?php // Promo: room line at the gross (pre-code) rate, then the code's own line.
+                $pGross = (int)($b['gross'] ?? 0); if ($pGross <= 0) $pGross = $total;
+                $pDisc = (int)($b['discount'] ?? 0);
+                $pNightly = $nights > 0 ? (int) round($pGross / $nights) : $pGross; ?>
           <div class="r">
-            <div class="l"><?php echo ($roomsN > 1 ? $roomsN . ' × ' : '') . h($type); ?><small><?php echo uv_fmt_thb($nightly); ?> per night × <?php echo $nights; ?><?php echo $roomsN > 1 ? ' (' . $roomsN . ' villas)' : ''; ?></small></div>
-            <div><?php echo uv_fmt_thb($total); ?></div>
+            <div class="l"><?php echo ($roomsN > 1 ? $roomsN . ' × ' : '') . h($type); ?><small><?php echo uv_fmt_thb($pNightly); ?> per night × <?php echo $nights; ?><?php echo $roomsN > 1 ? ' (' . $roomsN . ' villas)' : ''; ?></small></div>
+            <div><?php echo uv_fmt_thb($pGross); ?></div>
           </div>
+          <?php if (!empty($b['promo_code'])): ?>
+          <div class="r">
+            <div class="l">Promo code <b><?php echo h($b['promo_code']); ?></b><small><?php echo h((string)$b['promo_note']); ?></small></div>
+            <div><?php echo $pDisc ? '−' . uv_fmt_thb($pDisc) : 'Included'; ?></div>
+          </div>
+          <?php endif; ?>
           <div class="r"><div class="l" style="color:var(--mut);font-size:12.5px">Taxes and fees</div>
             <div style="color:var(--mut);font-size:12.5px">Included</div></div>
           <div class="tot"><div>Total</div><div><?php echo uv_fmt_thb($total); ?> THB</div></div>

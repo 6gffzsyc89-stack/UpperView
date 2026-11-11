@@ -137,8 +137,16 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $names = array(net_self()['id'] => net_self()['name']); foreach (net_peers() as $pp) $names[$pp['id']] = $pp['name'];
     $run = function ($siteId, $op, $data) use ($sites) {
         if (!array_key_exists($siteId, $sites)) return array('ok' => false, 'error' => 'unknown property');
-        if ($sites[$siteId] === null) return $op === 'set_provider' ? net_local_set_provider($data['provider']) : net_local_set_emails($data['emails']);
+        if ($sites[$siteId] === null) {
+            if ($op === 'set_provider') return net_local_set_provider($data['provider']);
+            if ($op === 'set_emails') return net_local_set_emails($data['emails']);
+            return net_local_promo($op, $data);
+        }
         return net_call($sites[$siteId], $op, $data);
+    };
+    $picked = function () use ($sites) {
+        return isset($_POST['sites']) && is_array($_POST['sites'])
+            ? array_values(array_intersect(array_map('strval', $_POST['sites']), array_keys($sites))) : array();
     };
     $report = function ($label, $results) use ($names) {
         $parts = array(); $all = true;
@@ -153,9 +161,23 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($act === 'emails_save') {
         $anchor = 'emails';
         $list = preg_split('/[\s,;]+/', (string) ($_POST['emails'] ?? ''), -1, PREG_SPLIT_NO_EMPTY);
-        $pick = isset($_POST['sites']) && is_array($_POST['sites']) ? array_values(array_intersect(array_map('strval', $_POST['sites']), array_keys($sites))) : array();
-        $res = array(); foreach ($pick as $id) $res[$id] = $run($id, 'set_emails', array('emails' => $list));
+        $res = array(); foreach ($picked() as $id) $res[$id] = $run($id, 'set_emails', array('emails' => $list));
         if (!$res) { $msg = 'Tick at least one property.'; $ok = false; } else list($msg, $ok) = $report('Booking emails saved.', $res);
+    }
+    /* promotions (new codes start switched OFF; tick the properties they apply to) */
+    if ($act === 'promo_save') {
+        $anchor = 'promos';
+        $data = array('code' => (string) ($_POST['code'] ?? ''), 'title' => (string) ($_POST['title'] ?? ''), 'kind' => (string) ($_POST['kind'] ?? ''),
+                      'percent' => (int) ($_POST['percent'] ?? 0), 'service' => (string) ($_POST['service'] ?? ''), 'valid_until' => (string) ($_POST['valid_until'] ?? ''),
+                      'min_nights' => (int) ($_POST['min_nights'] ?? 0), 'banner' => !empty($_POST['banner']) ? 1 : 0, 'active' => !empty($_POST['active']) ? 1 : 0);
+        $res = array(); foreach ($picked() as $id) $res[$id] = $run($id, 'promo_save', $data);
+        if (!$res) { $msg = 'Tick at least one property for this promo.'; $ok = false; }
+        else list($msg, $ok) = $report('Promo ' . htmlspecialchars(uv_promo_code_clean($data['code'])) . ' saved (' . ($data['active'] ? 'ON' : 'OFF') . ($data['banner'] ? ', in the top bar' : '') . ').', $res);
+    }
+    if (in_array($act, array('promo_active', 'promo_banner', 'promo_delete'), true) && !empty($_POST['code'])) {
+        $anchor = 'promos'; $id = (string) ($_POST['site'] ?? net_self()['id']);
+        $r = $run($id, $act, array('code' => (string) $_POST['code'], 'on' => !empty($_POST['on']) ? 1 : 0));
+        list($msg, $ok) = $report('Promo ' . htmlspecialchars(uv_promo_code_clean((string) $_POST['code'])) . ' ' . array('promo_active' => !empty($_POST['on']) ? 'switched ON.' : 'switched OFF.', 'promo_banner' => !empty($_POST['on']) ? 'shown in the top bar.' : 'removed from the top bar.', 'promo_delete' => 'deleted.')[$act], array($id => $r));
     }
     if ($msg === '') $msg = 'Nothing changed.';
     uv_meta_set('admin_flash', json_encode(['msg' => $msg, 'ok' => $ok, 'anchor' => $anchor]));
@@ -177,6 +199,7 @@ $stChk = json_decode((string) uv_meta_get('stripe_check'), true);
 if ($pskSet && (!$stChk || time() - (int)$stChk['at'] > 3600)) $stChk = uv_admin_stripe_check(); // re-check hourly on page load
 $net = net_all_status();          // this property + Sonata, read live
 $adminLinks = net_admin_links();
+$promos = $db->query('SELECT * FROM promos ORDER BY active DESC, created_at DESC')->fetchAll(PDO::FETCH_ASSOC);
 
 $rows = $db->query("SELECT * FROM bookings WHERE status != 'cancelled'
                     ORDER BY checkin ASC LIMIT 200")->fetchAll(PDO::FETCH_ASSOC);
@@ -243,7 +266,7 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 </details>
 
 <h2>Bookings &amp; blocks</h2>
-<table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th></th></tr>
+<table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th>Promo</th><th></th></tr>
 <?php foreach ($rows as $r): ?>
 <tr><td><?= htmlspecialchars($r['code']) ?></td><td><?= (int)($r['rooms'] ?? 1) > 1 ? (int)$r['rooms'] . ' × ' : '' ?><?= $r['type'] ?></td>
 <td><?= $r['checkin'] ?></td><td><?= $r['checkout'] ?></td><td><?= $r['guests'] ?><?= !empty($r['cot']) ? ' +cot' : '' ?></td>
@@ -251,6 +274,7 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <td><?= htmlspecialchars((string)$r['email']) ?> <?= htmlspecialchars((string)$r['phone']) ?></td>
 <td class="s-<?= $r['status'] ?>"><?= $r['status'] ?></td>
 <td><?= $r['amount'] ? number_format((float)$r['amount']) . ' ' . $r['currency'] : '—' ?></td>
+<td><?= !empty($r['promo_code']) ? '<b>' . htmlspecialchars($r['promo_code']) . '</b><br><small>' . htmlspecialchars((string)$r['promo_note']) . (!empty($r['discount']) ? ' (−' . number_format((int)$r['discount']) . ')' : '') . '</small>' : '—' ?></td>
 <td>
 <?php if ($r['status'] === 'inquiry'): ?>
 <form class="inline" method="post" onsubmit="return confirm('Confirm <?= $r['code'] ?> and close OTA calendars?')"><input type="hidden" name="act" value="confirm"><input type="hidden" name="code" value="<?= $r['code'] ?>"><button>Confirm + close OTAs</button></form>
@@ -303,6 +327,42 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <textarea name="emails" rows="3" style="width:100%;max-width:560px;font:inherit;padding:8px;border:1px solid #ccc"><?= htmlspecialchars(implode("\n", uv_notify_list())) ?></textarea>
 <p class="sites">Apply to: <?php foreach ($net as $n): ?><label><input type="checkbox" name="sites[]" value="<?= htmlspecialchars($n['site']['id']) ?>" <?= $n['self'] ? 'checked' : '' ?> <?= $n['status'] ? '' : 'disabled' ?>> <?= htmlspecialchars($n['site']['name']) ?></label><?php endforeach; ?></p>
 <button>Save booking emails</button></form>
+
+<h2 id="promos">Promotions</h2>
+<?= uv_flash_box('promos') ?>
+<p style="margin:0 0 10px">Promo codes live here, on our own website — not in Beds24. A discount comes off the direct rate when the guest types the code; an included service (e.g. a free airport transfer) is added to the booking. The code and what it gives appear on the checkout page, the invoice email and the Beds24 booking (notes, info item and invoice lines), where staff and the WhatsApp agent can see it. Promotions marked “top bar” show at the top of the website. <b>New codes start switched OFF.</b></p>
+<?php if ($promos): ?>
+<table><tr><th>Code</th><th>Top bar text</th><th>Gives</th><th>Valid until</th><th>Min nights</th><th>Status</th><th></th></tr>
+<?php foreach ($promos as $p): ?>
+<tr><td><b><?= htmlspecialchars($p['code']) ?></b></td><td><?= htmlspecialchars($p['title']) ?></td><td><?= htmlspecialchars(uv_promo_note($p)) ?></td>
+<td><?= $p['valid_until'] ? htmlspecialchars($p['valid_until']) : '—' ?></td><td><?= $p['min_nights'] ? (int)$p['min_nights'] : '—' ?></td>
+<td><?= uv_badge((bool)$p['active'], 'ON', 'OFF') ?><?= $p['active'] ? uv_badge((bool)$p['banner'], 'In top bar', 'Not in top bar') : '' ?></td>
+<td>
+<form class="inline" method="post"><input type="hidden" name="act" value="promo_active"><input type="hidden" name="code" value="<?= htmlspecialchars($p['code']) ?>"><input type="hidden" name="on" value="<?= $p['active'] ? '' : '1' ?>"><button style="background:#6B7352"><?= $p['active'] ? 'Switch off' : 'Switch on' ?></button></form>
+<form class="inline" method="post"><input type="hidden" name="act" value="promo_banner"><input type="hidden" name="code" value="<?= htmlspecialchars($p['code']) ?>"><input type="hidden" name="on" value="<?= $p['banner'] ? '' : '1' ?>"><button style="background:#3D4C36"><?= $p['banner'] ? 'Hide from top bar' : 'Show in top bar' ?></button></form>
+<form class="inline" method="post" onsubmit="return confirm('Delete promo <?= htmlspecialchars($p['code']) ?>? Bookings that used it keep their record.')"><input type="hidden" name="act" value="promo_delete"><input type="hidden" name="code" value="<?= htmlspecialchars($p['code']) ?>"><button style="background:#a33">Delete</button></form>
+</td></tr>
+<?php endforeach; ?></table>
+<?php endif; ?>
+<form method="post" style="display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:8px 12px;align-items:end;background:#fff;padding:12px 14px;margin:0 0 24px"><input type="hidden" name="act" value="promo_save">
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px">Promo code (CAPITALS)<input name="code" required maxlength="20" pattern="[A-Za-z0-9]{3,20}" placeholder="TRANSFER27" oninput="this.value=this.value.toUpperCase().replace(/[^A-Z0-9]/g,'')"></label>
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px;grid-column:span 2">Top bar text<input name="title" required maxlength="160" placeholder="Free airport transfer when you book direct"></label>
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px">Gives<select name="kind" onchange="this.form.percent.parentNode.style.display=this.value==='percent'?'':'none';this.form.service.parentNode.style.display=this.value==='service'?'':'none'"><option value="service">An included service</option><option value="percent">A % discount</option></select></label>
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px">Included service<input name="service" maxlength="160" placeholder="Airport transfer on arrival"></label>
+<label style="display:none;flex-direction:column;font-size:12px;color:#666;gap:3px">Discount %<input name="percent" type="number" min="1" max="90" placeholder="10"></label>
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px">Valid until (optional)<input name="valid_until" type="date"></label>
+<label style="display:flex;flex-direction:column;font-size:12px;color:#666;gap:3px">Minimum nights (optional)<input name="min_nights" type="number" min="0" max="60"></label>
+<label style="display:flex;flex-direction:row;align-items:center;gap:6px;font-size:13px"><input type="checkbox" name="active" value="1"> Switch on now</label>
+<label style="display:flex;flex-direction:row;align-items:center;gap:6px;font-size:13px"><input type="checkbox" name="banner" value="1"> Show in the top bar</label>
+<p class="sites" style="grid-column:1/-1;margin:4px 0">Apply to: <?php foreach ($net as $n): $hasP = $n['status'] && in_array('promos', $n['status']['features'] ?? array(), true); ?><label><input type="checkbox" name="sites[]" value="<?= htmlspecialchars($n['site']['id']) ?>" <?= $n['self'] ? 'checked' : '' ?> <?= $hasP ? '' : 'disabled' ?>> <?= htmlspecialchars($n['site']['name']) ?><?= $n['status'] && !$hasP ? ' (promo codes not built there yet)' : '' ?></label><?php endforeach; ?></p>
+<button>Save promo</button>
+</form>
+<?php foreach ($net as $n): if ($n['self'] || !$n['status'] || !in_array('promos', $n['status']['features'] ?? array(), true)) continue; ?>
+<p style="margin:16px 0 6px"><b>Promo codes on <?= htmlspecialchars($n['site']['name']) ?></b></p>
+<?php if (empty($n['status']['promos'])): ?><p style="font-size:12px;color:#666">None.</p><?php else: ?><table><tr><th>Code</th><th>Top bar text</th><th>Gives</th><th>Status</th><th></th></tr>
+<?php foreach ($n['status']['promos'] as $p): ?><tr><td><b><?= htmlspecialchars($p['code']) ?></b></td><td><?= htmlspecialchars($p['title']) ?></td><td><?= htmlspecialchars($p['note']) ?></td><td><?= uv_badge((bool)$p['active'], 'ON', 'OFF') ?><?= uv_badge((bool)$p['banner'], 'In top bar', 'Not in top bar') ?></td>
+<td><form class="inline" method="post"><input type="hidden" name="act" value="promo_active"><input type="hidden" name="site" value="<?= htmlspecialchars($n['site']['id']) ?>"><input type="hidden" name="code" value="<?= htmlspecialchars($p['code']) ?>"><input type="hidden" name="on" value="<?= $p['active'] ? '' : '1' ?>"><button style="background:#6B7352"><?= $p['active'] ? 'Switch off' : 'Switch on' ?></button></form></td></tr><?php endforeach; ?></table><?php endif; ?>
+<?php endforeach; ?>
 
 <h2>Block dates (maintenance, phone bookings…)</h2>
 <form method="post"><input type="hidden" name="act" value="block">

@@ -182,9 +182,29 @@ PROMO: SUMMER10 — 10% off the room rate (−4,436 THB on this villa)   ← dis
 plus an info item `PROMO` with the same text, the guest's own message in `comments`, and
 invoice lines: the villa at the direct rate, a "Promo …" line (negative amount for a discount,
 0 for an included service) and the payment when paid. Use `list_bookings` (notes / infoItems)
-and `get_invoices` to answer "which promo was used and what does the guest get". Upper View
-bookings will use the same lines once Upper View adds promo codes
-(see `docs/promo-codes-from-sonata_v1.0_2026-11-08.md`).
+and `get_invoices` to answer "which promo was used and what does the guest get".
+**Upper View uses the same lines from 2026-11-11** (`referer = upperviewsamui.com`,
+`apiReference = UV…`, property 365322): the PROMO note shows "(−N THB, already off the
+total)" for discounts, SERVICE TO ARRANGE for included services, the `PROMO` info item,
+and invoice lines (room charge at the gross direct rate, "Promo …" at −discount or 0,
+payment at the net amount when paid). Codes are managed on either property's admin page
+(Promotions section — they are per property, applied to the ticked ones).
+
+### 6b. Guest-care info items (2026-11-11 convention, both properties)
+Special requests, allergies, birthdays/anniversaries, pickup times and outstanding tasks
+belong ON THE BEDS24 BOOKING so every system sees them — not only in a spreadsheet.
+Write them as info items via `beds24_write` (`POST /bookings`, `[{id, infoItems:[…]}]`),
+one per fact, using these codes so they are searchable:
+```
+ALLERGY   e.g. "peanut allergy (guest 2)"
+OCCASION  e.g. "birthday on 12 Jan — cake arranged?"
+REQUEST   e.g. "late check-out asked, not yet answered"
+PICKUP    e.g. "airport pickup 14:30, flight PG123"
+TASK      e.g. "collect city tax at check-in"
+PROMO     (written automatically by the website, see 6a)
+```
+`list_bookings` with `includeInfoItems=true` then answers "who arrives this week and what
+do they need". The managers' Google Sheets stay a human double-check, not the master.
 
 ## 7. Ground rules for automated callers (Yomied included)
 

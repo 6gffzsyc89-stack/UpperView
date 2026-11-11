@@ -96,8 +96,10 @@ function st_checkout_for($booking) {
         'line_items[0][price_data][product_data][name]' =>
             'Upper View Samui — ' . uv_type_name($booking['type']),
         'line_items[0][price_data][product_data][description]' =>
-            $booking['checkin'] . ' to ' . $booking['checkout'],
+            $booking['checkin'] . ' to ' . $booking['checkout']
+            . (!empty($booking['promo_code']) ? ' · Promo ' . $booking['promo_code'] . ' (' . (string)($booking['promo_note'] ?? '') . ')' : ''),
         'metadata[booking_code]' => $code,
+        'metadata[promo_code]' => (string)($booking['promo_code'] ?? ''),
         'payment_intent_data[metadata][booking_code]' => $code,
         'payment_intent_data[statement_descriptor_suffix]' => 'UPPER VIEW',
     );

@@ -177,6 +177,14 @@ function b24_create_booking(array $b): ?int {
     if (!empty($b['cot'])) $notes[] = 'BABY COT requested (free option, suites only)';
     $qty = max(1, (int)($b['rooms'] ?? 1));
     if ($qty > 1) $notes[] = "MULTI-UNIT: $qty mini villas booked together (party of " . (int)$b['guests'] . ')';
+    // Promo (2026-11-11): the code and what it gives, readable by staff and the
+    // WhatsApp agent; services get their own TO-ARRANGE line.
+    $promo = !empty($b['promo_code']) ? $b['promo_code'] . ' — ' . (string)($b['promo_note'] ?? '') : null;
+    $pDisc = (int)($b['discount'] ?? 0);
+    if ($promo) $notes[] = 'PROMO: ' . $promo . ($pDisc ? ' (−' . number_format($pDisc) . ' THB, already off the total)' : '');
+    if ($promo && strpos((string)($b['promo_note'] ?? ''), 'Included:') === 0) {
+        $notes[] = 'SERVICE TO ARRANGE: ' . preg_replace('/^Included:\s*/', '', (string)$b['promo_note']);
+    }
     $payload = [[
         'roomId' => $roomId,
         'roomQty' => $qty,
@@ -192,23 +200,24 @@ function b24_create_booking(array $b): ?int {
         'apiReference' => $b['code'],
         'notes' => implode("\n", $notes),
     ]];
+    if ($promo) $payload[0]['infoItems'] = [['code' => 'PROMO', 'text' => $promo]];
     $res = b24_api('POST', '/bookings', $payload);
     $newId = null;
     if (is_array($res) && isset($res[0]['new']['id'])) $newId = (int)$res[0]['new']['id'];
     elseif (is_array($res) && isset($res[0]['success']) && $res[0]['success'] && isset($res[0]['id'])) $newId = (int)$res[0]['id'];
     if ($newId !== null) {
-        // Best-effort: record the charge + payment on the Beds24 invoice so
-        // payment status is visible in the booking's money tab, not only notes.
-        if (!empty($b['paid']) && !empty($b['amount'])) {
-            b24_api('POST', '/bookings', [[
-                'id' => $newId,
-                'invoiceItems' => [
-                    ['type' => 'charge', 'description' => 'Direct booking ' . $b['code'],
-                     'qty' => 1, 'amount' => (int)$b['amount']],
-                    ['type' => 'payment', 'description' => 'Paid online via ' . ($b['provider'] ?? 'card'),
-                     'amount' => (int)$b['amount']],
-                ],
-            ]]);
+        // Best-effort: record the charge (at the gross rate), the promo line and
+        // the payment on the Beds24 invoice so money is visible in the booking's
+        // invoice tab, not only in the notes.
+        if (!empty($b['amount'])) {
+            $gross = (int)($b['gross'] ?? 0); if ($gross <= 0) $gross = (int)$b['amount'];
+            $items = [['type' => 'charge', 'description' => 'Direct booking ' . $b['code'],
+                       'qty' => 1, 'amount' => $gross]];
+            if ($promo) $items[] = ['type' => 'charge', 'description' => 'Promo ' . $promo,
+                                    'qty' => 1, 'amount' => $pDisc ? -$pDisc : 0];
+            if (!empty($b['paid'])) $items[] = ['type' => 'payment',
+                'description' => 'Paid online via ' . ($b['provider'] ?? 'card'), 'amount' => (int)$b['amount']];
+            b24_api('POST', '/bookings', [['id' => $newId, 'invoiceItems' => $items]]);
         }
         return $newId;
     }
