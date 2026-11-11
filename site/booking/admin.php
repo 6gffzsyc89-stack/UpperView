@@ -72,6 +72,14 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $db->prepare("UPDATE bookings SET status='cancelled', updated_at=datetime('now') WHERE code=?")
            ->execute([$_POST['code']]);
         $msg = 'Cancelled ' . htmlspecialchars($_POST['code']) . '.';
+        // keep the master system in step: cancel the linked Beds24 record too
+        $bid = (int) (uv_meta_get('b24id_' . (string)$_POST['code']) ?? 0);
+        if ($bid > 0 && b24_enabled()) {
+            $r = b24_api('POST', '/bookings', [['id' => $bid, 'status' => 'cancelled']]);
+            $msg .= (isset($r[0]['modified']) || !empty($r[0]['success']))
+                ? " Beds24 #$bid cancelled too."
+                : " WARNING: linked Beds24 #$bid was NOT cancelled — do it in Beds24.";
+        }
     }
     if ($act === 'confirm' && !empty($_POST['code'])) {
         // Manual close: confirming an unpaid request writes it to Beds24,

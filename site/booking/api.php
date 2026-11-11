@@ -320,7 +320,9 @@ if ($action === 'review-guests') {
                 'room' => $roomNames[(int)($bb['roomId'] ?? 0)] ?? 'Stay',
                 'checkin' => (string)($bb['arrival'] ?? ''), 'checkout' => (string)($bb['departure'] ?? ''),
                 'source' => in_array($src, ['airbnb', 'booking'], true) ? $src : 'other',
-                'email' => (string)($bb['email'] ?? ''),
+                // the guest's email NEVER reaches the iPad — the server re-derives
+                // it from the booking when the review is submitted (Sonata's hardening)
+                'has_email' => (string)($bb['email'] ?? '') !== '',
             ];
         }
     }
@@ -339,6 +341,20 @@ if ($action === 'review' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $text = trim(strip_tags((string)($in['text'] ?? '')));
     $src = in_array($in['source'] ?? '', ['airbnb', 'booking', 'direct'], true) ? $in['source'] : 'other';
     $ref = preg_replace('/[^A-Za-z0-9\-]/', '', (string)($in['ref'] ?? ''));
+    // Kiosk submissions carry a booking ref: the guest's identity comes from the
+    // BOOKING, not from anything the page posted (details are not editable there).
+    if (preg_match('/^b24-(\d+)$/', $ref, $mref) && b24_enabled()) {
+        $bres = b24_api('GET', '/bookings?id=' . (int)$mref[1]);
+        $bb = $bres['data'][0] ?? null;
+        if ($bb) {
+            require_once __DIR__ . '/calendar.php';
+            $bn = trim(($bb['firstName'] ?? '') . ' ' . ($bb['lastName'] ?? ''));
+            if ($bn !== '') $guest = $bn;
+            $email = (string)($bb['email'] ?? '');
+            $bs = uv_cal_b24_source($bb);
+            $src = in_array($bs, ['airbnb', 'booking'], true) ? $bs : 'other';
+        }
+    }
     $staffIn = is_array($in['staff'] ?? null) ? $in['staff'] : [];
     $roster = json_decode((string) uv_meta_get('review_staff'), true) ?: [];
     $names = array_column($roster, 'name');

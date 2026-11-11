@@ -139,7 +139,7 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
           b.addEventListener('click', function(){
             document.querySelectorAll('#guestlist .big').forEach(function(x){ x.classList.remove('sel'); });
             b.classList.add('sel');
-            R.name = g.name; R.email = g.email || ''; R.source = g.source; R.ref = g.ref;
+            R.name = g.name; R.email = ''; R.hasEmail = !!g.has_email; R.source = g.source; R.ref = g.ref;
             loadBill(g.ref);
           });
           $('#guestlist').appendChild(b);
@@ -237,7 +237,7 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
   }).catch(function(){ $('#staffgrid').appendChild(staffTile('The whole team', '', '')); });
   function goWords(backTo){
     $('#s-words .back').setAttribute('data-back', backTo);
-    $('#defmail').style.display = R.email ? 'block' : 'none';
+    $('#defmail').style.display = (R.hasEmail || R.email) ? 'block' : 'none';
     show('s-words');
   }
   $('#n2').addEventListener('click', function(){
