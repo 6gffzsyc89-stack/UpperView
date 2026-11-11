@@ -195,6 +195,13 @@ function b24_create_booking(array $b): ?int {
     if ($promo && strpos((string)($b['promo_note'] ?? ''), 'Included:') === 0) {
         $notes[] = 'SERVICE TO ARRANGE: ' . preg_replace('/^Included:\s*/', '', (string)$b['promo_note']);
     }
+    // Pool bookings (Booking.com/direct style): assign the optimal physical
+    // villa at write time — back-to-back preferred, orphan gaps avoided.
+    $unitSet = 0;
+    if ($b['type'] === 'villa' && $qty === 1 && !$pending) {
+        require_once __DIR__ . '/units.php';
+        $unitSet = uv_best_unit($b['checkin'], $b['checkout']);
+    }
     $payload = [[
         'roomId' => $roomId,
         'roomQty' => $qty,
@@ -210,6 +217,7 @@ function b24_create_booking(array $b): ?int {
         'apiReference' => $b['code'],
         'notes' => implode("\n", $notes),
     ]];
+    if ($unitSet > 0) $payload[0]['unitId'] = $unitSet;
     if ($promo) $payload[0]['infoItems'] = [['code' => 'PROMO', 'text' => $promo]];
     if (!empty($b['request_note'])) {
         $payload[0]['infoItems'][] = ['code' => 'REQUEST', 'text' => mb_substr((string)$b['request_note'], 0, 300)];

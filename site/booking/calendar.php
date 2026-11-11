@@ -17,6 +17,8 @@
  */
 declare(strict_types=1);
 
+require_once __DIR__ . '/units.php';
+
 const UV_CAL_SOURCES = [
     // key => [label, bar colour, badge text, badge text colour]
     'airbnb'  => ['Airbnb', '#FF385C', 'A', '#fff'],
@@ -106,6 +108,7 @@ function uv_cal_month(string $ym): array {
         if ($b['departure'] <= $first || $b['arrival'] >= $after) continue;
         $src = uv_cal_b24_source($b);
         $qty = max(1, (int)($b['roomQty'] ?? 1));
+        $unit = $t === 'villa' ? (int)($b['unitId'] ?? 0) : 0;
         $name = trim(($b['firstName'] ?? '') . ' ' . ($b['lastName'] ?? ''));
         if (!empty($b['apiReference'])) $b24refs[$b['apiReference']] = true;
         // The list endpoint blanks apiReference, but our code is in the notes we
@@ -113,9 +116,10 @@ function uv_cal_month(string $ym): array {
         if (!empty($b['notes']) && preg_match_all('/\b(UV[0-9A-F]{6})\b/', (string)$b['notes'], $mm)) {
             foreach ($mm[1] as $ref) $b24refs[$ref] = true;
         }
-        $bars[$t][] = ['from' => $b['arrival'], 'to' => $b['departure'], 'src' => $src, 'qty' => $qty, 'b24' => (int)$b['id'],
+        $bars[$t][] = ['from' => $b['arrival'], 'to' => $b['departure'], 'src' => $src, 'qty' => $qty, 'unit' => $unit, 'b24' => (int)$b['id'],
             'label' => ($qty > 1 ? $qty . ' × ' : '') . ($src === 'blocked' ? 'Blocked' : ($name !== '' ? $name : UV_CAL_SOURCES[$src][0])),
             'info' => array_filter([
+                'Unit' => $t === 'villa' ? uv_unit_name($unit) : '',
                 'Guest' => $name, 'Source' => UV_CAL_SOURCES[$src][0] . (!empty($b['apiSource']) ? ' (' . $b['apiSource'] . ')' : ''),
                 'Status' => $b['status'] ?? '', 'Check-in' => $b['arrival'], 'Check-out' => $b['departure'],
                 'Nights' => (string) $nights($b['arrival'], $b['departure']),
@@ -148,7 +152,7 @@ function uv_cal_month(string $ym): array {
         }
         if ($dupe) continue;
         $qty = max(1, (int)($r['rooms'] ?? 1));
-        $bars[$t][] = ['from' => $r['checkin'], 'to' => $r['checkout'], 'src' => $src, 'qty' => $qty, 'b24' => 0,
+        $bars[$t][] = ['from' => $r['checkin'], 'to' => $r['checkout'], 'src' => $src, 'qty' => $qty, 'unit' => 0, 'b24' => 0,
             'label' => ($qty > 1 ? $qty . ' × ' : '') . ($src === 'blocked' ? ('Blocked' . ($r['name'] ? ' · ' . $r['name'] : '')) : (string)$r['name']),
             'info' => array_filter([
                 'Guest' => (string)$r['name'], 'Source' => UV_CAL_SOURCES[$src][0] . ' · our ref ' . $r['code'],
@@ -169,13 +173,21 @@ function uv_cal_month(string $ym): array {
     foreach ($st as $o) {
         $t = $o['type'];
         if (!isset($bars[$t])) continue;
+        $u0 = uv_unit_from_key((string)$o['unit_key']);
         $covered = false;
-        foreach ($bars[$t] as $x) if ($x['from'] <= $o['dtstart'] && $x['to'] >= $o['dtend']) { $covered = true; break; }
+        foreach ($bars[$t] as $x) {
+            // only a real stay/block ON THE SAME UNIT hides a feed event —
+            // a pending request or another villa's booking never does
+            if ($x['src'] === 'request') continue;
+            if ($t === 'villa' && (int)($x['unit'] ?? 0) !== $u0) continue;
+            if ($x['from'] <= $o['dtstart'] && $x['to'] >= $o['dtend']) { $covered = true; break; }
+        }
         if ($covered) continue;
         $sum = (string)($o['summary'] ?? '');
         $reserved = $sum === '' || stripos($sum, 'reserved') !== false;
         $src = $reserved ? 'airbnb' : 'blocked';
-        $bars[$t][] = ['from' => $o['dtstart'], 'to' => $o['dtend'], 'src' => $src, 'qty' => 1, 'b24' => 0,
+        $bars[$t][] = ['from' => $o['dtstart'], 'to' => $o['dtend'], 'src' => $src, 'qty' => 1,
+            'unit' => uv_unit_from_key((string)$o['unit_key']), 'b24' => 0,
             'label' => ($reserved ? 'Airbnb guest' : 'Closed on Airbnb') . ' (' . $o['unit_key'] . ')',
             'info' => array_filter([
                 'Unit' => (string)$o['unit_key'],
@@ -183,6 +195,18 @@ function uv_cal_month(string $ym): array {
                 'Feed says' => $sum, 'From' => $o['dtstart'], 'To' => $o['dtend'], 'Nights' => (string) $nights($o['dtstart'], $o['dtend']),
                 'Note' => 'Not in Beds24, so there are no guest details. Open the listing calendar on Airbnb for more.',
             ], 'strlen')];
+    }
+    // Transition-period dedupe: a manual BLOCK that mirrors a real stay on the
+    // SAME unit (the Jan over-blocks) disappears while the stay fully covers it.
+    foreach ($bars as $t => $list) {
+        $bars[$t] = array_values(array_filter($list, function ($b) use ($list) {
+            if ($b['src'] !== 'blocked' || (int)($b['unit'] ?? 0) === 0) return true;
+            foreach ($list as $x) {
+                if ($x === $b || $x['src'] === 'blocked' || $x['src'] === 'request') continue;
+                if ((int)($x['unit'] ?? 0) === (int)$b['unit'] && $x['from'] <= $b['from'] && $x['to'] >= $b['to']) return false;
+            }
+            return true;
+        }));
     }
     foreach ($bars as &$list) usort($list, function ($a, $b) { return strcmp($a['from'], $b['from']); });
     unset($list);
@@ -264,16 +288,49 @@ function uv_cal_render(string $self, string $ym): string {
     foreach (array_keys($d['bars']) as $t) $o .= '<option value="' . $e($t) . '">' . $e(uv_type_name($t)) . '</option>';
     $o .= '</select><span class="cal-src">' . ($d['b24ok'] ? 'Live from Beds24 + our bookings + the Airbnb calendar feeds' : 'Beds24 not reachable — showing our bookings + the Airbnb calendar feeds only') . '</span></div>';
 
-    // conflicts first, so they show at the top
-    $flags = []; $weights = []; $alertsHtml = '';
+    // Build display rows. The Mini Villa pool is shown PER PHYSICAL UNIT
+    // (Villa 1..8, like Airbnb's own listings, + an Unallocated lane for pool
+    // bookings not yet assigned) — Andy's rule 2026-11-11. Suites stay as one
+    // row each. Row = [key, label, sub, cap, bars (original index => bar)].
+    $rows = [];
     foreach ($d['bars'] as $t => $bars) {
         $cap = max(1, (int)($inv[$t] ?? 1));
-        [$flags[$t], $weights[$t], $over] = uv_cal_conflicts($bars, $cap);
-        foreach (uv_cal_over_ranges($over, $cap) as $m) {
-            $alertsHtml .= '<li><b>' . $e(uv_type_name($t)) . ':</b> ' . $e($m) . '</li>';
+        if ($t === 'villa' && $cap > 1) {
+            $byUnit = [];
+            foreach ($bars as $i => $b) $byUnit[(int)($b['unit'] ?? 0)][$i] = $b;
+            for ($u = 1; $u <= UV_VILLA_UNITS; $u++) {
+                $rows[] = ['key' => $t, 'label' => uv_unit_name($u), 'sub' => 'Mini Villa', 'cap' => 1, 'bars' => $byUnit[$u] ?? []];
+            }
+            if (!empty($byUnit[0])) {
+                $rows[] = ['key' => $t, 'label' => 'Unallocated', 'sub' => 'assign below', 'cap' => $cap, 'bars' => $byUnit[0]];
+            }
+        } else {
+            $rows[] = ['key' => $t, 'label' => uv_type_name($t), 'sub' => '', 'cap' => $cap, 'bars' => $bars];
         }
     }
-    if ($alertsHtml !== '') $o .= '<div class="cal-alert"><b>Double booking — act now.</b> More stays than units on the same night. Move a guest to another room or other dates (or cancel one) today.<ul>' . $alertsHtml . '</ul></div>';
+
+    // conflicts per display row (a unit row has capacity 1, so a double
+    // ASSIGNMENT shows up exactly like a hotel room double booking), plus the
+    // pool-level check so the total can never exceed 8 either
+    $flags = []; $alertsHtml = '';
+    foreach ($rows as $ri => $row) {
+        [$flags[$ri], $rowW, $over] = uv_cal_conflicts(array_values($row['bars']), $row['cap']);
+        $rows[$ri]['w'] = $rowW;
+        foreach (uv_cal_over_ranges($over, $row['cap']) as $m) {
+            $alertsHtml .= '<li><b>' . $e($row['label']) . ':</b> ' . $e($m) . '</li>';
+        }
+    }
+    $poolFlags = [];
+    foreach ($d['bars'] as $t => $bars) {
+        $cap = max(1, (int)($inv[$t] ?? 1));
+        [$poolFlags[$t], $x, $overAll] = uv_cal_conflicts($bars, $cap);
+        if ($t === 'villa' && $cap > 1) {
+            foreach (uv_cal_over_ranges($overAll, $cap) as $m) {
+                $alertsHtml .= '<li><b>' . $e(uv_type_name($t)) . ' (whole pool):</b> ' . $e($m) . '</li>';
+            }
+        }
+    }
+    if ($alertsHtml !== '') $o .= '<div class="cal-alert"><b>Double booking — act now.</b> More stays than units on the same night. Move a guest to another villa or other dates (or cancel one) today.<ul>' . $alertsHtml . '</ul></div>';
 
     /* ---- calendar view ---- */
     $o .= '<div class="cal-view" data-view="cal"><div class="cal-wrap"><div class="cal" style="--n:' . $days . '">';
@@ -283,23 +340,25 @@ function uv_cal_render(string $self, string $ym): string {
         $o .= '<span class="' . ($w >= 6 ? 'we ' : '') . ($dt === $today ? 'td' : '') . '"><small>' . $e(substr(date('D', strtotime($dt)), 0, 2)) . '</small>' . $i . '</span>';
     }
     $o .= '</div></div>';
-    foreach ($d['bars'] as $t => $bars) {
-        $cap = max(1, (int)($inv[$t] ?? 1));
-        $wN = $weights[$t];
+    foreach ($rows as $ri => $row) {
+        $t = $row['key']; $cap = $row['cap'];
+        $bars = array_values($row['bars']);
+        $wN = $row['w'];
         $free = 0;
         for ($i = 1; $i <= $days; $i++) { if (($wN[$ym . '-' . sprintf('%02d', $i)] ?? 0) < $cap) $free++; }
-        // lanes: stack overlapping bars (normal in the villa pool)
+        // lanes: stack overlapping bars (only Unallocated should ever need more than one)
         $laneEnd = []; $lanes = [];
         foreach ($bars as $i => $b) { $l = 0; while (isset($laneEnd[$l]) && $laneEnd[$l] > $b['from']) $l++; $laneEnd[$l] = $b['to']; $lanes[$i] = $l; }
-        $o .= '<div class="cal-row" data-villa="' . $e($t) . '" style="--lanes:' . max(1, count($laneEnd)) . '"><div class="cal-name"><b>' . $e(uv_type_name($t)) . '</b><small>'
-            . ($cap > 1 ? $cap . ' units · ' : '') . $free . ' free night' . ($free === 1 ? '' : 's') . '</small></div><div class="cal-days">';
+        $o .= '<div class="cal-row" data-villa="' . $e($t) . '" style="--lanes:' . max(1, count($laneEnd)) . '"><div class="cal-name"><b>' . $e($row['label']) . '</b><small>'
+            . ($row['sub'] !== '' ? $e($row['sub']) . ' · ' : '') . $free . ' free night' . ($free === 1 ? '' : 's') . '</small></div><div class="cal-days">';
         for ($i = 1; $i <= $days; $i++) {
             $dt = $ym . '-' . sprintf('%02d', $i); $w = (int) date('N', strtotime($dt));
             $o .= '<span class="' . ($w >= 6 ? 'we ' : '') . ($dt === $today ? 'td ' : '') . ((($wN[$dt] ?? 0) < $cap) ? 'fr' : '') . '"></span>';
         }
-        // short gaps between two stays — only meaningful on one-unit rows
+        // short gaps between two stays — the amber "hard to sell" marker
         if ($cap === 1 && $minN > 1) {
             $sorted = array_values(array_filter($bars, function ($b) { return $b['src'] !== 'request'; }));
+            usort($sorted, function ($a, $b) { return strcmp($a['from'], $b['from']); });
             for ($k = 1; $k < count($sorted); $k++) {
                 $gFrom = $sorted[$k - 1]['to']; $gTo = $sorted[$k]['from'];
                 $gn = (int) round((strtotime($gTo) - strtotime($gFrom)) / 86400);
@@ -317,7 +376,7 @@ function uv_cal_render(string $self, string $ym): string {
             $cutL = $a < 0; $cutR = $z > $days;
             $a = max(0, $a); $z = min($days, $z);
             if ($z <= $a) continue;
-            $n = $nightsOf($b); $fl = $flags[$t][$i];
+            $n = $nightsOf($b); $fl = $flags[$ri][$i];
             $extra = $fl === 'dbl' ? ['WARNING' => 'DOUBLE BOOKING: this night has more stays than units'] : ($fl === 'req-clash' ? ['WARNING' => 'These nights are already taken: this request cannot be confirmed'] : []);
             $o .= '<button type="button" class="bar s-' . $b['src'] . ($cutL ? ' cl' : '') . ($cutR ? ' cr' : '') . ($fl ? ' ' . $fl : '') . '"'
                 . str_replace(' style="', ' style="top:' . (9 + 40 * $lanes[$i]) . 'px;left:calc(' . $a . ' / var(--n) * 100%);width:calc(' . ($z - $a) . ' / var(--n) * 100%);', $attrs($b, $extra))

@@ -170,6 +170,20 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         uv_meta_set('review_staff', json_encode($roster));
         $msg = 'Removed ' . htmlspecialchars((string)$_POST['sname']) . ' from the review roster.';
     }
+    if ($act === 'assign_apply') {
+        require_once __DIR__ . '/units.php';
+        $in = json_decode((string)($_POST['moves'] ?? ''), true);
+        $mv = [];
+        foreach ((is_array($in) ? $in : []) as $m) {
+            if (!empty($m['b24']) && !empty($m['unit'])) $mv[] = ['b24' => (int)$m['b24'], 'unit' => (int)$m['unit']];
+        }
+        $r = uv_assign_apply($mv);
+        uv_sheet_ping();
+        $msg = 'Villa assignments: ' . (int)$r['done'] . ' booking(s) moved in Beds24.'
+             . ($r['failed'] ? ' FAILED: ' . htmlspecialchars(implode('; ', $r['failed'])) : '');
+        $ok = !$r['failed'];
+        $anchor = 'assign';
+    }
     if ($act === 'calimg_token') {   // link for the WhatsApp assistant's calendar pictures (new link = old one stops working)
         uv_meta_set('cal_image_token', bin2hex(random_bytes(20)));
         $msg = 'New WhatsApp picture link created (the old one no longer works). Copy it into the WhatsApp assistant\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
@@ -318,6 +332,31 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <?= uv_flash_box('calendar') ?>
 <?= uv_cal_render($self, $calMonth) ?>
 <?= uv_cal_assets($self) ?>
+<h2 id="assign">Villa assignments (who sleeps where)</h2>
+<?= uv_flash_box('assign') ?>
+<p style="margin:0 0 8px;font-size:13px">Airbnb guests are <b>locked</b> to the villa they booked. Everyone else (Booking.com, Agoda, direct, phone) books "a mini villa" and the system places them: <b>back-to-back stays first</b> (checkout 12:00 → cleaning → check-in 15:00, limited same-day turnovers per day), <b>never creating gaps shorter than the 2-night minimum</b> (unsellable orphan nights), and keeping long open runs whole for long stays. New paid bookings are placed automatically; this button re-optimises everything still movable (never in-house guests, never arrivals within 48 h, never Airbnb).</p>
+<?php if (isset($_GET['opt'])): require_once __DIR__ . '/units.php';
+    $prop = uv_assign_units(date('Y-m-d'), date('Y-m-d', strtotime('+180 days'))); ?>
+<?php foreach ($prop['conflicts'] as $cfl): ?><p class="msg bad"><?= htmlspecialchars($cfl) ?></p><?php endforeach; ?>
+<?php if (!$prop['moves']): ?><p style="font-size:13px">Everything movable is already in its best villa — no moves proposed.</p>
+<?php else: ?>
+<table><tr><th>Guest / stay</th><th>Dates</th><th>Now</th><th>→ Proposed</th><th>Why</th></tr>
+<?php foreach ($prop['moves'] as $m): ?>
+<tr><td><?= htmlspecialchars($m['label']) ?> <small>#<?= (int)$m['b24'] ?></small></td>
+<td><?= htmlspecialchars($m['from']) ?> → <?= htmlspecialchars($m['to']) ?></td>
+<td><?= htmlspecialchars(uv_unit_name((int)$m['cur'])) ?></td>
+<td><b><?= htmlspecialchars(uv_unit_name((int)$m['unit'])) ?></b></td>
+<td style="font-size:12px"><?= htmlspecialchars($m['why']) ?></td></tr>
+<?php endforeach; ?></table>
+<form method="post" onsubmit="return confirm('Apply these villa assignments in Beds24?')">
+<input type="hidden" name="act" value="assign_apply">
+<input type="hidden" name="moves" value="<?= htmlspecialchars(json_encode($prop['moves']), ENT_QUOTES) ?>">
+<button>Apply assignments to Beds24</button></form>
+<?php endif; ?>
+<?php else: ?>
+<p><a href="<?= htmlspecialchars($self) ?>&opt=1#assign" style="display:inline-block;background:#4F6446;color:#fff;padding:8px 16px;text-decoration:none;border-radius:4px">Preview optimal assignments (next 180 days)</a></p>
+<?php endif; ?>
+
 <?php $ciTok = (string) uv_meta_get('cal_image_token'); $ciBase = rtrim((string)($cfg['site_url'] ?? 'https://upperviewsamui.com'), '/') . '/booking/calendar-image.php'; ?>
 <details class="box" style="margin:12px 0 24px;background:#fff;padding:12px 14px">
 <summary><b>WhatsApp picture link</b> — phone-sized calendar pictures the WhatsApp assistant can send</summary>

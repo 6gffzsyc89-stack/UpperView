@@ -354,3 +354,33 @@ session's feed deploy. Google refreshes IMPORTDATA on its own (~hourly).
   with two labelled DRINK/MEAL invoice lines to demo the kiosk and comps.
 - Beds24 support request filled in the help centre (convert funded trial,
   owner 181740, both properties); the final Submit click is Andy's.
+
+## v3.7 — 2026-11-11 · Physical villa units: per-unit calendar + assignment optimiser
+Andy's rule: the pool must display and manage the 8 PHYSICAL villas (Airbnb
+sells each villa as its own listing; Booking.com-style bookings are placed by
+us for optimal occupancy).
+- Beds24 room 752258 already models this (units 1..8 "Villa 1".."Villa 8",
+  per-booking allocation) — assignments live on the Beds24 booking (unitId),
+  never in a side table.
+- **Admin calendar** now shows Villa 1–8 as individual rows (+ an Unallocated
+  lane), unit-aware dedupe (a pending request or another villa's stay no
+  longer hides a feed event — fixed a bug that hid a real Airbnb stay), and a
+  per-unit double-ASSIGNMENT alert plus the whole-pool overbook check.
+- **units.php**: uv_unit_stays (Beds24 unitId + Airbnb feeds v2/v3/v4 =
+  locked units), uv_assign_units — standard hotel room-assignment heuristics:
+  pin Airbnb/in-house/<48h arrivals; assign flexible stays arrival-first,
+  best-fit (back-to-back rewarded = same-day turnover with the 12:00→15:00
+  cleaning window, capped per day via config max_turnovers_per_day default 4;
+  orphan gaps shorter than the 2-night minimum heavily penalised; fill broken
+  units before long open runs). uv_assign_apply writes unitIds to Beds24;
+  uv_best_unit auto-places each new paid pool booking at write time.
+- **Admin "Villa assignments" section**: preview proposed moves (guest,
+  dates, current → proposed, reason) and one-click apply.
+- Data fixes while verifying: the three manual Jan villa over-blocks had
+  auto-landed on wrong units (fixed to 2/3/4), then — feeds now verified
+  villa-for-villa against the managers' sheet — the three VILLA blocks were
+  cancelled as redundant duplicates (they phantom-blocked a sellable night);
+  the SUITE block stays (no feed covers suites). Per-villa free-night counts
+  and pool availability for Jan 1–4 now match the manual sheet exactly.
+- calendar-feed.php: new Unit column (Villa N) + refreshes the Airbnb feeds
+  on every pull, so portal changes reach the sheet on their own.

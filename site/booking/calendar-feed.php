@@ -29,6 +29,10 @@ $from = uv_valid_date($_GET['from'] ?? null) ? (string)$_GET['from'] : date('Y-m
 $to   = uv_valid_date($_GET['to'] ?? null) ? (string)$_GET['to'] : date('Y-m-d', strtotime('+180 days'));
 if ($to <= $from || strtotime($to) - strtotime($from) > 400 * 86400) { http_response_code(400); exit('bad range'); }
 
+// Every sheet pull re-pulls the Airbnb calendars when they are older than the
+// configured age (5 min), so portal-side changes reach the sheet by themselves.
+uv_refresh_ota();
+
 // Collect bars month by month (the calendar's own merged view: Beds24 + our
 // bookings + the Airbnb feeds, deduped), then dedupe stays spanning months.
 $rows = []; $seen = [];
@@ -48,6 +52,7 @@ for ($ym = substr($from, 0, 7); $ym <= substr($to, 0, 7); $ym = date('Y-m', strt
             $rows[] = [
                 $status,
                 uv_type_name($type),
+                $type === 'villa' ? uv_unit_name((int)($b['unit'] ?? 0)) : uv_type_name($type),
                 max(1, (int)($b['qty'] ?? 1)),
                 $b['from'],
                 $b['to'],
@@ -69,7 +74,7 @@ header('Content-Type: text/csv; charset=utf-8');
 header('Cache-Control: no-store');
 header('X-Robots-Tag: noindex');
 $out = fopen('php://output', 'w');
-fputcsv($out, ['Updated ' . date('Y-m-d H:i') . ' (Samui time)', 'upperviewsamui.com', $from . ' -> ' . $to, '', '', '', '', '', '', '', '', '', '']);
-fputcsv($out, ['Status', 'Room', 'Units', 'Check-in', 'Check-out', 'Nights', 'Guest', 'Source', 'Ref', 'Guests', 'Amount', 'Promo', 'Note']);
+fputcsv($out, ['Updated ' . date('Y-m-d H:i') . ' (Samui time)', 'upperviewsamui.com', $from . ' -> ' . $to, '', '', '', '', '', '', '', '', '', '', '']);
+fputcsv($out, ['Status', 'Room', 'Unit', 'Qty', 'Check-in', 'Check-out', 'Nights', 'Guest', 'Source', 'Ref', 'Guests', 'Amount', 'Promo', 'Note']);
 foreach ($rows as $r) fputcsv($out, $r);
 fclose($out);
