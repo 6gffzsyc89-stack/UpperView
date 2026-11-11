@@ -242,6 +242,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $r = $run($id, $act, array('code' => (string) $_POST['code'], 'on' => !empty($_POST['on']) ? 1 : 0));
         list($msg, $ok) = $report('Promo ' . htmlspecialchars(uv_promo_code_clean((string) $_POST['code'])) . ' ' . array('promo_active' => !empty($_POST['on']) ? 'switched ON.' : 'switched OFF.', 'promo_banner' => !empty($_POST['on']) ? 'shown in the top bar.' : 'removed from the top bar.', 'promo_delete' => 'deleted.')[$act], array($id => $r));
     }
+    if (in_array($act, array('block', 'cancel', 'confirm', 'request', 'refresh'), true)) uv_sheet_ping();
     if ($msg === '') $msg = 'Nothing changed.';
     uv_meta_set('admin_flash', json_encode(['msg' => $msg, 'ok' => $ok, 'anchor' => $anchor]));
     header('Location: ' . $self . ($anchor ? '#' . $anchor : ''), true, 303);

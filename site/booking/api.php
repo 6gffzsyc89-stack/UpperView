@@ -154,6 +154,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
                        'pending', 'direct', $amount, $cfg['currency'],
                        $promo ? $promo['code'] : null, $promo ? $promo['note'] : null,
                        $disc > 0 ? $gross : null, $disc > 0 ? $disc : null, $now, $now]);
+        uv_sheet_ping();
         $payUrl = rtrim($cfg['site_url'], '/') . '/booking/pay.php?code='
                 . rawurlencode($code) . '&sig=' . uv_pay_sig($code);
         uv_json(['mode' => 'pay', 'code' => $code, 'url' => $payUrl,
@@ -208,6 +209,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         'status' => 'inquiry', 'paid' => false, 'cot' => $cot, 'rooms' => $rooms,
         'promo_code' => $promo ? $promo['code'] : null, 'promo_note' => $promo ? $promo['note'] : null,
     ]);
+    uv_sheet_ping();
     uv_notify("Upper View: NEW BOOKING REQUEST $code (pending, unpaid)", $summary
         . "\n\nNO payment has been taken — this is a PENDING request only."
         . "\nOTA calendars are still OPEN"

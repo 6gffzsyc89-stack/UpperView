@@ -385,6 +385,8 @@ function uv_pay_sig(string $code): string {
     return substr(hash_hmac('sha256', 'pay|' . $code, $cfg['admin_key']), 0, 16);
 }
 
+require_once __DIR__ . '/sheet-ping.php';   // near-real-time Google Sheet mirror
+
 /** Create a hosted checkout for a booking. Returns ['url' => ...] or null. */
 function uv_checkout_create(array $booking): ?array {
     if (uv_payment_provider() === 'airwallex') {

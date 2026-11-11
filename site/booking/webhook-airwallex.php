@@ -75,6 +75,7 @@ $b24id = b24_create_booking(array(
     'rooms' => (int) ($b['rooms'] ?? 1),
 ));
 uv_meta_set('aw_paid_' . $code, (string) time());
+uv_sheet_ping();
 
 uv_send_confirmation($b, 'Airwallex');
 if (!$b24id) {

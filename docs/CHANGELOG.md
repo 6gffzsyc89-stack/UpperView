@@ -334,3 +334,23 @@ View + Sonata)" is live under ableabmanagement@gmail.com, anyone-with-link
 viewer: UPPER VIEW tab imports the feed (verified: 16 stays, dates formatted,
 pendings/blocks/Airbnb/Booking.com all present), SONATA tab awaits that
 session's feed deploy. Google refreshes IMPORTDATA on its own (~hourly).
+
+## v3.6 — 2026-11-11 · Instant sheet pings, kiosk locked to staff-picked guests
+- **Near-real-time sheet mirror:** `sheet-ping.php` (uv_sheet_ping) fires a
+  non-blocking call to the Apps Script web app (meta sheet_ping_url) after
+  every booking-state change — pay hold, pending request, webhook confirm,
+  admin block/cancel/confirm/request/refresh — so the shared Google Sheet
+  re-pulls both feeds within seconds of an event; Google-side script
+  "NikiStay live sheet sync" created under ableabmanagement@gmail.com
+  (authorization + trigger pending Andy's one-time Allow). Sonata's feed is
+  live in the SONATA tab.
+- **Review kiosk, Andy's correction:** in kiosk mode the manual fields are
+  gone — staff tap the guest, the details come from the booking and are not
+  editable; the booking's email is never shown or edited (a note says the
+  finished review goes there); only the optional EXTRA email on the final
+  step is typed. Guests at home (no kiosk key) keep the manual form.
+- **MOCK BOOKING UVMOCK01** (Beds24 96025641, clearly labelled, PAST dates
+  Nov 6–10 so it can never block availability or reach the sheet feed) seeded
+  with two labelled DRINK/MEAL invoice lines to demo the kiosk and comps.
+- Beds24 support request filled in the help centre (convert funded trial,
+  owner 181740, both properties); the final Submit click is Andy's.
