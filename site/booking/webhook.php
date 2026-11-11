@@ -36,6 +36,18 @@ if (($event['type'] ?? '') === 'checkout.session.completed') {
         $st->execute([$code]);
         $b = $st->fetch(PDO::FETCH_ASSOC);
         if ($b && $b['status'] !== 'confirmed') {
+            // No double bookings — ever: confirm-time re-check (see webhook-stripe.php).
+            $clash = uv_clash_nights($b['type'], $b['checkin'], $b['checkout'], (int)($b['rooms'] ?? 1), (string)$b['code']);
+            if ($clash) {
+                $db->prepare("UPDATE bookings SET status='clash', updated_at=datetime('now') WHERE code=?")
+                   ->execute([$code]);
+                uv_notify('URGENT: paid booking ' . $code . ' NOT confirmed — dates already taken',
+                    "A guest PAID online (Stripe) but these nights were booked elsewhere first, so the booking was NOT confirmed (no double booking was made):\n\n"
+                    . uv_type_name($b['type']) . ' (' . $code . '): taken on ' . implode(', ', $clash)
+                    . "\n\nContact the guest TODAY: offer other dates or another room, or refund in full."
+                    . "\nGuest: {$b['name']} · {$b['email']} · {$b['phone']}");
+                http_response_code(200); exit('clash');
+            }
             $db->prepare("UPDATE bookings SET status='confirmed', updated_at=datetime('now') WHERE code=?")
                ->execute([$code]);
             $b24id = b24_create_booking([

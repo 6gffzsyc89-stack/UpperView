@@ -9,6 +9,7 @@ require __DIR__ . '/beds24.php';
 require_once __DIR__ . '/stripe.php';
 if (is_file(__DIR__ . '/airwallex.php')) require_once __DIR__ . '/airwallex.php';
 require_once __DIR__ . '/network-local.php'; // admin network shared with Sonata (2026-11-08)
+require_once __DIR__ . '/calendar.php';      // occupancy calendar (2026-11-11, from Sonata v3.0)
 
 $cfg = uv_config();
 // Arriving from another property's admin: a short-lived signed link opens this admin.
@@ -24,6 +25,12 @@ $k = htmlspecialchars($kin);
 $db = uv_db();
 $msg = ''; $ok = true; $anchor = '';
 $self = '?k=' . rawurlencode($kin);
+// Calendar click-through: one booking from Beds24, as JSON
+if (isset($_GET['bk'])) {
+    header('Content-Type: application/json; charset=utf-8'); header('Cache-Control: no-store');
+    echo json_encode(uv_cal_b24_detail((int) $_GET['bk'])); exit;
+}
+$calMonth = (isset($_GET['m']) && preg_match('/^20\d\d-(0[1-9]|1[0-2])$/', (string) $_GET['m'])) ? (string) $_GET['m'] : date('Y-m');
 
 /** Live check of the saved Stripe key: lists one Checkout Session (read-only, charges nothing). */
 function uv_admin_stripe_check(): array {
@@ -72,7 +79,15 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $st = $db->prepare('SELECT * FROM bookings WHERE code=?');
         $st->execute([$_POST['code']]);
         $b = $st->fetch(PDO::FETCH_ASSOC);
-        if ($b) {
+        // No double bookings — ever: the nights must still be free right now
+        // (Beds24 + fresh OTA feeds + our bookings, excluding this booking's own row).
+        $clash = $b ? uv_clash_nights($b['type'], $b['checkin'], $b['checkout'], (int)($b['rooms'] ?? 1), (string)$b['code']) : [];
+        if ($b && $clash) {
+            $ok = false;
+            $msg = 'NOT confirmed — that would be a double booking: ' . htmlspecialchars(uv_type_name($b['type']))
+                 . ' is already taken on ' . htmlspecialchars(implode(', ', $clash))
+                 . '. Offer the guest other dates or another room.';
+        } elseif ($b) {
             $db->prepare("UPDATE bookings SET status='confirmed', updated_at=datetime('now') WHERE code=?")
                ->execute([$b['code']]);
             $b24id = b24_create_booking([
@@ -92,6 +107,10 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($act === 'refresh') { uv_refresh_ota(true); $msg = 'OTA calendars refreshed.'; }
+    if ($act === 'calimg_token') {   // link for the WhatsApp assistant's calendar pictures (new link = old one stops working)
+        uv_meta_set('cal_image_token', bin2hex(random_bytes(20)));
+        $msg = 'New WhatsApp picture link created (the old one no longer works). Copy it into the WhatsApp assistant\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
+    }
     if ($act === 'stripekey') {
         $sk = trim((string)($_POST['sk'] ?? ''));
         if (preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$/', $sk)) {
@@ -207,6 +226,21 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <a href="#payments" style="color:inherit;text-decoration:underline">Payments settings</a></div>
 <p>OTA calendars last pulled: <?= $fetched ? gmdate('Y-m-d H:i', (int)$fetched) . ' UTC' : 'never' ?>
 <form class="inline" method="post"><input type="hidden" name="act" value="refresh"><button>Pull now</button></form></p>
+
+<h2 id="calendar">Calendar</h2>
+<?= uv_flash_box('calendar') ?>
+<?= uv_cal_render($self, $calMonth) ?>
+<?= uv_cal_assets($self) ?>
+<?php $ciTok = (string) uv_meta_get('cal_image_token'); $ciBase = rtrim((string)($cfg['site_url'] ?? 'https://upperviewsamui.com'), '/') . '/booking/calendar-image.php'; ?>
+<details class="box" style="margin:12px 0 24px;background:#fff;padding:12px 14px">
+<summary><b>WhatsApp picture link</b> — phone-sized calendar pictures the WhatsApp assistant can send</summary>
+<?php if ($ciTok === ''): ?><p>No link yet.</p><?php else: $ciUrl = $ciBase . '?t=' . rawurlencode($ciTok); ?>
+<p style="font-size:12px;color:#666">Give the WhatsApp assistant this address (in its own settings, not in a chat). Add <code>&amp;m=2026-12</code> for a month, <code>&amp;v=villa</code> / <code>superior</code> / <code>deluxe</code> / <code>king</code> for one room type, <code>&amp;view=list</code> for a list, <code>&amp;who=staff</code> for colours and guest names (team only — guests get the default: booked / free, no names).</p>
+<p><input readonly style="width:100%;max-width:760px;font:12px monospace;padding:6px" value="<?= htmlspecialchars($ciUrl) ?>" onclick="this.select()"></p>
+<p>Preview: <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl) ?>">guest calendar</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&view=list') ?>">guest list (free dates)</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&who=staff') ?>">staff calendar</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&who=staff&view=list') ?>">staff list</a></p>
+<?php endif; ?>
+<form class="inline" method="post"><input type="hidden" name="act" value="calimg_token"><button style="background:#3D4C36"><?= $ciTok === '' ? 'Create link' : 'Replace link' ?></button></form>
+</details>
 
 <h2>Bookings &amp; blocks</h2>
 <table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th></th></tr>

@@ -65,6 +65,10 @@ function uv_db(): PDO {
         // lazy migration: number of units booked (multi-villa parties)
         try { $db->exec('ALTER TABLE bookings ADD COLUMN rooms INTEGER NOT NULL DEFAULT 1'); }
         catch (PDOException $e) { /* column already exists */ }
+        // lazy migration (calendar, 2026-11-11): keep the iCal SUMMARY
+        // ("Reserved" = Airbnb guest, "Not available" = closed on Airbnb)
+        try { $db->exec('ALTER TABLE ota_busy ADD COLUMN summary TEXT'); }
+        catch (PDOException $e) { /* column already exists */ }
     }
     return $db;
 }
@@ -104,11 +108,11 @@ function uv_refresh_ota(bool $force = false): array {
         $db->beginTransaction();
         $db->prepare('DELETE FROM ota_busy WHERE source=? AND unit_key=?')
            ->execute([$feed['source'], $feed['unit']]);
-        $ins = $db->prepare('INSERT OR IGNORE INTO ota_busy(source,unit_key,type,dtstart,dtend,uid)
-                             VALUES(?,?,?,?,?,?)');
+        $ins = $db->prepare('INSERT OR IGNORE INTO ota_busy(source,unit_key,type,dtstart,dtend,uid,summary)
+                             VALUES(?,?,?,?,?,?,?)');
         foreach ($events as $ev) {
             $ins->execute([$feed['source'], $feed['unit'], $feed['type'],
-                           $ev['start'], $ev['end'], $ev['uid']]);
+                           $ev['start'], $ev['end'], $ev['uid'], $ev['summary']]);
         }
         $db->commit();
         $results[$feed['unit']] = count($events) . ' events';
@@ -145,7 +149,8 @@ function uv_parse_ics(string $ics): array {
         $start = uv_ics_date($s);
         $end   = $e ? uv_ics_date($e) : $start;
         if ($end <= $start) $end = date('Y-m-d', strtotime($start . ' +1 day'));
-        $events[] = ['start' => $start, 'end' => $end, 'uid' => $get('UID') ?? ''];
+        $events[] = ['start' => $start, 'end' => $end, 'uid' => $get('UID') ?? '',
+                     'summary' => (string)($get('SUMMARY') ?? '')];
     }
     return $events;
 }
@@ -185,13 +190,18 @@ function uv_availability(string $type, string $from, string $to): array {
     }
 
     // Direct bookings (confirmed, fresh pending, inquiries, admin blocks).
-    $st = $db->prepare("SELECT checkin, checkout FROM bookings
+    // A multi-villa booking takes `rooms` units per night, not 1.
+    // $GLOBALS['uv_avail_exclude'] (set by uv_clash_nights) leaves out one
+    // booking's own row, so re-checking a booking never clashes with itself.
+    $ex = isset($GLOBALS['uv_avail_exclude']) ? (string)$GLOBALS['uv_avail_exclude'] : '';
+    $st = $db->prepare("SELECT checkin, checkout, rooms FROM bookings
                         WHERE type=? AND status IN ('confirmed','pending','inquiry','blocked')
-                        AND checkin < ? AND checkout > ?");
-    $st->execute([$type, $to, $from]);
+                        AND code != ? AND checkin < ? AND checkout > ?");
+    $st->execute([$type, $ex, $to, $from]);
     foreach ($st as $row) {
+        $take = max(1, (int)($row['rooms'] ?? 1));
         foreach (uv_date_range(max($row['checkin'], $from), min($row['checkout'], $to)) as $d) {
-            if (isset($busy[$d])) $busy[$d]++;
+            if (isset($busy[$d])) $busy[$d] += $take;
         }
     }
 
@@ -265,6 +275,18 @@ function uv_mail_guest(string $email, string $subject, string $body): void {
     @mail($email, $subject, $body,
           "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
           '-f booking@upperviewsamui.com');
+}
+
+/** Very small per-IP rate limit for public endpoints (calendar pictures). */
+function uv_rate_limit(string $bucket, int $max, int $windowSec): void {
+    $ip = $_SERVER['REMOTE_ADDR'] ?? '0';
+    $k = 'rl_' . $bucket . '_' . md5($ip);
+    $now = time();
+    $raw = uv_meta_get($k);
+    $hits = $raw ? array_filter(array_map('intval', explode(',', $raw)), function ($t) use ($now, $windowSec) { return $t > $now - $windowSec; }) : [];
+    if (count($hits) >= $max) { http_response_code(429); exit('Too many requests, please try again later.'); }
+    $hits[] = $now;
+    uv_meta_set($k, implode(',', $hits));
 }
 
 /* ---------- Payment adapter seam (stripe today, airwallex later) ---------- */

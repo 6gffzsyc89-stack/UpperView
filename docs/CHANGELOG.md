@@ -195,3 +195,42 @@ place … change it in all places … record the change and let the Upper View s
 - Deployed over SSH (5 files); live files matched the repo before upload; database backed up as
   `data/bookings.sqlite.bak-2026-11-08-network`. Previous versions are in git (commit 38541d5).
 
+## v3.1 — 2026-11-11 · Admin calendar, no double bookings, WhatsApp calendar picture
+Ported from Sonata v3.0 (Andy: "update Upper View's admin to match").
+- **Admin calendar** (`booking/calendar.php`): one month at a time (◀ ▶, "This
+  month"), one row per room type, stays drawn as bars coloured by source
+  (Airbnb/Booking.com/Agoda/Trip/Expedia/Vrbo/direct/request/blocked) with
+  badges; click a bar → side panel with the full booking loaded live from
+  Beds24 (guest, channel, price, commission, messages, notes, invoice);
+  Calendar/List switch and room filter (remembered per browser). Upper View
+  adaptation: the Mini Villa row is a POOL of 8 units, so overlapping bars
+  are normal there — "double booking" is capacity-aware (nights where summed
+  stay weight, incl. Beds24 roomQty and our `rooms`, exceeds the unit count);
+  suites (capacity 1) behave exactly like Sonata's villas.
+- **No double bookings — ever** (`uv_clash_nights` in beds24.php: Beds24 +
+  freshly pulled OTA feeds + our bookings, excluding the booking's own row):
+  checked (a) in pay.php before any payment starts (409, clear message,
+  nothing charged), (b) in all three webhooks at confirm time — if the nights
+  were taken while the guest paid, status becomes `clash`, nothing is written
+  to Beds24, the desk gets an URGENT email and the guest's checkout page
+  explains (payment safe, contact today, refund or move), (c) on the admin
+  Confirm button (refuses with the clashing nights). Local engine fixed on
+  the way: multi-villa bookings now count `rooms` units per night (was 1).
+- **WhatsApp calendar picture** (`booking/calendar-image.php`, PNG 1080px,
+  Lato/OFL in booking/fonts/): `?t=<token>&m=YYYY-MM&v=all|villa|superior|
+  deluxe|king&view=cal|list&who=guest|staff`. Guest = booked/free only, with
+  "N free" per night on the villa pool; staff = colours + guest names. Token
+  made in admin → Calendar; stored only in the site DB; 60 pictures/10 min
+  per IP. Verified live: all six modes render, bad token 403.
+- **Dedupe gotcha (both brands)**: Beds24 GET /bookings returns an EMPTY
+  apiReference even for bookings created with one, so matching our rows to
+  Beds24 copies by reference silently fails → the same stay showed twice and
+  raised a false "double booking". Fallback dedupe added: same type +
+  identical dates + (both blocks, matching channel ref, or same guest name).
+  Reported to the Sonata session (its calendar relies on the same key).
+- iCal SUMMARY now stored (`ota_busy.summary`, lazy migration) so feed
+  entries read "Airbnb guest" vs "Closed on Airbnb"; `uv_rate_limit()` added.
+- Cloudflare (Sonata v3.0 item 4): both domains are in Andy's Cloudflare
+  account, switch lives in Sonata's admin, covers upperviewsamui.com — no
+  Upper View code needed, nothing changes until the nameserver move.
+

@@ -111,6 +111,23 @@ function uv_avail(string $type, string $from, string $to): array {
     return uv_availability($type, $from, $to);
 }
 
+/** No double bookings — ever (2026-11-11, mirrors Sonata v3.0): the nights in
+ *  [$ci, $co) that can NOT take $rooms more unit(s) of this type right now —
+ *  Beds24 (every portal it manages) + the OTA calendar feeds (pulled fresh) +
+ *  our own bookings, excluding $excludeCode's own row so a booking never
+ *  clashes with itself. Empty array = the stay can be confirmed. */
+function uv_clash_nights(string $type, string $ci, string $co, int $rooms = 1, string $excludeCode = '', bool $fresh = true): array {
+    static $pulled = false;
+    if ($fresh && !$pulled) { uv_refresh_ota(true); $pulled = true; }
+    $GLOBALS['uv_avail_exclude'] = $excludeCode;
+    $a = uv_avail($type, $ci, $co);
+    unset($GLOBALS['uv_avail_exclude']);
+    $need = max(1, $rooms);
+    $out = [];
+    foreach ($a as $d => $n) if ((int)$n < $need) $out[] = $d;
+    return $out;
+}
+
 function b24_availability(string $type, string $from, string $to): ?array {
     $roomId = b24_cfg()['room_map'][$type] ?? null;
     if ($roomId === null) return null;

@@ -25,6 +25,24 @@ $st->execute(array($code));
 $b = $st->fetch(PDO::FETCH_ASSOC);
 if (!$b) { http_response_code(404); exit('Booking not found'); }
 
+/* ---- paid-but-clashed booking: never double-book; tell the guest what happens next ---- */
+if ($b['status'] === 'clash') {
+    http_response_code(200);
+    echo '<!doctype html><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">'
+       . '<meta name="robots" content="noindex"><title>Upper View Samui</title>'
+       . '<body style="font-family:Georgia,serif;background:#F7F0E9;color:#2b2b26;margin:0">'
+       . '<div style="max-width:560px;margin:60px auto;padding:34px;background:#fff">'
+       . '<h1 style="font-weight:normal;letter-spacing:.14em;font-size:20px;color:#3D4C36">UPPER VIEW</h1>'
+       . '<p style="line-height:1.7">We are very sorry — the dates you chose were booked by another guest moments '
+       . 'before your payment completed, so your reservation <b>' . htmlspecialchars($code) . '</b> could not be confirmed. '
+       . 'No double booking was made.</p>'
+       . '<p style="line-height:1.7"><b>Your payment is safe.</b> Our team is already informed and will contact you today '
+       . 'to offer other dates or another room — or refund you in full, whichever you prefer.</p>'
+       . '<p style="line-height:1.7">Questions now? Write to <a href="mailto:booking@upperviewsamui.com" '
+       . 'style="color:#3D4C36">booking@upperviewsamui.com</a> quoting ' . htmlspecialchars($code) . '.</p></div>';
+    exit;
+}
+
 /* ---- AJAX: save guest details, return payment intent ---- */
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     header('Content-Type: application/json');
@@ -47,6 +65,18 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         'news'    => !empty($in['news']),
     )));
     $b['email'] = $email;
+    /* No double bookings — ever: re-check live availability (Beds24 + fresh OTA
+       feeds + our bookings) BEFORE any money is taken. 409 = nothing charged. */
+    if ($b['status'] !== 'confirmed') {
+        $clash = uv_clash_nights($b['type'], $b['checkin'], $b['checkout'], (int)($b['rooms'] ?? 1), $code);
+        if ($clash) {
+            http_response_code(409);
+            echo json_encode(array('error' => 'We are very sorry — these dates were just booked by another guest ('
+                . implode(', ', array_slice($clash, 0, 4)) . (count($clash) > 4 ? '…' : '')
+                . '). No payment was taken. Please choose other dates.'));
+            exit;
+        }
+    }
     if (uv_pay_provider() === 'stripe') {
         $sess = st_checkout_for($b);
         if (!$sess) { http_response_code(502); echo '{"error":"payment unavailable"}'; exit; }
@@ -294,7 +324,10 @@ input:focus,select:focus{outline:1px solid var(--green)}
       body: JSON.stringify({ first: v('f_first'), last: v('f_last'), phone: v('f_phone'),
         email: v('f_email'), country: v('f_country'), address: v('f_address'),
         city: v('f_city'), zip: v('f_zip'), news: document.getElementById('f_news').checked })
-    }).then(function(r){ if(!r.ok) throw 0; return r.json(); })
+    }).then(function(r){
+      if(!r.ok) return r.json().then(function(d){ throw (d && d.error) ? d.error : 0; }, function(){ throw 0; });
+      return r.json();
+    })
     .then(function(d){
       if (d.checkout_url) { location.href = d.checkout_url; return; }
       document.getElementById('paySec').classList.add('on');
@@ -315,10 +348,10 @@ input:focus,select:focus{outline:1px solid var(--green)}
           document.getElementById('paySec').scrollIntoView({behavior:'smooth'});
         });
     })
-    .catch(function(){
+    .catch(function(why){
       started = false; btn.disabled = false; btn.textContent = 'CONTINUE TO PAYMENT';
       var e1b = document.getElementById('err1');
-      e1b.textContent = 'We could not start the payment. Please try again.';
+      e1b.textContent = (typeof why === 'string' && why) ? why : 'We could not start the payment. Please try again.';
       e1b.style.display = 'block';
     });
   });
