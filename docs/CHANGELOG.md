@@ -311,3 +311,16 @@ Ported from Sonata v3.0 (Andy: "update Upper View's admin to match").
   emailing guests their own words to post themselves is allowed. Beds24 has
   a Booking.com review mirror endpoint (/channels/booking/reviews — answers
   once the channel is connected).
+
+## v3.4 — 2026-11-11 · Two-night minimum stay (matching the portals)
+Andy's rule: minimum 2 nights everywhere. (1) Beds24: minStay 2 written to
+all four rooms for the whole seeded horizon (today → 2028-11-01, two writes
+per room for the 365-day cap) and read back = 2 on every spot check — so the
+rule will flow to every connected channel. (2) Website server-side: quote and
+book both refuse ranges under 2 nights (400 "Minimum stay is 2 nights.").
+(3) Website calendar: a checkout tap less than 2 nights after check-in is
+refused with the message in all ten languages (p_min2); the Check button
+double-checks. (4) Server config min_nights=2 (backed up first) so the admin
+calendar ambers gaps shorter than the minimum. Verified live: 1-night quote
+and book 400, 2-night quote returns rooms. Sonata asked to confirm its side
+(its Beds24 rooms were created with minStay 2; its site uses CONFIG.minNights).

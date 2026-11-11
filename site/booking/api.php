@@ -41,6 +41,7 @@ if ($action === 'quote') {
     if (!uv_valid_date($from) || !uv_valid_date($to) || $to <= $from) uv_json(['error' => 'bad range'], 400);
     $cfg = uv_config();
     $nights = (int)((strtotime($to) - strtotime($from)) / 86400);
+    if ($nights < 2) uv_json(['error' => 'Minimum stay is 2 nights.'], 400);
     $mult = $cfg['direct_multiplier'] ?? 0.90; // direct booking = base rate -10%
     $promoIn = uv_promo_code_clean((string)($_GET['promo'] ?? ''));
     $promo = $promoIn !== '' ? uv_promo_find($promoIn, $from, $to) : null;
@@ -123,6 +124,7 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
     $cfg = uv_config();
     if ($ci < $cfg['opening_date']) uv_json(['error' => 'before opening'], 400);
     $nights = (int)((strtotime($co) - strtotime($ci)) / 86400);
+    if ($nights < 2) uv_json(['error' => 'Minimum stay is 2 nights.'], 400);
     if ($nights > 30) uv_json(['error' => 'too long'], 400);
     foreach (uv_avail($type, $ci, $co) as $d => $free) {
         if ($free < $rooms) uv_json(['error' => 'no availability', 'date' => $d], 409);

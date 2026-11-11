@@ -1,5 +1,5 @@
 // Upper View — site behavior. Config and translations live in i18n.js.
-import { CONFIG, LANGS, I18N } from './i18n.js?v=pr1';
+import { CONFIG, LANGS, I18N } from './i18n.js?v=mn2';
 
 const HERO_CLIPS_DESKTOP = [
   'video/fd143a0f.mp4', // entrance (original take)
@@ -453,14 +453,24 @@ function bkNightsFree(ci, co) {
 const nextDay = (d) => new Date(new Date(d + 'T00:00:00Z').getTime() + 86400000)
   .toISOString().slice(0, 10);
 
+function bkAddDays(d, n) {
+  const t = new Date(Date.parse(d) + n * 86400000);
+  return t.toISOString().slice(0, 10);
+}
+
 function bkPick(d) {
   if (!BK.ci || (BK.ci && BK.co)) {
     BK.ci = d; BK.co = null;
-  } else if (d > BK.ci && bkNightsFree(BK.ci, d)) {
+  } else if (d >= bkAddDays(BK.ci, 2) && bkNightsFree(BK.ci, d)) {
+    // minimum stay 2 nights (same rule as Beds24 and every portal)
     BK.co = d;
+  } else if (d > BK.ci) {
+    bkError(t('p_min2') || 'Minimum stay is 2 nights.');
+    return;
   } else {
     BK.ci = d; BK.co = null;
   }
+  bkError('');
   bkRenderCal();
 }
 
@@ -695,6 +705,10 @@ $('#uv-check').addEventListener('click', async () => {
   bkError('');
   if (!BK.ci || !BK.co) {
     bkError(t('p_err_dates') || 'Please select your dates.');
+    return;
+  }
+  if (BK.co < bkAddDays(BK.ci, 2)) {
+    bkError(t('p_min2') || 'Minimum stay is 2 nights.');
     return;
   }
   const btn = $('#uv-check');
