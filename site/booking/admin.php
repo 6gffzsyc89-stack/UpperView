@@ -107,6 +107,69 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         }
     }
     if ($act === 'refresh') { uv_refresh_ota(true); $msg = 'OTA calendars refreshed.'; }
+    if ($act === 'request' && uv_valid_date($_POST['ci'] ?? null) && uv_valid_date($_POST['co'] ?? null)
+        && uv_valid_type($_POST['type'] ?? '') && $_POST['co'] > $_POST['ci']) {
+        // Record a PENDING request that arrived by email / phone / walk-in:
+        // visible everywhere (admin calendar, Beds24, WhatsApp assistant) in the
+        // pending colour, but does NOT close any dates.
+        $now = gmdate('Y-m-d H:i:s'); $code = uv_booking_code();
+        $db->prepare("INSERT INTO bookings (code,type,checkin,checkout,guests,name,email,phone,status,source,currency,created_at,updated_at)
+                      VALUES (?,?,?,?,?,?,?,?,'inquiry','admin',?,?,?)")
+           ->execute([$code, $_POST['type'], $_POST['ci'], $_POST['co'], max(1, (int)($_POST['guests'] ?? 2)),
+                      trim((string)($_POST['name'] ?? '')), trim((string)($_POST['email'] ?? '')),
+                      trim((string)($_POST['phone'] ?? '')), $cfg['currency'], $now, $now]);
+        $b24id = b24_create_booking([
+            'code' => $code, 'type' => $_POST['type'], 'checkin' => $_POST['ci'], 'checkout' => $_POST['co'],
+            'guests' => max(1, (int)($_POST['guests'] ?? 2)), 'name' => trim((string)($_POST['name'] ?? '')),
+            'email' => trim((string)($_POST['email'] ?? '')), 'phone' => trim((string)($_POST['phone'] ?? '')),
+            'status' => 'inquiry', 'paid' => false, 'rooms' => 1,
+            'source_label' => 'recorded by staff on the admin page (email/phone request)',
+            'request_note' => (string)($_POST['note'] ?? ''),
+        ]);
+        $msg = "Pending request $code recorded" . ($b24id ? " (Beds24 inquiry #$b24id)" : ' (Beds24 write failed — website only)')
+             . ' — no dates were closed. Confirm it from the bookings table when payment is arranged.';
+        $anchor = 'requests';
+    }
+    /* ---- guest reviews: toggles + staff roster ---- */
+    if ($act === 'rv_toggles') {
+        uv_meta_set('review_staff_enabled', !empty($_POST['staff_on']) ? '1' : '0');
+        uv_meta_set('review_comp_enabled', !empty($_POST['comp_on']) ? '1' : '0');
+        uv_meta_set('review_comp_limit', (string) max(0, min(100000, (int)($_POST['comp_limit'] ?? 500))));
+        $msg = 'Review settings saved: staff picker ' . (!empty($_POST['staff_on']) ? 'ON' : 'OFF')
+             . ', thank-you comps ' . (!empty($_POST['comp_on']) ? 'ON (limit ' . number_format((int)($_POST['comp_limit'] ?? 500)) . ' THB)' : 'OFF') . '.';
+        $anchor = 'reviews';
+    }
+    if ($act === 'rv_staffadd') {
+        $anchor = 'reviews';
+        $nm = trim((string)($_POST['sname'] ?? '')); $role = trim((string)($_POST['srole'] ?? ''));
+        if ($nm === '' || mb_strlen($nm) > 60) { $msg = 'Staff name needed.'; $ok = false; }
+        else {
+            $slug = strtolower(preg_replace('/[^a-z0-9]+/i', '-', $nm));
+            $photo = '';
+            if (!empty($_FILES['sphoto']['tmp_name']) && is_uploaded_file($_FILES['sphoto']['tmp_name'])) {
+                $sz = @getimagesize($_FILES['sphoto']['tmp_name']);
+                $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
+                if ($sz && isset($extMap[$sz['mime']]) && $_FILES['sphoto']['size'] <= 4 * 1024 * 1024) {
+                    $dir = __DIR__ . '/../review/staff';
+                    if (!is_dir($dir)) @mkdir($dir, 0755, true);
+                    $file = $slug . '.' . $extMap[$sz['mime']];
+                    if (@move_uploaded_file($_FILES['sphoto']['tmp_name'], $dir . '/' . $file)) $photo = 'staff/' . $file;
+                } else { $msg = 'Photo must be a JPG/PNG/WEBP up to 4 MB. '; }
+            }
+            $roster = json_decode((string) uv_meta_get('review_staff'), true) ?: [];
+            $roster = array_values(array_filter($roster, function ($s) use ($nm) { return strcasecmp($s['name'], $nm) !== 0; }));
+            $roster[] = ['name' => $nm, 'role' => mb_substr($role, 0, 60), 'photo' => $photo];
+            uv_meta_set('review_staff', json_encode($roster));
+            $msg .= 'Staff member ' . htmlspecialchars($nm) . ' saved' . ($photo ? ' with photo.' : ' (no photo — the page shows initials).');
+        }
+    }
+    if ($act === 'rv_staffdel' && !empty($_POST['sname'])) {
+        $anchor = 'reviews';
+        $roster = json_decode((string) uv_meta_get('review_staff'), true) ?: [];
+        $roster = array_values(array_filter($roster, function ($s) { return strcasecmp($s['name'], (string)$_POST['sname']) !== 0; }));
+        uv_meta_set('review_staff', json_encode($roster));
+        $msg = 'Removed ' . htmlspecialchars((string)$_POST['sname']) . ' from the review roster.';
+    }
     if ($act === 'calimg_token') {   // link for the WhatsApp assistant's calendar pictures (new link = old one stops working)
         uv_meta_set('cal_image_token', bin2hex(random_bytes(20)));
         $msg = 'New WhatsApp picture link created (the old one no longer works). Copy it into the WhatsApp assistant\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
@@ -363,6 +426,61 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <?php foreach ($n['status']['promos'] as $p): ?><tr><td><b><?= htmlspecialchars($p['code']) ?></b></td><td><?= htmlspecialchars($p['title']) ?></td><td><?= htmlspecialchars($p['note']) ?></td><td><?= uv_badge((bool)$p['active'], 'ON', 'OFF') ?><?= uv_badge((bool)$p['banner'], 'In top bar', 'Not in top bar') ?></td>
 <td><form class="inline" method="post"><input type="hidden" name="act" value="promo_active"><input type="hidden" name="site" value="<?= htmlspecialchars($n['site']['id']) ?>"><input type="hidden" name="code" value="<?= htmlspecialchars($p['code']) ?>"><input type="hidden" name="on" value="<?= $p['active'] ? '' : '1' ?>"><button style="background:#6B7352"><?= $p['active'] ? 'Switch off' : 'Switch on' ?></button></form></td></tr><?php endforeach; ?></table><?php endif; ?>
 <?php endforeach; ?>
+
+<h2 id="reviews">Guest reviews</h2>
+<?= uv_flash_box('reviews') ?>
+<?php
+$rvStaffOn = (uv_meta_get('review_staff_enabled') ?? '1') === '1';
+$rvCompOn = (uv_meta_get('review_comp_enabled') ?? '0') === '1';
+$rvLimit = (int)(uv_meta_get('review_comp_limit') ?? '500');
+$rvRoster = json_decode((string) uv_meta_get('review_staff'), true) ?: [];
+$rvRows = $db->query('SELECT * FROM reviews ORDER BY id DESC LIMIT 20')->fetchAll(PDO::FETCH_ASSOC);
+$rvTok = (string) uv_meta_get('cal_image_token');
+?>
+<div style="background:#fff;padding:12px 14px;margin:0 0 14px">
+<p style="margin:0 0 8px"><b>Review kiosk</b> — open this on the iPad (big buttons; staff tap the guest, the guest rates, picks the team members they liked, writes a few words; the finished review is emailed to them ready to paste on the portal they booked through). Guests at home can use <code>upperviewsamui.com/review/</code> (no guest list shown without the key).</p>
+<?php if ($rvTok !== ''): ?><p><input readonly style="width:100%;max-width:700px;font:12px monospace;padding:6px" value="https://upperviewsamui.com/review/?t=<?= htmlspecialchars(rawurlencode($rvTok)) ?>" onclick="this.select()"></p>
+<?php else: ?><p>Create the key first (Calendar section → WhatsApp picture link — the kiosk uses the same key).</p><?php endif; ?>
+<form method="post" style="margin:10px 0 0"><input type="hidden" name="act" value="rv_toggles">
+<label style="margin-right:18px"><input type="checkbox" name="staff_on" value="1" <?= $rvStaffOn ? 'checked' : '' ?>> Staff picker step ON</label>
+<label style="margin-right:8px"><input type="checkbox" name="comp_on" value="1" <?= $rvCompOn ? 'checked' : '' ?>> Thank-you comps ON</label>
+<label>limit <input name="comp_limit" type="number" min="0" max="100000" value="<?= $rvLimit ?>" style="width:90px"> THB</label>
+<button>Save review settings</button></form>
+<p style="font-size:12px;color:#666;margin:8px 0 0"><b>Compliance note (verified 2026-11-11):</b> Airbnb and Booking.com prohibit offering guests anything in exchange for a review. The comp here is a <b>staff-discretion thank-you for drinks/meals</b> (capped at the limit; if their bar bill is only 180 THB, 180 is comped, never the full limit) and must never be presented as conditional on posting a review. Emailing guests their own words to paste themselves is allowed.</p>
+</div>
+<p style="margin:0 0 6px"><b>Staff roster</b> (shown to guests as big portrait tiles; named staff are flagged in the review email to you for salary bonuses)</p>
+<?php if ($rvRoster): ?><table><tr><th>Photo</th><th>Name</th><th>Role</th><th></th></tr>
+<?php foreach ($rvRoster as $s): ?>
+<tr><td><?= $s['photo'] ? '<img src="../review/' . htmlspecialchars($s['photo']) . '" alt="" style="width:46px;height:56px;object-fit:cover;border-radius:6px">' : '—' ?></td>
+<td><b><?= htmlspecialchars($s['name']) ?></b></td><td><?= htmlspecialchars($s['role']) ?></td>
+<td><form class="inline" method="post" onsubmit="return confirm('Remove <?= htmlspecialchars($s['name']) ?> from the roster?')"><input type="hidden" name="act" value="rv_staffdel"><input type="hidden" name="sname" value="<?= htmlspecialchars($s['name']) ?>"><button style="background:#a33">Remove</button></form></td></tr>
+<?php endforeach; ?></table><?php endif; ?>
+<form method="post" enctype="multipart/form-data" style="margin:0 0 20px"><input type="hidden" name="act" value="rv_staffadd">
+<input name="sname" placeholder="name" required> <input name="srole" placeholder="role (e.g. Front Desk)">
+<input type="file" name="sphoto" accept="image/jpeg,image/png,image/webp"> <button>Add / update staff member</button>
+<span style="font-size:12px;color:#666">Portrait photos look best (white Upper View polo).</span></form>
+<p style="margin:0 0 6px"><b>Latest reviews</b></p>
+<?php if (!$rvRows): ?><p style="font-size:13px;color:#666;margin:0 0 20px">None yet.</p><?php else: ?>
+<table><tr><th>When</th><th>Guest</th><th>Rating</th><th>Booked via</th><th>Staff credited (bonus)</th><th>Review</th></tr>
+<?php foreach ($rvRows as $rv): $stf = json_decode((string)$rv['staff'], true) ?: []; ?>
+<tr><td><?= htmlspecialchars(substr((string)$rv['created_at'], 0, 16)) ?></td><td><?= htmlspecialchars((string)$rv['guest']) ?><br><small><?= htmlspecialchars((string)$rv['email']) ?></small></td>
+<td><?= str_repeat('★', (int)$rv['rating']) ?></td><td><?= htmlspecialchars((string)$rv['source']) ?></td>
+<td><?= $stf ? '<b>' . htmlspecialchars(implode(', ', $stf)) . '</b>' : '—' ?></td>
+<td style="max-width:420px"><?= htmlspecialchars(mb_substr((string)$rv['text'], 0, 240)) ?><?= mb_strlen((string)$rv['text']) > 240 ? '…' : '' ?></td></tr>
+<?php endforeach; ?></table><?php endif; ?>
+
+<h2 id="requests">Record a pending request (email / phone / walk-in)</h2>
+<?= uv_flash_box('requests') ?>
+<p style="margin:0 0 8px;font-size:13px">A request someone sent by email or phone. It appears everywhere in the <b>pending colour</b> (admin calendar, Beds24, the WhatsApp assistant) but <b>closes no dates</b>. When payment is arranged, press <b>Confirm + close OTAs</b> on its row above.</p>
+<form method="post"><input type="hidden" name="act" value="request">
+<select name="type"><option value="villa">Mini Villa</option><option value="superior">Superior Suite</option><option value="deluxe">Deluxe Suite</option><option value="king">King Suite</option></select>
+<input type="date" name="ci" required> → <input type="date" name="co" required>
+<input name="guests" type="number" min="1" max="6" value="2" style="width:60px" title="guests">
+<input name="name" placeholder="guest name" required>
+<input name="email" type="email" placeholder="guest email">
+<input name="phone" placeholder="phone">
+<input name="note" placeholder="what they asked for (kept on the Beds24 booking)" style="width:280px">
+<button>Record pending request</button></form>
 
 <h2>Block dates (maintenance, phone bookings…)</h2>
 <form method="post"><input type="hidden" name="act" value="block">

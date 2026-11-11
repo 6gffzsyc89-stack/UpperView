@@ -75,6 +75,19 @@ function uv_db(): PDO {
             try { $db->exec('ALTER TABLE bookings ADD COLUMN ' . $c); }
             catch (PDOException $e) { /* column already exists */ }
         }
+        // guest reviews (2026-11-11): written on the review page (iPad kiosk or
+        // guest's own phone), emailed to the guest ready to paste on the portal
+        // they booked through; staff picked by the guest earn salary bonuses.
+        $db->exec('CREATE TABLE IF NOT EXISTS reviews (
+            id INTEGER PRIMARY KEY AUTOINCREMENT,
+            created_at TEXT NOT NULL,
+            code TEXT,                         -- booking ref when known (UV… / Beds24 id)
+            guest TEXT, email TEXT, extra_email TEXT,
+            source TEXT,                       -- airbnb|booking|direct|other
+            rating INTEGER,                    -- 1..5
+            text TEXT,
+            staff TEXT                         -- JSON list of staff names credited (bonus)
+        )');
         $db->exec('CREATE TABLE IF NOT EXISTS promos (
             code TEXT PRIMARY KEY,             -- UPPERCASE letters/digits, e.g. TRANSFER26
             title TEXT NOT NULL,               -- banner text

@@ -152,17 +152,22 @@ function b24_availability(string $type, string $from, string $to): ?array {
     return $out;
 }
 
-/** Create the booking in Beds24. Returns beds24 booking id or null. */
+/** Create the booking in Beds24. Returns beds24 booking id or null.
+ *  $b['status']==='inquiry' writes a PENDING request (Beds24 status 'inquiry',
+ *  which does NOT deduct inventory — owner rule 2026-11-11: unpaid requests
+ *  never close dates). If this code was already written as an inquiry, the
+ *  existing Beds24 booking is UPDATED instead of duplicated. */
 function b24_create_booking(array $b): ?int {
     $roomId = b24_cfg()['room_map'][$b['type']] ?? null;
     if ($roomId === null || !b24_enabled()) return null;
+    $pending = ($b['status'] ?? '') === 'inquiry';
     $name = trim($b['name']);
     $sp = strrpos($name, ' ');
     $first = $sp ? substr($name, 0, $sp) : $name;
     $last = $sp ? substr($name, $sp + 1) : '';
     // Notes written so the AI assistant (Yomied) can read, per booking:
     // where it was made, whether payment was taken, and OTA calendar status.
-    $notes = ['SOURCE: direct website upperviewsamui.com — ref ' . $b['code']];
+    $notes = ['SOURCE: ' . (string)($b['source_label'] ?? 'direct website upperviewsamui.com') . ' — ref ' . $b['code']];
     if (!empty($b['paid'])) {
         $notes[] = 'PAYMENT: PAID'
             . (!empty($b['amount']) ? ' ' . number_format((int)$b['amount']) . ' THB' : '')
@@ -170,10 +175,15 @@ function b24_create_booking(array $b): ?int {
     } else {
         $notes[] = 'PAYMENT: NOT TAKEN — '
             . (!empty($b['manual']) ? 'manually confirmed from the admin page, collect payment separately'
-                                    : 'unpaid request');
+                                    : ($pending ? 'PENDING request, awaiting staff confirmation' : 'unpaid request'));
     }
-    $notes[] = 'OTA CALENDARS: CLOSED automatically by this Beds24 booking '
-             . '(availability reduced on Booking.com / Agoda / Airbnb / all channels)';
+    if ($pending) {
+        $notes[] = 'PENDING REQUEST: does not close availability. To accept: confirm + take payment '
+                 . '(admin page, Beds24, or the WhatsApp assistant).';
+    } else {
+        $notes[] = 'OTA CALENDARS: CLOSED automatically by this Beds24 booking '
+                 . '(availability reduced on Booking.com / Agoda / Airbnb / all channels)';
+    }
     if (!empty($b['cot'])) $notes[] = 'BABY COT requested (free option, suites only)';
     $qty = max(1, (int)($b['rooms'] ?? 1));
     if ($qty > 1) $notes[] = "MULTI-UNIT: $qty mini villas booked together (party of " . (int)$b['guests'] . ')';
@@ -188,7 +198,7 @@ function b24_create_booking(array $b): ?int {
     $payload = [[
         'roomId' => $roomId,
         'roomQty' => $qty,
-        'status' => $b['status'] === 'confirmed' ? 'confirmed' : 'new',
+        'status' => $pending ? 'inquiry' : ($b['status'] === 'confirmed' ? 'confirmed' : 'new'),
         'arrival' => $b['checkin'],
         'departure' => $b['checkout'],
         'numAdult' => (int)$b['guests'],
@@ -201,11 +211,21 @@ function b24_create_booking(array $b): ?int {
         'notes' => implode("\n", $notes),
     ]];
     if ($promo) $payload[0]['infoItems'] = [['code' => 'PROMO', 'text' => $promo]];
+    if (!empty($b['request_note'])) {
+        $payload[0]['infoItems'][] = ['code' => 'REQUEST', 'text' => mb_substr((string)$b['request_note'], 0, 300)];
+    }
+    // Same code already in Beds24 (a pending request being confirmed, or a
+    // re-send): UPDATE that booking instead of creating a duplicate.
+    $known = (int)(uv_meta_get('b24id_' . $b['code']) ?? 0);
+    if ($known > 0) $payload[0]['id'] = $known;
     $res = b24_api('POST', '/bookings', $payload);
     $newId = null;
     if (is_array($res) && isset($res[0]['new']['id'])) $newId = (int)$res[0]['new']['id'];
+    elseif (is_array($res) && isset($res[0]['modified']) && $known > 0) $newId = $known;
     elseif (is_array($res) && isset($res[0]['success']) && $res[0]['success'] && isset($res[0]['id'])) $newId = (int)$res[0]['id'];
     if ($newId !== null) {
+        uv_meta_set('b24id_' . $b['code'], (string)$newId);
+        if ($pending) return $newId;   // no invoice lines on a pending request
         // Best-effort: record the charge (at the gross rate), the promo line and
         // the payment on the Beds24 invoice so money is visible in the booking's
         // invoice tab, not only in the notes.

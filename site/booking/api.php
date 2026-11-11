@@ -195,13 +195,21 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         uv_json(['mode' => 'pay', 'code' => $code, 'url' => $checkout['url']]);
     }
 
-    /* UNPAID request: do NOT write to Beds24 and do NOT touch OTA calendars.
-       Closing calendars for an unpaid request is a manual decision (admin page
-       "Confirm + close OTAs"). Paid bookings close them automatically via the
-       Stripe/Airwallex webhooks. */
-    uv_notify("Upper View: NEW BOOKING REQUEST $code (unpaid)", $summary
-        . "\n\nNO payment has been taken — this is a request only."
-        . "\nOTA calendars are still OPEN (nothing was written to Beds24)."
+    /* UNPAID request = PENDING (owner rule 2026-11-11): recorded in Beds24 as a
+       non-blocking 'inquiry' so staff and the WhatsApp assistant see it in the
+       master system, but NO dates close. Confirming + payment is manual (admin
+       "Confirm + close OTAs", Beds24, or the WhatsApp assistant); a paid
+       booking closes calendars automatically via the webhooks. */
+    $b24id = b24_create_booking([
+        'code' => $code, 'type' => $type, 'checkin' => $ci, 'checkout' => $co,
+        'guests' => $guests, 'name' => $name, 'email' => $email, 'phone' => $phone,
+        'status' => 'inquiry', 'paid' => false, 'cot' => $cot, 'rooms' => $rooms,
+        'promo_code' => $promo ? $promo['code'] : null, 'promo_note' => $promo ? $promo['note'] : null,
+    ]);
+    uv_notify("Upper View: NEW BOOKING REQUEST $code (pending, unpaid)", $summary
+        . "\n\nNO payment has been taken — this is a PENDING request only."
+        . "\nOTA calendars are still OPEN"
+        . ($b24id ? " (recorded in Beds24 as pending inquiry #$b24id — does not block dates)." : " (Beds24 pending write failed — the request exists only on the website).")
         . "\nTo accept it and close the OTA calendars, open the admin page"
         . " (upperviewsamui.com/booking/admin.php) and press Confirm + close OTAs."
         . "\nIf the guest pays online instead, the calendars close automatically.");
@@ -212,6 +220,164 @@ if ($action === 'book' && $_SERVER['REQUEST_METHOD'] === 'POST') {
         . ($cot ? ', baby cot requested' : '') . ").\n"
         . "Your reference is $code. We will confirm by email shortly.\n\nUpper View Samui");
     uv_json(['mode' => 'inquiry', 'code' => $code]);
+}
+
+/* ---------- guest reviews (2026-11-11): kiosk + guest page ---------- */
+
+/** Staff roster for the review page (public: names, roles, photos only).
+ *  The staff-picker step is togglable from the admin (review_staff_enabled). */
+if ($action === 'review-staff') {
+    $enabled = (uv_meta_get('review_staff_enabled') ?? '1') === '1';
+    $roster = $enabled ? json_decode((string) uv_meta_get('review_staff'), true) : [];
+    uv_json(['staff_enabled' => $enabled, 'staff' => is_array($roster) ? array_values($roster) : []]);
+}
+
+/** Staff-only (kiosk token): the guest's drink/meal charges from the Beds24
+ *  invoice, for a THANK-YOU COMP. Compliance: the comp is a hospitality
+ *  gesture at staff discretion and is NEVER conditional on a portal review
+ *  being posted (Airbnb and Booking.com prohibit review incentives). */
+if ($action === 'review-bill') {
+    $tok = (string) uv_meta_get('cal_image_token');
+    if ($tok === '' || !hash_equals($tok, (string) ($_GET['t'] ?? ''))) uv_json(['error' => 'forbidden'], 403);
+    if ((uv_meta_get('review_comp_enabled') ?? '0') !== '1') uv_json(['comp_enabled' => false, 'items' => []]);
+    $bid = (int) preg_replace('/\D/', '', (string)($_GET['ref'] ?? ''));
+    if ($bid <= 0 || !b24_enabled()) uv_json(['comp_enabled' => true, 'items' => [], 'limit' => 0]);
+    $res = b24_api('GET', '/bookings?id=' . $bid . '&includeInvoiceItems=true');
+    $items = [];
+    foreach (($res['data'][0]['invoiceItems'] ?? []) as $i) {
+        $desc = (string)($i['description'] ?? '');
+        // Eligible: drinks and meals only, by the billing convention DRINK:/MEAL:
+        if (($i['type'] ?? '') === 'charge' && preg_match('/^(DRINK|MEAL):\s*/i', $desc) && (float)($i['amount'] ?? 0) > 0) {
+            $items[] = ['id' => (string)($i['id'] ?? ''), 'desc' => preg_replace('/^(DRINK|MEAL):\s*/i', '', $desc),
+                        'kind' => strtoupper(substr($desc, 0, 5)) === 'DRINK' ? 'drink' : 'meal',
+                        'amount' => (int) round((float)$i['amount'] * max(1, (int)($i['qty'] ?? 1)))];
+        }
+    }
+    uv_json(['comp_enabled' => true, 'items' => $items,
+             'limit' => (int)(uv_meta_get('review_comp_limit') ?? '500')]);
+}
+
+/** Staff-only (kiosk token): apply the thank-you comp to the Beds24 invoice.
+ *  Smart cap: the comp is min(selected drink/meal charges, configured limit) —
+ *  a 500 THB allowance against a 180 THB bar bill comps 180, never 500. */
+if ($action === 'review-comp' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    $in = json_decode(file_get_contents('php://input'), true) ?: [];
+    $tok = (string) uv_meta_get('cal_image_token');
+    if ($tok === '' || !hash_equals($tok, (string)($in['t'] ?? ''))) uv_json(['error' => 'forbidden'], 403);
+    if ((uv_meta_get('review_comp_enabled') ?? '0') !== '1') uv_json(['error' => 'comps are switched off'], 409);
+    $bid = (int) preg_replace('/\D/', '', (string)($in['ref'] ?? ''));
+    $sel = is_array($in['items'] ?? null) ? array_map('strval', $in['items']) : [];
+    if ($bid <= 0 || !$sel || !b24_enabled()) uv_json(['error' => 'nothing to comp'], 400);
+    if (uv_meta_get('comped_' . $bid) !== null) uv_json(['error' => 'a comp was already applied to this stay'], 409);
+    $res = b24_api('GET', '/bookings?id=' . $bid . '&includeInvoiceItems=true');
+    $sum = 0; $names = [];
+    foreach (($res['data'][0]['invoiceItems'] ?? []) as $i) {
+        if (!in_array((string)($i['id'] ?? ''), $sel, true)) continue;
+        $desc = (string)($i['description'] ?? '');
+        if (($i['type'] ?? '') !== 'charge' || !preg_match('/^(DRINK|MEAL):\s*/i', $desc)) continue;
+        $sum += (int) round((float)($i['amount'] ?? 0) * max(1, (int)($i['qty'] ?? 1)));
+        $names[] = preg_replace('/^(DRINK|MEAL):\s*/i', '', $desc);
+    }
+    $limit = (int)(uv_meta_get('review_comp_limit') ?? '500');
+    $comp = min($sum, $limit);
+    if ($comp <= 0) uv_json(['error' => 'the selected items are not drink/meal charges'], 400);
+    $w = b24_api('POST', '/bookings', [['id' => $bid, 'invoiceItems' => [[
+        'type' => 'charge', 'qty' => 1, 'amount' => -$comp,
+        'description' => 'Thank-you comp (drinks/meals): ' . implode(', ', array_slice($names, 0, 4))
+                       . ' — staff-discretion gesture, capped at ' . number_format($limit) . ' THB',
+    ]]]]);
+    if (!is_array($w)) uv_json(['error' => 'Beds24 write failed'], 502);
+    uv_meta_set('comped_' . $bid, (string) $comp);
+    uv_notify('Upper View: thank-you comp −' . number_format($comp) . ' THB (Beds24 #' . $bid . ')',
+        'Items: ' . implode(', ', $names) . "\nEligible total: " . number_format($sum)
+        . " THB · limit " . number_format($limit) . " THB · comped " . number_format($comp) . ' THB.'
+        . "\nApplied from the review kiosk (staff action). Comps are never conditional on a posted review.");
+    uv_json(['ok' => true, 'comped' => $comp]);
+}
+
+/** Recent + current stays for the iPad kiosk (token-gated; minimal fields). */
+if ($action === 'review-guests') {
+    $tok = (string) uv_meta_get('cal_image_token');
+    if ($tok === '' || !hash_equals($tok, (string) ($_GET['t'] ?? ''))) uv_json(['error' => 'forbidden'], 403);
+    require_once __DIR__ . '/calendar.php';
+    $out = [];
+    if (b24_enabled()) {
+        $res = b24_api('GET', '/bookings?propertyId=' . (int)(b24_cfg()['property_id'] ?? 365322)
+            . '&arrivalFrom=' . date('Y-m-d', strtotime('-28 days')) . '&arrivalTo=' . date('Y-m-d', strtotime('+1 day')));
+        $roomNames = [];
+        foreach ((b24_cfg()['room_map'] ?? []) as $t => $rid) $roomNames[(int)$rid] = uv_type_name($t);
+        foreach (($res['data'] ?? []) as $bb) {
+            if (in_array($bb['status'] ?? '', ['cancelled', 'black', 'inquiry', 'request'], true)) continue;
+            if (($bb['departure'] ?? '') < date('Y-m-d', strtotime('-7 days'))) continue; // left more than a week ago
+            $src = uv_cal_b24_source($bb);
+            $out[] = [
+                'ref' => 'b24-' . (int)$bb['id'],
+                'name' => trim((string)($bb['firstName'] ?? '')) ?: trim((string)($bb['lastName'] ?? '')),
+                'room' => $roomNames[(int)($bb['roomId'] ?? 0)] ?? 'Stay',
+                'checkin' => (string)($bb['arrival'] ?? ''), 'checkout' => (string)($bb['departure'] ?? ''),
+                'source' => in_array($src, ['airbnb', 'booking'], true) ? $src : 'other',
+                'email' => (string)($bb['email'] ?? ''),
+            ];
+        }
+    }
+    usort($out, function ($a, $b) { return strcmp($b['checkout'], $a['checkout']); });
+    uv_json(['guests' => array_slice($out, 0, 24)]);
+}
+
+/** Submit a review: stored, emailed to the guest ready to paste, desk notified. */
+if ($action === 'review' && $_SERVER['REQUEST_METHOD'] === 'POST') {
+    uv_rate_limit('review', 10, 3600);
+    $in = json_decode(file_get_contents('php://input'), true) ?: [];
+    $guest = trim((string)($in['name'] ?? ''));
+    $email = trim((string)($in['email'] ?? ''));
+    $extra = trim((string)($in['extra_email'] ?? ''));
+    $rating = max(1, min(5, (int)($in['rating'] ?? 0)));
+    $text = trim(strip_tags((string)($in['text'] ?? '')));
+    $src = in_array($in['source'] ?? '', ['airbnb', 'booking', 'direct'], true) ? $in['source'] : 'other';
+    $ref = preg_replace('/[^A-Za-z0-9\-]/', '', (string)($in['ref'] ?? ''));
+    $staffIn = is_array($in['staff'] ?? null) ? $in['staff'] : [];
+    $roster = json_decode((string) uv_meta_get('review_staff'), true) ?: [];
+    $names = array_column($roster, 'name');
+    $staff = array_values(array_intersect(array_map('strval', $staffIn), array_merge($names, ['The whole team'])));
+    if ($guest === '' || $text === '' || (int)($in['rating'] ?? 0) < 1) uv_json(['error' => 'name, rating and a few words are needed'], 400);
+    if ($email !== '' && !filter_var($email, FILTER_VALIDATE_EMAIL)) uv_json(['error' => 'that email address does not look right'], 400);
+    if ($extra !== '' && !filter_var($extra, FILTER_VALIDATE_EMAIL)) uv_json(['error' => 'the second email address does not look right'], 400);
+    $text = mb_substr($text, 0, 2000);
+    uv_db()->prepare('INSERT INTO reviews(created_at,code,guest,email,extra_email,source,rating,text,staff)
+                      VALUES (datetime(\'now\'),?,?,?,?,?,?,?,?)')
+           ->execute([$ref, $guest, $email, $extra, $src, $rating, $text, json_encode($staff)]);
+    // The paste-ready version, catered to where they booked.
+    $thanks = $staff ? (in_array('The whole team', $staff, true) && count($staff) === 1
+        ? 'Special thanks to the whole Upper View team for taking such good care of us.'
+        : 'Special thanks to ' . implode(', ', array_diff($staff, ['The whole team'])) . ' for taking such good care of us.') : '';
+    $paste = $text . ($thanks && stripos($text, 'thanks to') === false ? "\n\n" . $thanks : '');
+    $stars = str_repeat('★', $rating) . str_repeat('☆', 5 - $rating);
+    $google = (string)(uv_config()['google_review_url'] ?? 'https://www.google.com/maps/search/Upper+View+Samui+Bophut');
+    if ($src === 'airbnb') {
+        $how = "You booked through Airbnb, so your review goes on Airbnb:\n"
+             . "1. Open the Airbnb app or airbnb.com and go to Trips (Airbnb also emails you a review invitation after check-out).\n"
+             . "2. Choose your Upper View stay, give it " . $rating . " star" . ($rating > 1 ? 's' : '') . ", paste the text below, and send.";
+    } elseif ($src === 'booking') {
+        $how = "You booked through Booking.com, so your review goes on Booking.com:\n"
+             . "1. Booking.com emails you a review invitation after check-out (or find the stay under Bookings on booking.com).\n"
+             . "2. Give your scores, paste the text below into the comment field, and send.";
+    } else {
+        $how = "You booked with us directly — a Google review helps most:\n1. Open " . $google . "\n2. Tap the stars, paste the text below, and post.";
+    }
+    uv_mail_guest($email !== '' ? $email : $extra, 'Your Upper View review — ready to paste',
+        "Thank you so much, $guest!\n\nHere is your review, ready to copy and paste:\n\n"
+        . $stars . "\n" . $paste . "\n\n" . $how
+        . ($thanks ? "\n\nNaming the team members who looked after you means a lot — they are personally recognised for it." : '')
+        . "\n\nWith our warmest thanks,\nUpper View Samui\nbooking@upperviewsamui.com");
+    if ($extra !== '' && $email !== '' && $extra !== $email) {
+        uv_mail_guest($extra, 'Your Upper View review — ready to paste',
+            "Review by $guest:\n\n" . $stars . "\n" . $paste . "\n\n" . $how . "\n\nUpper View Samui");
+    }
+    uv_notify('Upper View: GUEST REVIEW ' . $stars . ' — ' . $guest,
+        "Rating: $rating/5 ($src" . ($ref !== '' ? ", ref $ref" : '') . ")\n\n$text\n\n"
+        . ($staff ? "STAFF CREDITED (salary bonus applies): " . implode(', ', $staff) . "\n\n" : 'No staff named.' . "\n\n")
+        . "Guest email: " . ($email ?: '—') . ($extra ? " / $extra" : ''));
+    uv_json(['ok' => true]);
 }
 
 /* ---------- admin API: backend for the Upper View MCP ---------- */

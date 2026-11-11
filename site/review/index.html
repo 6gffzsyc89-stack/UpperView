@@ -1,0 +1,264 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Share your stay · Upper View Samui</title>
+<link href="https://fonts.googleapis.com/css2?family=Jost:wght@300;400;500&family=Archivo:wght@400;500;600&display=swap" rel="stylesheet">
+<style>
+:root{--green:#4F6446;--deep:#3D4C36;--cream:#F7F0E9;--ink:#2b2b26;--mut:#8a8376;--line:#e4dcd2}
+*{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
+body{background:var(--cream);color:var(--ink);font:17px/1.6 'Archivo','Jost',Helvetica,Arial,sans-serif;min-height:100vh}
+header{background:var(--deep);color:var(--cream);text-align:center;padding:26px 16px}
+header .wm{letter-spacing:.35em;font-family:'Jost',sans-serif;font-size:19px}
+header .sub{color:#b9c0ae;font-size:10px;letter-spacing:.3em;margin-top:5px;text-transform:uppercase}
+.wrap{max-width:760px;margin:0 auto;padding:26px 18px 70px}
+h1{font-family:'Jost',sans-serif;font-weight:400;font-size:clamp(23px,4vw,30px);letter-spacing:.04em;margin:0 0 6px}
+.hint{color:var(--mut);font-size:14px;margin:0 0 22px}
+.step{display:none}.step.on{display:block;animation:in .3s ease}
+@keyframes in{from{opacity:0;transform:translateY(10px)}to{opacity:1}}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(210px,1fr));gap:14px}
+.big{display:flex;flex-direction:column;align-items:flex-start;gap:4px;width:100%;min-height:86px;padding:18px 20px;background:#fff;border:2px solid var(--line);cursor:pointer;font:inherit;text-align:left;border-radius:16px;transition:border-color .2s, background .2s}
+.big b{font-size:19px}.big small{color:var(--mut);font-size:13.5px}
+.big:active,.big.sel{border-color:var(--green);background:#eef0e8}
+.staffgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(150px,1fr));gap:14px}
+.staff{display:flex;flex-direction:column;align-items:center;gap:10px;padding:18px 10px 14px;background:#fff;border:3px solid var(--line);border-radius:18px;cursor:pointer;font:inherit;transition:border-color .2s}
+.staff.sel{border-color:var(--green);background:#eef0e8}
+.staff .ph{width:110px;height:132px;border-radius:14px;object-fit:cover;object-position:top;background:var(--deep);color:var(--cream);display:flex;align-items:center;justify-content:center;font:400 40px 'Jost',sans-serif}
+.staff b{font-size:16.5px;text-align:center}.staff small{color:var(--mut);font-size:12.5px;margin-top:-6px;text-align:center}
+.staff .tick{position:absolute}
+.stars{display:flex;gap:10px;justify-content:center;margin:26px 0 8px}
+.stars button{font-size:clamp(46px,9vw,64px);line-height:1;background:none;border:none;cursor:pointer;color:#d8d2c6;padding:4px;transition:transform .15s,color .15s}
+.stars button.on{color:#D9A441}
+.stars button:active{transform:scale(1.15)}
+.starlbl{text-align:center;color:var(--mut);font-size:15px;min-height:24px}
+textarea,input[type=text],input[type=email]{width:100%;font:inherit;padding:16px;border:2px solid var(--line);border-radius:14px;background:#fff;outline:none}
+textarea:focus,input:focus{border-color:var(--green)}
+textarea{min-height:150px;resize:vertical}
+label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--mut);margin:18px 0 6px}
+.cta{display:block;width:100%;margin-top:26px;background:var(--green);color:var(--cream);border:none;cursor:pointer;padding:22px;font-size:13px;letter-spacing:.3em;text-transform:uppercase;font-weight:500;border-radius:16px;font-family:inherit}
+.cta:disabled{opacity:.45}
+.ghost{background:transparent;border:2px solid var(--green);color:var(--green)}
+.back{background:none;border:none;color:var(--mut);font:inherit;font-size:14px;cursor:pointer;padding:6px 0;margin:0 0 14px}
+.err{color:#a33;font-size:14px;margin-top:12px;display:none}
+.done{text-align:center;padding:40px 0}
+.done .big-ok{font-size:64px}
+.src3{display:grid;grid-template-columns:1fr 1fr 1fr;gap:12px}
+@media(max-width:560px){.src3{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header><div class="wm">UPPER VIEW</div><div class="sub">Boutique Hotel · Koh Samui</div></header>
+<div class="wrap">
+
+<section class="step" id="s-guest">
+  <h1>Who had a lovely stay?</h1>
+  <p class="hint">Tap your name — or add your details below.</p>
+  <div class="grid" id="guestlist"></div>
+  <div id="manual">
+    <label for="m-name">Your name</label><input type="text" id="m-name" autocomplete="name">
+    <label for="m-email">Your email (we send your finished review here)</label><input type="email" id="m-email" autocomplete="email">
+    <label>Where did you book?</label>
+    <div class="src3">
+      <button type="button" class="big" data-src="airbnb"><b>Airbnb</b></button>
+      <button type="button" class="big" data-src="booking"><b>Booking.com</b></button>
+      <button type="button" class="big" data-src="direct"><b>With us directly</b></button>
+    </div>
+  </div>
+  <div id="billbox" style="display:none;margin-top:22px;background:#fff;border:2px dashed var(--line);border-radius:16px;padding:16px 18px">
+    <b style="font-size:15px">Staff only — thank-you comp</b>
+    <p class="hint" style="margin:4px 0 10px">A hospitality gesture for drinks &amp; meals on the stay, at staff discretion. <b>Never conditional on a review being posted.</b></p>
+    <div id="billitems"></div>
+    <p class="hint" id="billcap" style="margin:8px 0 0"></p>
+    <button type="button" class="cta ghost" id="billapply" style="margin-top:12px;padding:14px">Apply thank-you comp</button>
+    <p class="err" id="e-bill"></p>
+  </div>
+  <p class="err" id="e1"></p>
+  <button class="cta" id="n1">Continue</button>
+</section>
+
+<section class="step" id="s-rate">
+  <button class="back" data-back="s-guest">‹ Back</button>
+  <h1 id="rate-title">How was your stay?</h1>
+  <div class="stars" id="stars">
+    <button type="button" data-v="1">★</button><button type="button" data-v="2">★</button><button type="button" data-v="3">★</button><button type="button" data-v="4">★</button><button type="button" data-v="5">★</button>
+  </div>
+  <p class="starlbl" id="starlbl">Tap the stars</p>
+  <button class="cta" id="n2" disabled>Continue</button>
+</section>
+
+<section class="step" id="s-staff">
+  <button class="back" data-back="s-rate">‹ Back</button>
+  <h1>Who took great care of you?</h1>
+  <p class="hint">Tap one or more — they are personally recognised for your kind words.</p>
+  <div class="staffgrid" id="staffgrid"></div>
+  <button class="cta" id="n3">Continue</button>
+</section>
+
+<section class="step" id="s-words">
+  <button class="back" data-back="s-staff">‹ Back</button>
+  <h1>A few words</h1>
+  <p class="hint">What did you enjoy most? Two or three sentences are perfect — we email the finished review to you, ready to copy &amp; paste.</p>
+  <textarea id="words" placeholder="The view, the pool, the breakfast, the people…"></textarea>
+  <label for="x-email">Also send a copy to (optional)</label>
+  <input type="email" id="x-email" placeholder="second email address">
+  <p class="err" id="e4"></p>
+  <button class="cta" id="send">Send my review</button>
+</section>
+
+<section class="step" id="s-done">
+  <div class="done">
+    <div class="big-ok">🌺</div>
+    <h1>Thank you!</h1>
+    <p class="hint" id="donemsg">Your review is in your inbox, ready to copy &amp; paste. Naming our team members makes their day — and their month.</p>
+    <button class="cta ghost" id="again">New review</button>
+  </div>
+</section>
+
+</div>
+<script>
+(function(){
+  var $ = function(s){ return document.querySelector(s); };
+  var R = { name:'', email:'', source:'other', ref:'', rating:0, staff:[], token:new URLSearchParams(location.search).get('t') || '' };
+  function show(id){ document.querySelectorAll('.step').forEach(function(x){ x.classList.remove('on'); }); $('#'+id).classList.add('on'); window.scrollTo(0,0); }
+  show('s-guest');
+
+  /* guest list (iPad kiosk: ?t=<token>) */
+  if (R.token) {
+    fetch('../booking/api.php?action=review-guests&t=' + encodeURIComponent(R.token))
+      .then(function(r){ return r.json(); }).then(function(d){
+        (d.guests || []).forEach(function(g){
+          var b = document.createElement('button'); b.type = 'button'; b.className = 'big';
+          b.innerHTML = '<b></b><small></small>';
+          b.querySelector('b').textContent = g.name || 'Guest';
+          b.querySelector('small').textContent = g.room + ' · ' + g.checkin + ' → ' + g.checkout;
+          b.addEventListener('click', function(){
+            document.querySelectorAll('#guestlist .big').forEach(function(x){ x.classList.remove('sel'); });
+            b.classList.add('sel');
+            R.name = g.name; R.email = g.email || ''; R.source = g.source; R.ref = g.ref;
+            $('#m-name').value = g.name; $('#m-email').value = R.email;
+            loadBill(g.ref);
+          });
+          $('#guestlist').appendChild(b);
+        });
+      }).catch(function(){});
+  }
+  /* staff-only bill panel (kiosk token + comps switched on in the admin) */
+  function loadBill(ref){
+    $('#billbox').style.display = 'none';
+    if (!R.token) return;
+    fetch('../booking/api.php?action=review-bill&t=' + encodeURIComponent(R.token) + '&ref=' + encodeURIComponent(ref))
+      .then(function(r){ return r.json(); }).then(function(d){
+        if (!d.comp_enabled || !(d.items || []).length) return;
+        var box = $('#billitems'); box.innerHTML = '';
+        d.items.forEach(function(i){
+          var l = document.createElement('label');
+          l.style.cssText = 'display:flex;align-items:center;gap:10px;padding:8px 0;font-size:16px;text-transform:none;letter-spacing:0;color:var(--ink)';
+          var c = document.createElement('input'); c.type = 'checkbox'; c.value = i.id; c.style.cssText = 'width:22px;height:22px';
+          var t = document.createElement('span'); t.textContent = (i.kind === 'drink' ? '🥤 ' : '🍽 ') + i.desc + ' — ฿' + Number(i.amount).toLocaleString();
+          l.appendChild(c); l.appendChild(t); box.appendChild(l);
+        });
+        $('#billcap').textContent = 'Comp allowance: up to ฿' + Number(d.limit).toLocaleString()
+          + ' — if the ticked items come to less, only that amount is taken off the bill.';
+        $('#billbox').style.display = 'block';
+      }).catch(function(){});
+  }
+  $('#billapply').addEventListener('click', function(){
+    var ids = Array.prototype.map.call(document.querySelectorAll('#billitems input:checked'), function(c){ return c.value; });
+    if (!ids.length) { $('#e-bill').textContent = 'Tick the items to comp first.'; $('#e-bill').style.display = 'block'; return; }
+    $('#e-bill').style.display = 'none'; $('#billapply').disabled = true;
+    fetch('../booking/api.php?action=review-comp', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ t: R.token, ref: R.ref, items: ids }) })
+    .then(function(r){ return r.json().then(function(d){ return { ok: r.ok, d: d }; }); })
+    .then(function(x){
+      if (!x.ok) throw (x.d && x.d.error) || 0;
+      $('#billbox').innerHTML = '<b>✓ ฿' + Number(x.d.comped).toLocaleString() + ' taken off the bill.</b> Recorded on the Beds24 invoice.';
+    })
+    .catch(function(w){ $('#billapply').disabled = false; $('#e-bill').textContent = (typeof w === 'string' && w) ? w : 'Could not apply — try again.'; $('#e-bill').style.display = 'block'; });
+  });
+
+  document.querySelectorAll('#manual .big').forEach(function(b){
+    b.addEventListener('click', function(){
+      document.querySelectorAll('#manual .big').forEach(function(x){ x.classList.remove('sel'); });
+      b.classList.add('sel'); R.source = b.getAttribute('data-src');
+    });
+  });
+  $('#n1').addEventListener('click', function(){
+    R.name = ($('#m-name').value || R.name).trim();
+    R.email = ($('#m-email').value || R.email).trim();
+    if (!R.name) { $('#e1').textContent = 'Please tap your name or type it.'; $('#e1').style.display = 'block'; return; }
+    $('#e1').style.display = 'none';
+    $('#rate-title').textContent = 'How was your stay, ' + R.name.split(' ')[0] + '?';
+    show('s-rate');
+  });
+
+  /* stars */
+  var lbl = ['','We are sorry — tell us what went wrong','Not quite right — tell us more','Good','Really good','Wonderful!'];
+  document.querySelectorAll('#stars button').forEach(function(b){
+    b.addEventListener('click', function(){
+      R.rating = +b.getAttribute('data-v');
+      document.querySelectorAll('#stars button').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-v') <= R.rating); });
+      $('#starlbl').textContent = lbl[R.rating]; $('#n2').disabled = false;
+    });
+  });
+
+  /* staff roster */
+  function initials(n){ return n.split(/\s+/).map(function(w){ return w[0] || ''; }).join('').slice(0,2).toUpperCase(); }
+  function staffTile(name, role, photo){
+    var b = document.createElement('button'); b.type = 'button'; b.className = 'staff';
+    if (photo) {
+      var img = document.createElement('img'); img.className = 'ph'; img.src = photo; img.alt = name;
+      img.onerror = function(){ var d = document.createElement('div'); d.className = 'ph'; d.textContent = initials(name); img.replaceWith(d); };
+      b.appendChild(img);
+    } else { var d = document.createElement('div'); d.className = 'ph'; d.textContent = name === 'The whole team' ? '♥' : initials(name); b.appendChild(d); }
+    var nm = document.createElement('b'); nm.textContent = name; b.appendChild(nm);
+    if (role) { var r = document.createElement('small'); r.textContent = role; b.appendChild(r); }
+    b.addEventListener('click', function(){
+      b.classList.toggle('sel');
+      var i = R.staff.indexOf(name);
+      if (i >= 0) R.staff.splice(i,1); else R.staff.push(name);
+    });
+    return b;
+  }
+  var SKIP_STAFF = false;
+  fetch('../booking/api.php?action=review-staff').then(function(r){ return r.json(); }).then(function(d){
+    if (d.staff_enabled === false) { SKIP_STAFF = true; return; }   // togglable in the admin
+    var g = $('#staffgrid');
+    g.appendChild(staffTile('The whole team', '', ''));
+    (d.staff || []).forEach(function(s){ g.appendChild(staffTile(s.name, s.role || '', s.photo || '')); });
+  }).catch(function(){ $('#staffgrid').appendChild(staffTile('The whole team', '', '')); });
+  $('#n2').addEventListener('click', function(){
+    if (SKIP_STAFF) { $('#s-words .back').setAttribute('data-back', 's-rate'); show('s-words'); }
+    else { $('#s-words .back').setAttribute('data-back', 's-staff'); show('s-staff'); }
+  });
+  $('#n3').addEventListener('click', function(){ show('s-words'); });
+
+  document.querySelectorAll('.back').forEach(function(b){ b.addEventListener('click', function(){ show(b.getAttribute('data-back')); }); });
+
+  /* send */
+  $('#send').addEventListener('click', function(){
+    var text = $('#words').value.trim();
+    if (!text) { $('#e4').textContent = 'A sentence or two, please — it means the world.'; $('#e4').style.display = 'block'; return; }
+    $('#e4').style.display = 'none';
+    $('#send').disabled = true; $('#send').textContent = 'SENDING…';
+    fetch('../booking/api.php?action=review', { method:'POST', headers:{'Content-Type':'application/json'},
+      body: JSON.stringify({ name:R.name, email:R.email, extra_email:$('#x-email').value.trim(),
+        rating:R.rating, text:text, source:R.source, ref:R.ref, staff:R.staff }) })
+    .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, d:d }; }); })
+    .then(function(x){
+      if (!x.ok) throw (x.d && x.d.error) || 0;
+      if (!R.email && !$('#x-email').value.trim()) $('#donemsg').textContent = 'Your review is saved — our team will be so pleased. Thank you!';
+      show('s-done');
+    })
+    .catch(function(why){
+      $('#e4').textContent = (typeof why === 'string' && why) ? why : 'Could not send just now — please try again.';
+      $('#e4').style.display = 'block';
+    })
+    .finally(function(){ $('#send').disabled = false; $('#send').textContent = 'SEND MY REVIEW'; });
+  });
+  $('#again').addEventListener('click', function(){ location.reload(); });
+})();
+</script>
+</body>
+</html>

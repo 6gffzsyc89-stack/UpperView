@@ -274,3 +274,40 @@ Ported from Sonata v3.0 (Andy: "update Upper View's admin to match").
   TASK) so requests, allergies and birthdays live on the Beds24 booking,
   readable by staff and the WhatsApp assistant — the managers' sheets remain
   a human double-check, not the master.
+
+## v3.3 — 2026-11-11 · Pending pipeline everywhere, sheet sync, live CSV feed, guest reviews
+- **Sheet reconciliation finished (Dec 2026 → Apr 2027):** the managers'
+  UPPERVIEW RESERVATIONS sheet now matches the live system on every month.
+  Two gaps the sheets exposed were closed with manual blocks (local + Beds24
+  96018102/96018103): the Superior Booking.com stay's Dec 26–31 nights (the
+  old block started Jan 1) and a Deluxe Booking.com stay Feb 11–13 — both
+  invisible to the website until Beds24's Booking.com channel connects.
+- **Pending requests recorded in Beds24 from every channel:** website unpaid
+  requests now ALSO write a Beds24 'inquiry' (non-blocking, PENDING notes,
+  REQUEST info item); admin got a "Record a pending request" form for email/
+  phone/walk-in requests; b24_create_booking updates the SAME Beds24 row when
+  a pending request is later confirmed (meta b24id_<code>), never duplicates.
+  Verified live: inquiry 96018236 did not reduce the pool, confirm patched
+  the same id, then the test was cancelled.
+- **Live CSV feed** (`booking/calendar-feed.php?t=<token>`): one row per stay
+  across all channels incl. PENDING, for the Google Sheets mirror via
+  =IMPORTDATA(...) — Google refreshes it on its own. Same token as the
+  WhatsApp picture link.
+- **Guest reviews** (`/review/`, Andy's spec 2026-11-11): iPad-first kiosk —
+  staff tap the guest (token mode lists recent Beds24 stays), 5 huge stars,
+  staff-roster portrait tiles ("The whole team" + per-person; roster and the
+  whole step togglable in admin → Guest reviews), a few words, then the
+  finished review is EMAILED to the guest ready to paste, catered to where
+  they booked (Airbnb / Booking.com instructions, Google for direct). Desk
+  notification flags STAFF CREDITED for salary bonuses. Mock roster seeded
+  with 6 Higgsfield portraits in white UPPER VIEW polos (replace via admin
+  photo upload). Verified live end-to-end; test review deleted.
+- **Thank-you comp (togglable, OFF by default):** staff-only kiosk panel
+  lists the stay's DRINK:/MEAL: charges from the Beds24 invoice; comp =
+  min(selected charges, admin limit) written as a negative invoice line; one
+  comp per stay. COMPLIANCE (verified 2026-11-11): Airbnb and Booking.com
+  prohibit incentives in exchange for reviews, so the comp is a
+  staff-discretion hospitality gesture, never conditional on posting;
+  emailing guests their own words to post themselves is allowed. Beds24 has
+  a Booking.com review mirror endpoint (/channels/booking/reviews — answers
+  once the channel is connected).
