@@ -14,8 +14,15 @@ require __DIR__ . '/lib.php';
 require __DIR__ . '/beds24.php';
 require __DIR__ . '/calendar.php';
 
-$tok = (string) uv_meta_get('cal_image_token');
-if ($tok === '' || !hash_equals($tok, (string) ($_GET['t'] ?? ''))) { http_response_code(403); exit('forbidden'); }
+// The feed has its OWN low-privilege token (meta cal_feed_token): it ends up
+// inside a link-shared Google Sheet formula, where viewers can read it, so it
+// must unlock NOTHING but this CSV. The kiosk/picture token also works for
+// backward compatibility (its powers are a superset).
+$tokFeed = (string) uv_meta_get('cal_feed_token');
+$tokImg  = (string) uv_meta_get('cal_image_token');
+$tIn = (string) ($_GET['t'] ?? '');
+$okT = ($tokFeed !== '' && hash_equals($tokFeed, $tIn)) || ($tokImg !== '' && hash_equals($tokImg, $tIn));
+if (!$okT) { http_response_code(403); exit('forbidden'); }
 uv_rate_limit('calfeed', 60, 600);
 
 $from = uv_valid_date($_GET['from'] ?? null) ? (string)$_GET['from'] : date('Y-m-d');

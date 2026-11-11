@@ -324,3 +324,13 @@ double-checks. (4) Server config min_nights=2 (backed up first) so the admin
 calendar ambers gaps shorter than the minimum. Verified live: 1-night quote
 and book 400, 2-night quote returns rooms. Sonata asked to confirm its side
 (its Beds24 rooms were created with minStay 2; its site uses CONFIG.minNights).
+
+## v3.5 — 2026-11-11 · Live Google Sheets mirror + low-privilege feed token
+calendar-feed.php now takes its OWN token (meta cal_feed_token): the token
+sits inside a link-shared Google Sheet's IMPORTDATA formula where any viewer
+can read it, so it unlocks NOTHING but the CSV (verified: 403 on the kiosk
+guest list). The shared mirror sheet "NikiStay — LIVE Reservations (Upper
+View + Sonata)" is live under ableabmanagement@gmail.com, anyone-with-link
+viewer: UPPER VIEW tab imports the feed (verified: 16 stays, dates formatted,
+pendings/blocks/Airbnb/Booking.com all present), SONATA tab awaits that
+session's feed deploy. Google refreshes IMPORTDATA on its own (~hourly).
