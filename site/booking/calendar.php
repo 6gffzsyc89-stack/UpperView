@@ -105,6 +105,11 @@ function uv_cal_month(string $ym): array {
         $qty = max(1, (int)($b['roomQty'] ?? 1));
         $name = trim(($b['firstName'] ?? '') . ' ' . ($b['lastName'] ?? ''));
         if (!empty($b['apiReference'])) $b24refs[$b['apiReference']] = true;
+        // The list endpoint blanks apiReference, but our code is in the notes we
+        // write on every booking ("… ref UVxxxxxx" / "Direct website booking UVxxxxxx").
+        if (!empty($b['notes']) && preg_match_all('/\b(UV[0-9A-F]{6})\b/', (string)$b['notes'], $mm)) {
+            foreach ($mm[1] as $ref) $b24refs[$ref] = true;
+        }
         $bars[$t][] = ['from' => $b['arrival'], 'to' => $b['departure'], 'src' => $src, 'qty' => $qty, 'b24' => (int)$b['id'],
             'label' => ($qty > 1 ? $qty . ' × ' : '') . ($src === 'blocked' ? 'Blocked' : ($name !== '' ? $name : UV_CAL_SOURCES[$src][0])),
             'info' => array_filter([

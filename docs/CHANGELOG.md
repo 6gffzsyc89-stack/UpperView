@@ -225,9 +225,12 @@ Ported from Sonata v3.0 (Andy: "update Upper View's admin to match").
 - **Dedupe gotcha (both brands)**: Beds24 GET /bookings returns an EMPTY
   apiReference even for bookings created with one, so matching our rows to
   Beds24 copies by reference silently fails → the same stay showed twice and
-  raised a false "double booking". Fallback dedupe added: same type +
+  raised a false "double booking". Fix (second pass, exact-match idea from the
+  Sonata session, which applied it as its v3.2): our UV code is read back from
+  the Beds24 notes line we write on every booking ("… ref UVxxxxxx" and the
+  older "Direct website booking UVxxxxxx" — the list endpoint DOES return
+  notes); remaining fallback for note-less manual blocks: same type +
   identical dates + (both blocks, matching channel ref, or same guest name).
-  Reported to the Sonata session (its calendar relies on the same key).
 - iCal SUMMARY now stored (`ota_busy.summary`, lazy migration) so feed
   entries read "Airbnb guest" vs "Closed on Airbnb"; `uv_rate_limit()` added.
 - Cloudflare (Sonata v3.0 item 4): both domains are in Andy's Cloudflare
