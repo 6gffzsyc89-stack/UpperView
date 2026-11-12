@@ -31,6 +31,29 @@ const state = {
 const $ = (s) => document.querySelector(s);
 const body = document.body;
 
+/* Browser-language auto-detect (same rules as Sonata): first supported
+   navigator.languages entry wins; a menu pick is saved and always wins;
+   the detected language is never saved. */
+function detectLang() {
+  try {
+    const have = LANGS.map((l) => l.code);
+    for (const tag of navigator.languages || [navigator.language || '']) {
+      const low = String(tag).toLowerCase();
+      let c = low.split('-')[0];
+      if (c === 'zh') c = /tw|hk|mo|hant/.test(low) ? 'tw' : 'zh';
+      if (c === 'iw') c = 'he';
+      if (have.includes(c)) return c;
+    }
+  } catch (e) {}
+  return 'en';
+}
+try {
+  const saved = localStorage.getItem('uv_lang');
+  state.lang = saved && LANGS.some((l) => l.code === saved) ? saved : detectLang();
+} catch (e) {
+  state.lang = detectLang();
+}
+
 /* ---------- i18n ---------- */
 function t(key) {
   const d = I18N[state.lang] || I18N.en;
@@ -72,6 +95,7 @@ function buildLangLists() {
       });
       b.addEventListener('click', () => {
         state.lang = l.code;
+        try { localStorage.setItem('uv_lang', l.code); } catch (e) {}
         closeDropdowns();
         applyI18n();
       });

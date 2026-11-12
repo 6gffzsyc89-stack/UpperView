@@ -192,9 +192,9 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok = !$r['failed'];
         $anchor = 'assign';
     }
-    if ($act === 'calimg_token') {   // link for the WhatsApp assistant's calendar pictures (new link = old one stops working)
+    if ($act === 'calimg_token') {   // kiosk / calendar-image key (Yomied uses the same one; a new key = the old stops working)
         uv_meta_set('cal_image_token', bin2hex(random_bytes(20)));
-        $msg = 'New WhatsApp picture link created (the old one no longer works). Copy it into the WhatsApp assistant\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
+        $msg = 'New kiosk / calendar-image key created (the old one no longer works). Update it in Yomied\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
     }
     if ($act === 'stripekey') {
         $sk = trim((string)($_POST['sk'] ?? ''));
@@ -336,8 +336,12 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <p>OTA calendars last pulled: <?= $fetched ? gmdate('Y-m-d H:i', (int)$fetched) . ' UTC' : 'never' ?>
 <form class="inline" method="post"><input type="hidden" name="act" value="refresh"><button>Pull now</button></form></p>
 
-<h2 id="calendar">Calendar</h2>
+<h2 id="calendar">Booking calendar</h2>
 <?= uv_flash_box('calendar') ?>
+<p style="margin:0 0 10px;font-size:13px">
+<a target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1hfjVN1JeK1VYMsdFqurONjxT1hE_0O7a5SxVzx0uje8/edit">Live sheet (automatic — updates itself)</a>
+ · <a target="_blank" rel="noopener" href="https://docs.google.com/spreadsheets/d/1d3NlrpjhI_jxiZoznaAiSzjTmCOcusKDiWEunwLv7nc/edit">Manual sheet (NikiStay)</a>
+</p>
 <?= uv_cal_render($self, $calMonth) ?>
 <?= uv_cal_assets($self) ?>
 <h2 id="assign">Villa assignments (who sleeps where)</h2>
@@ -364,17 +368,6 @@ button{background:#4F6446;color:#fff;border:none;cursor:pointer}.msg{padding:10p
 <?php else: ?>
 <p><a href="<?= htmlspecialchars($self) ?>&opt=1#assign" style="display:inline-block;background:#4F6446;color:#fff;padding:8px 16px;text-decoration:none;border-radius:4px">Preview optimal assignments (next 180 days)</a></p>
 <?php endif; ?>
-
-<?php $ciTok = (string) uv_meta_get('cal_image_token'); $ciBase = rtrim((string)($cfg['site_url'] ?? 'https://upperviewsamui.com'), '/') . '/booking/calendar-image.php'; ?>
-<details class="box" style="margin:12px 0 24px;background:#fff;padding:12px 14px">
-<summary><b>WhatsApp picture link</b> — phone-sized calendar pictures the WhatsApp assistant can send</summary>
-<?php if ($ciTok === ''): ?><p>No link yet.</p><?php else: $ciUrl = $ciBase . '?t=' . rawurlencode($ciTok); ?>
-<p style="font-size:12px;color:#666">Give the WhatsApp assistant this address (in its own settings, not in a chat). Add <code>&amp;m=2026-12</code> for a month, <code>&amp;v=villa</code> / <code>superior</code> / <code>deluxe</code> / <code>king</code> for one room type, <code>&amp;view=list</code> for a list, <code>&amp;who=staff</code> for colours and guest names (team only — guests get the default: booked / free, no names).</p>
-<p><input readonly style="width:100%;max-width:760px;font:12px monospace;padding:6px" value="<?= htmlspecialchars($ciUrl) ?>" onclick="this.select()"></p>
-<p>Preview: <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl) ?>">guest calendar</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&view=list') ?>">guest list (free dates)</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&who=staff') ?>">staff calendar</a> · <a target="_blank" rel="noopener" href="<?= htmlspecialchars($ciUrl . '&who=staff&view=list') ?>">staff list</a></p>
-<?php endif; ?>
-<form class="inline" method="post"><input type="hidden" name="act" value="calimg_token"><button style="background:#3D4C36"><?= $ciTok === '' ? 'Create link' : 'Replace link' ?></button></form>
-</details>
 
 <h2>Bookings &amp; blocks</h2>
 <table><tr><th>Code</th><th>Type</th><th>Check-in</th><th>Check-out</th><th>Guests</th><th>Name</th><th>Contact</th><th>Status</th><th>Amount</th><th>Promo</th><th></th></tr>
@@ -488,7 +481,7 @@ $rvTok = (string) uv_meta_get('cal_image_token');
 <div style="background:#fff;padding:12px 14px;margin:0 0 14px">
 <p style="margin:0 0 8px"><b>Review kiosk</b> — open this on the iPad (big buttons; staff tap the guest, the guest rates, picks the team members they liked, writes a few words; the finished review is emailed to them ready to paste on the portal they booked through). Guests at home can use <code>upperviewsamui.com/review/</code> (no guest list shown without the key).</p>
 <?php if ($rvTok !== ''): ?><p><input readonly style="width:100%;max-width:700px;font:12px monospace;padding:6px" value="https://upperviewsamui.com/review/?t=<?= htmlspecialchars(rawurlencode($rvTok)) ?>" onclick="this.select()"></p>
-<?php else: ?><p>Create the key first (Calendar section → WhatsApp picture link — the kiosk uses the same key).</p><?php endif; ?>
+<?php else: ?><form class="inline" method="post"><input type="hidden" name="act" value="calimg_token"><button style="background:#3D4C36">Create the kiosk key</button></form><?php endif; ?>
 <form method="post" style="margin:10px 0 0"><input type="hidden" name="act" value="rv_toggles">
 <label style="margin-right:18px"><input type="checkbox" name="staff_on" value="1" <?= $rvStaffOn ? 'checked' : '' ?>> Staff picker step ON</label>
 <label style="margin-right:8px"><input type="checkbox" name="comp_on" value="1" <?= $rvCompOn ? 'checked' : '' ?>> Thank-you comps ON</label>

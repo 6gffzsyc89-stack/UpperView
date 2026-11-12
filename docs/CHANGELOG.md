@@ -401,3 +401,31 @@ us for optimal occupancy).
   Superior / Deluxe / King).
 - Beds24 verification email drafted (listing links for both brands); Sonata
   parity check complete — full parity, one documented horizon gap.
+
+## v3.9 — 2026-11-12 · True replica mirror tabs; admin "Booking calendar"; language auto-detect
+- The mirror sheet was rebuilt as a TRUE REPLICA of the managers' manual
+  workbooks (Andy: a data mirror in a different layout is not a copy; the
+  manual sheets will be retired). Per-month tabs for both brands — UV NOV
+  2026…UV APR 2027 in the UPPERVIEW manual's layout (orange banner, blue
+  weekday headers, tall room rows: Superior/Deluxe/King Suite + Villa # 1–8
+  + unassigned) and SON Nov 2026…SON Apr 2027 in the Sonata/AKASHA manual's
+  layout (AKASHA row kept, cyan Villa 1–3) — each with the manual's guest
+  detail table (Source logos via favicons, Check-in/out, Villa Type, Nights)
+  where Date Booked / Rate / Commission stay EMPTY until Beds24 leaves the
+  trial. The old two GRID tabs are deleted; flat tabs remain.
+- Apps Script hardening: Sheets applies merges lazily, so a failed merge of
+  overlapping bars surfaced LATER and silently discarded queued writes (SON
+  Dec lost Villa 3 + its detail table). Bars are now clipped to free days
+  (first booking wins the shared day), every month flushes explicitly, and
+  errors land in a SYNC LOG tab instead of vanishing.
+- Admin: "Calendar" → "Booking calendar", with two links beneath it — the
+  live automatic sheet and the manual NikiStay sheet. WhatsApp picture link
+  UI removed (that is Yomied's own function; the key-rotation action remains
+  as the kiosk key). Sonata asked to mirror all of this.
+- Site: browser-language auto-detect on first visit (Sonata's detectLang
+  rules: navigator.languages walked in order, zh-Hant variants → 繁, iw →
+  he; a saved menu pick always wins and is the only thing saved) — app.js
+  v=mn3.
+- Cloudflare nameserver move EXECUTED for both domains via the Hostinger
+  API (adelaide/yoxall.ns.cloudflare.com, propagation pending); proxy
+  flip awaits Andy's direct yes in the Sonata session.
