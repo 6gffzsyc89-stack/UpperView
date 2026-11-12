@@ -1,6 +1,15 @@
-# AI marketing & agents — strategy and spec — v1.1 (2026-11-12)
+# AI marketing & agents — strategy and spec — v1.2 (2026-11-12)
 
-(v1.1: §E user-level controls & nested scopes added — Yomied to design; §D Yomied mini-app list expanded.)
+**NORTH STAR (instituted by Andy, 2026-11-12): the entire system is managed
+through the WhatsApp AI agent (Yomied), and ALL manual work is retired.**
+Every feature below serves that end-state: the manual workbook retires into
+the live mirror with its preserved manual-notes column; admin-page actions
+become Yomied abilities; email becomes AI-triaged with human GO only until
+drafts earn autonomy; staff and owners instruct the system by messaging the
+assistant scoped to them (§E). When choosing what to build next, prefer the
+thing that removes a manual step.
+
+(v1.2: North Star instituted. v1.1: §E user-level controls & nested scopes added — Yomied to design; §D Yomied mini-app list expanded.)
 
 Scope: every property (Upper View, Sonata, and any added later). This file is
 the canonical spec for AI discovery/booking marketing AND the agent
