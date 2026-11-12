@@ -479,3 +479,24 @@ Andy: "Go build and deploy the unified backend system." Done, live, verified:
 - Repo: site/common/ (merged modules) + shims in site/booking/;
   tools/deploy-core.sh deploys engine → shared-core (webroots get stubs
   only, never engine files). Sonata profile deploys from the Sonata repo.
+
+## v4.1 — 2026-11-12 · AI marketing & agents spec; sheet manual fields; robots.txt
+- New canonical spec docs/ai-marketing-and-agents_v1.0_2026-11-12.md +
+  playbook v1.4 §12 (binding for every property): Yomied = internal agent
+  only; external Guest Concierge on each website with auto welcome message +
+  Live Help button from per-site config (live_help_phone, replacing the
+  hard-coded number); AI email triage with human GO before send (auto-send
+  per-property opt-in later); all outbound email logged for Yomied; public
+  guest MCP design (narrow token, 25-min expiring holds, Stripe Checkout).
+- Discovery phase 0 done: UV serves an explicit AI-crawler robots.txt
+  (OAI-SearchBot/ChatGPT-User/Claude-SearchBot/Claude-User/Perplexity*/
+  Googlebot/Bingbot; both sites previously 404'd). Sonata mirroring.
+  Cloudflare-flip caveat recorded (default AI-crawler blocking).
+- Mirror sheet: every month tab gains column 15 "Manual notes (yours —
+  kept)" — staff corrections typed into the sheet survive every rebuild
+  (harvest-by-key before clear, re-apply after; verified by writing a test
+  note and syncing twice). Web app bumped to deployment Version 3 (same
+  URL) so instant pings carry the preserving code — the prior version would
+  have wiped notes. Steps toward retiring the manual workbook; the
+  still-empty columns (Date Booked / Rate / Commission for OTA rows) fill
+  automatically when the Beds24 trial lifts.
