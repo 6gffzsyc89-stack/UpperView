@@ -45,6 +45,13 @@ was included successfully from the UV webroot. Therefore:
    live repo) in case we ever leave Beds24 — so the core keeps ALL Beds24
    coupling isolated behind beds24.php + the OTA-feed layer, a seam another
    channel manager (or none) could replace without touching the engine.
+   This is a formal core config toggle: channel_manager = 'beds24' |
+   'standalone' ('standalone' = the engine alone: direct bookings + iCal
+   portal imports, portals managed by hand). A 'custom' value is reserved for
+   a future direct-API integration, noting that as of Nov 2026 Booking.com's
+   connectivity-partner onboarding is paused/periodically closed and Airbnb's
+   API program is invitation-only and not accepting requests — so 'beds24'
+   stays the recommended production value.
 3. Assemble the superset core in this repo under core/ (merge order smallest-
    first: sheet-ping, ical-export, calendar-feed, network-local, webhooks,
    calendar-image, then lib/api/pay/admin+confirm as a designed unification),
