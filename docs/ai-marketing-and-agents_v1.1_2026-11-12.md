@@ -1,4 +1,6 @@
-# AI marketing & agents — strategy and spec — v1.0 (2026-11-12)
+# AI marketing & agents — strategy and spec — v1.1 (2026-11-12)
+
+(v1.1: §E user-level controls & nested scopes added — Yomied to design; §D Yomied mini-app list expanded.)
 
 Scope: every property (Upper View, Sonata, and any added later). This file is
 the canonical spec for AI discovery/booking marketing AND the agent
@@ -109,6 +111,39 @@ abandoned chats never block portal inventory.
 - UpperView session: UV site work, shared-core, this spec, guest-MCP build.
 - Sonata session: Sonata mirror of every item (robots.txt, links, widget
   when built).
-- Yomied session: internal mini-apps (optimiser UI, email triage queue +
-  GO button, email log viewer, key management). Coordinate via
-  cross-session messages; this doc is the contract.
+- Yomied session: internal mini-apps — (a) "Optimize for Vacancies": big
+  button rendering the reorganised chart below the live one, moved guests
+  highlighted with provenance (manual / Yomied / owner), big DO IT applying
+  unit moves through Beds24; (b) email triage queue with per-draft GO
+  button; (c) outbound-email log viewer; (d) key management (kiosk /
+  calendar-image keys); (e) user, role and scope manager (§E); (f) sheet
+  manual-notes surfacing. All of it rides the same engine + Beds24 MCP the
+  admin uses — one knowledge pool, Yomied as its presentation layer.
+  Coordinate via cross-session messages; this doc is the contract. (No
+  Yomied session was reachable on 2026-11-12 — this section IS its brief.)
+
+## E. User-level controls and identity (REQUIRED — Yomied designs this)
+
+Andy, 2026-11-12: there are no user-level controls today; Yomied must
+figure out the design. Requirements it must satisfy:
+1. **Scopes.** A client and a project are THE SAME unit of scoping — one
+   "scope". Scopes NEST: our client can have their own clients (a tree).
+   Permissions flow downward only; sibling branches are isolated.
+2. **Assistant naming.** Each assistant name is bound to exactly one scope
+   (e.g. an assistant scoped to Upper View, another to a client's client).
+   The name a person addresses determines which scope's data and powers
+   are in play — never more.
+3. **Identities.** Every human is one user with bound identities across
+   channels: phone numbers per messaging platform (WhatsApp first; LINE /
+   Telegram / SMS as added), email addresses, platform account names.
+   A message is authorized by (identity → user → role → scope).
+4. **Roles.** At minimum Owner, Manager, Staff, Client-admin (a client
+   managing their own sub-clients), read-only. Role decides which Yomied
+   actions are allowed where (e.g. who may press DO IT on the optimiser,
+   who may GO an email draft, who may rotate keys).
+5. **Instruction channels.** Yomied accepts instructions only on channels
+   bound to a known identity; unknown senders get the guest treatment.
+   Every instructed action is audit-logged (who, channel, scope, action).
+6. **Interop.** All of this fronts the same Beds24 MCP + engine MCPs the
+   admin uses; user-level controls live in Yomied, not duplicated per
+   website admin.
