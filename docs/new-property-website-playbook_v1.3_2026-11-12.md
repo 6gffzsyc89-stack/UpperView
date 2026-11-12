@@ -1,6 +1,13 @@
-# New property website playbook — v1.2 (2026-11-07)
+# New property website playbook — v1.3 (2026-11-12)
 
 Changelog:
+- v1.3 (2026-11-12) — ONE BACKEND (CHANGELOG v4.0): every engine file now
+  lives once in /home/u357356777/shared-core/ (uv/ + sonata/ profiles
+  merging file-by-file into common/); webroot booking/ dirs hold 2-line
+  stubs only. New §11 is the explicit recipe for adding a THIRD (or Nth)
+  property on the shared core — this section is the authoritative answer
+  to "how do we add a property", maintained in BOTH brand repos
+  (UpperView + Sonata) by their respective Claude sessions.
 - v1.2 (2026-11-07) — Beds24 inventory-rows gotcha (root cause of the
   366403 zero-availability mystery, found by the Sonata session): rooms
   created via the Beds24 API get NO inventory rows — availability reads
@@ -231,3 +238,53 @@ Beds24, reports the Beds24 block id or a loud failure), Payments
 9. Remote MCP tokens for the AI assistant; send the integration README.
 10. CHANGELOG.md started; cross-brand sync message sent; tracker row
     opened for anything left with the owner.
+
+
+## 11. Adding a property on the ONE BACKEND (shared-core) — explicit recipe
+
+State as of 2026-11-12: engine code lives ONLY in
+`/home/u357356777/shared-core/` — profiles `uv/` and `sonata/`, shared
+superset growing in `common/` (network.php, sheet-ping.php merged; the
+rest follows per docs/one-backend-plan.md). Webroot `booking/` dirs hold
+two-line stubs. NEVER copy engine code into a webroot.
+
+For a new property "X" at domain X.com (same Hostinger account):
+
+1. **Hosting + data.** Add the domain to the account. Create
+   `domains/X.com/data/` (OUTSIDE the webroot) with `config.php` from
+   `config.sample.php`: brand name, domain, mail addresses, Beds24
+   property/room ids, villa_model ('pool' like UV or 'individual' like
+   Sonata), pricing source, feature toggles, 'min_nights' => 2.
+2. **Beds24.** Create the property and its rooms IN THE CONTROL PANEL
+   (never via API — API-created rooms get no inventory rows, §2 gotcha),
+   seed inventory ~2 years, note the horizon in config, set minStay 2.
+3. **Engine.** While the superset merge is incomplete: copy the CLOSEST
+   profile (`uv/` for pooled identical units, `sonata/` for named villas
+   with capacities/combos) to `shared-core/X/`, then point X at `common/`
+   for every already-merged module via the 2-line shims (see
+   `shared-core/uv/sheet-ping.php` for the pattern + the CORE_* adapter
+   constant). Once the merge completes, this step collapses to "stubs +
+   config only" — no engine copying at all.
+4. **Stubs.** Generate one 2-line stub per engine .php into
+   `domains/X.com/public_html/booking/` (template:
+   `tools/stubs/uv-example-stub.php`): define X_SITE_DATA +
+   X_SITE_WEBROOT, require the shared-core file. Generate LOCALLY, lint,
+   ship via tar over ssh (never printf files over ssh — that broke 5
+   live files once).
+5. **Front end.** New brand site in the webroot (its own repo), plus the
+   static `review/` kiosk page and `photos/`.
+6. **Tokens + mirror.** Set meta cal_feed_token + cal_image_token; add a
+   brand entry (feed URL, tab prefix, layout style) to the Apps Script
+   "NikiStay live sheet sync" CFG.brands, run syncFeeds, and BUMP THE WEB
+   APP DEPLOYMENT VERSION (Manage deployments → edit → New version —
+   deployments pin code); store meta sheet_ping_url on the new site.
+7. **Payments.** The brand's own Stripe (and/or Airwallex) account; keys
+   via admin; webhook URL = https://X.com/booking/webhook-stripe.php;
+   payment_provider set in admin.
+8. **MCP + email + DNS.** Remote MCP entry per the account-wide pattern
+   (§8); SPF/DKIM/DMARC; Cloudflare NS if adopted account-wide.
+9. **Verify + record.** Run the §10 checklist + the endpoint battery
+   (quote with real pricing, feed CSV, webhooks answer 400 to garbage,
+   admin, calendar-image 403 without token, kiosk). Add the property to
+   every session's standing rules; record in BOTH repos' CHANGELOG.md
+   and message all brand sessions (standing rule, header of this doc).
