@@ -130,7 +130,12 @@ function uv_cal_month(string $ym): array {
             ], 'strlen')];
     }
 
-    // 2. Our own bookings table (skip rows our code already wrote to Beds24)
+    // 2. Our own bookings table (skip rows our code already wrote to Beds24).
+    // Expire abandoned checkout holds first (same 25-minute rule as the
+    // availability engine), so a guest who picked dates but never paid does
+    // not linger as PENDING in the calendar, the feed or the sheet.
+    uv_db()->prepare("UPDATE bookings SET status='cancelled', updated_at=datetime('now')
+                      WHERE status='pending' AND created_at < datetime('now','-25 minutes')")->execute();
     $st = uv_db()->prepare("SELECT * FROM bookings WHERE status IN ('confirmed','blocked','inquiry','pending','clash')
                             AND checkin < ? AND checkout > ? ORDER BY checkin");
     $st->execute([$after, $first]);

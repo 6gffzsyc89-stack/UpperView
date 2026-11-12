@@ -10,9 +10,12 @@
 :root{--green:#4F6446;--deep:#3D4C36;--cream:#F7F0E9;--ink:#2b2b26;--mut:#8a8376;--line:#e4dcd2}
 *{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 body{background:var(--cream);color:var(--ink);font:17px/1.6 'Archivo','Jost',Helvetica,Arial,sans-serif;min-height:100vh}
-header{background:var(--deep);color:var(--cream);text-align:center;padding:26px 16px}
-header .wm{letter-spacing:.35em;font-family:'Jost',sans-serif;font-size:19px}
-header .sub{color:#b9c0ae;font-size:10px;letter-spacing:.3em;margin-top:5px;text-transform:uppercase}
+header{background:var(--deep);color:var(--cream);text-align:center;padding:24px 16px 18px}
+header img{width:132px;height:auto;display:inline-block}
+.langbar{display:flex;flex-wrap:wrap;gap:8px;justify-content:center;padding:12px 14px 0}
+.langbar button{font:600 12.5px/1 'Archivo',sans-serif;letter-spacing:.04em;padding:10px 14px;border-radius:999px;border:1.5px solid var(--line);background:#fff;color:var(--ink);cursor:pointer}
+.langbar button.on{background:var(--green);border-color:var(--green);color:var(--cream)}
+h1{text-transform:uppercase;letter-spacing:.08em}
 .wrap{max-width:760px;margin:0 auto;padding:26px 18px 70px}
 h1{font-family:'Jost',sans-serif;font-weight:400;font-size:clamp(23px,4vw,30px);letter-spacing:.04em;margin:0 0 6px}
 .hint{color:var(--mut);font-size:14px;margin:0 0 22px}
@@ -49,21 +52,22 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
 </style>
 </head>
 <body>
-<header><div class="wm">UPPER VIEW</div><div class="sub">Boutique Hotel · Koh Samui</div></header>
+<header><img src="../brand/logo-stack-cream.png" alt="Upper View — Boutique Hotel, Koh Samui"></header>
+<nav class="langbar" id="langbar" aria-label="Language"></nav>
 <div class="wrap">
 
 <section class="step" id="s-guest">
-  <h1>Who had a lovely stay?</h1>
-  <p class="hint">Tap your name — or add your details below.</p>
+  <h1 id="t-who">Who had a lovely stay?</h1>
+  <p class="hint" id="t-tap">Tap your name — or add your details below.</p>
   <div class="grid" id="guestlist"></div>
   <div id="manual">
-    <label for="m-name">Your name</label><input type="text" id="m-name" autocomplete="name">
-    <label for="m-email">Your email (we send your finished review here)</label><input type="email" id="m-email" autocomplete="email">
-    <label>Where did you book?</label>
+    <label for="m-name" id="l-name">Your name</label><input type="text" id="m-name" autocomplete="name">
+    <label for="m-email" id="l-email">Your email (we send your finished review here)</label><input type="email" id="m-email" autocomplete="email">
+    <label id="l-where">Where did you book?</label>
     <div class="src3">
       <button type="button" class="big" data-src="airbnb"><b>Airbnb</b></button>
       <button type="button" class="big" data-src="booking"><b>Booking.com</b></button>
-      <button type="button" class="big" data-src="direct"><b>With us directly</b></button>
+      <button type="button" class="big" data-src="direct"><b id="b-direct">With us directly</b></button>
     </div>
   </div>
   <div id="billbox" style="display:none;margin-top:22px;background:#fff;border:2px dashed var(--line);border-radius:16px;padding:16px 18px">
@@ -90,19 +94,19 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
 
 <section class="step" id="s-staff">
   <button class="back" data-back="s-rate">‹ Back</button>
-  <h1>Who took great care of you?</h1>
-  <p class="hint">Tap one or more — they are personally recognised for your kind words.</p>
+  <h1 id="t-care">Who took great care of you?</h1>
+  <p class="hint" id="t-caresub">Tap one or more — they are personally recognised for your kind words.</p>
   <div class="staffgrid" id="staffgrid"></div>
   <button class="cta" id="n3">Continue</button>
 </section>
 
 <section class="step" id="s-words">
   <button class="back" data-back="s-staff">‹ Back</button>
-  <h1>A few words</h1>
-  <p class="hint">What did you enjoy most? Two or three sentences are perfect — we email the finished review to you, ready to copy &amp; paste.</p>
+  <h1 id="t-words">A few words</h1>
+  <p class="hint" id="t-wordssub">What did you enjoy most? Two or three sentences are perfect — we email the finished review to you, ready to copy &amp; paste.</p>
   <textarea id="words" placeholder="The view, the pool, the breakfast, the people…"></textarea>
   <p class="hint" id="defmail" style="display:none;margin:14px 0 0">Your finished review goes to the email address on your booking.</p>
-  <label for="x-email">Also send a copy to (optional)</label>
+  <label for="x-email" id="l-extra">Also send a copy to (optional)</label>
   <input type="email" id="x-email" placeholder="second email address">
   <p class="err" id="e4"></p>
   <button class="cta" id="send">Send my review</button>
@@ -111,7 +115,7 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
 <section class="step" id="s-done">
   <div class="done">
     <div class="big-ok">🌺</div>
-    <h1>Thank you!</h1>
+    <h1 id="t-thanks">Thank you!</h1>
     <p class="hint" id="donemsg">Your review is in your inbox, ready to copy &amp; paste. Naming our team members makes their day — and their month.</p>
     <button class="cta ghost" id="again">New review</button>
   </div>
@@ -123,6 +127,49 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
   var $ = function(s){ return document.querySelector(s); };
   var R = { name:'', email:'', source:'other', ref:'', rating:0, staff:[], token:new URLSearchParams(location.search).get('t') || '' };
   function show(id){ document.querySelectorAll('.step').forEach(function(x){ x.classList.remove('on'); }); $('#'+id).classList.add('on'); window.scrollTo(0,0); }
+
+  /* ---------- 10 languages (matches the main site's set) ---------- */
+  var LANGS = [['en','English'],['th','ไทย'],['zh','简体中文'],['tw','繁體中文'],['fr','Français'],['es','Español'],['ru','Русский'],['de','Deutsch'],['pl','Polski'],['he','עברית']];
+  var T = {
+  en:{who:'Who had a lovely stay?',tap:'Tap your name — or add your details below.',name:'Your name',email:'Your email (we send your finished review here)',where:'Where did you book?',direct:'With us directly',cont:'Continue',back:'‹ Back',how:'How was your stay, {n}?',how0:'How was your stay?',tapstars:'Tap the stars',l1:'We are sorry — tell us what went wrong',l2:'Not quite right — tell us more',l3:'Good',l4:'Really good',l5:'Wonderful!',care:'Who took great care of you?',caresub:'Tap one or more — they are personally recognised for your kind words.',team:'The whole team',words:'A few words',wordssub:'What did you enjoy most? Two or three sentences are perfect — we email the finished review to you, ready to copy & paste.',ph:'The view, the pool, the breakfast, the people…',defmail:'Your finished review goes to the email address on your booking.',extra:'Also send a copy to (optional)',extraPh:'second email address',send:'Send my review',sending:'Sending…',thanks:'Thank you!',doneMail:'Your review is in your inbox, ready to copy & paste. Naming our team members makes their day — and their month.',doneNoMail:'Your review is saved — our team will be so pleased. Thank you!',again:'New review',errTap:'Tap the guest’s name above.',errName:'Please type your name.',errWords:'A sentence or two, please — it means the world.',errSend:'Could not send just now — please try again.'},
+  th:{who:'ใครได้พักผ่อนอย่างมีความสุขบ้าง?',tap:'แตะชื่อของคุณ — หรือกรอกข้อมูลด้านล่าง',name:'ชื่อของคุณ',email:'อีเมลของคุณ (เราจะส่งรีวิวที่เสร็จแล้วไปที่นี่)',where:'คุณจองผ่านช่องทางใด?',direct:'จองกับเราโดยตรง',cont:'ดำเนินการต่อ',back:'‹ ย้อนกลับ',how:'การเข้าพักเป็นอย่างไรบ้าง คุณ{n}?',how0:'การเข้าพักของคุณเป็นอย่างไร?',tapstars:'แตะดาวเพื่อให้คะแนน',l1:'ขออภัยอย่างยิ่ง — บอกเราได้ไหมว่าเกิดอะไรขึ้น',l2:'ยังไม่ค่อยดี — เล่าให้เราฟังหน่อย',l3:'ดี',l4:'ดีมาก',l5:'ยอดเยี่ยม!',care:'ใครดูแลคุณได้ดีเป็นพิเศษ?',caresub:'แตะได้มากกว่าหนึ่งคน — พวกเขาจะได้รับคำชมของคุณโดยตรง',team:'ทีมงานทั้งหมด',words:'สักสองสามประโยค',wordssub:'คุณประทับใจอะไรมากที่สุด? สองสามประโยคก็พอ — เราจะส่งรีวิวที่เสร็จแล้วให้ทางอีเมล พร้อมคัดลอกไปวางได้เลย',ph:'วิว สระว่ายน้ำ อาหารเช้า ผู้คน…',defmail:'รีวิวที่เสร็จแล้วจะส่งไปยังอีเมลที่ใช้จอง',extra:'ส่งสำเนาไปที่ (ไม่บังคับ)',extraPh:'อีเมลที่สอง',send:'ส่งรีวิวของฉัน',sending:'กำลังส่ง…',thanks:'ขอบคุณค่ะ!',doneMail:'รีวิวของคุณอยู่ในอีเมลแล้ว พร้อมคัดลอกไปวาง การเอ่ยชื่อทีมงานทำให้พวกเขามีความสุขมาก',doneNoMail:'บันทึกรีวิวแล้ว — ทีมงานจะดีใจมาก ขอบคุณค่ะ!',again:'รีวิวใหม่',errTap:'แตะชื่อผู้เข้าพักด้านบน',errName:'กรุณาพิมพ์ชื่อของคุณ',errWords:'ขอสักหนึ่งสองประโยค — มีความหมายกับเรามาก',errSend:'ส่งไม่สำเร็จ — กรุณาลองใหม่'},
+  zh:{who:'哪位贵宾住得愉快?',tap:'点击您的姓名——或在下方填写信息',name:'您的姓名',email:'您的邮箱(完成的点评会发送到这里)',where:'您通过哪里预订?',direct:'直接向我们预订',cont:'继续',back:'‹ 返回',how:'{n},您住得怎么样?',how0:'您住得怎么样?',tapstars:'点击星星评分',l1:'非常抱歉——请告诉我们哪里不满意',l2:'不太满意——请多告诉我们一些',l3:'不错',l4:'很好',l5:'棒极了!',care:'谁把您照顾得特别好?',caresub:'可多选——您的好评将直接表彰他们',team:'整个团队',words:'写几句话',wordssub:'您最喜欢什么?两三句话就很好——我们会把完成的点评发到您邮箱,直接复制粘贴即可',ph:'景色、泳池、早餐、员工……',defmail:'完成的点评将发送到您预订时使用的邮箱',extra:'同时发送一份至(可选)',extraPh:'第二个邮箱',send:'提交我的点评',sending:'发送中…',thanks:'谢谢您!',doneMail:'点评已发送到您的邮箱,可直接复制粘贴。写上团队成员的名字会让他们非常开心',doneNoMail:'您的点评已保存——团队会非常高兴,谢谢!',again:'新点评',errTap:'请点击上方的宾客姓名',errName:'请输入您的姓名',errWords:'请写一两句话——对我们意义重大',errSend:'暂时无法发送——请重试'},
+  tw:{who:'哪位貴賓住得愉快?',tap:'點擊您的姓名——或在下方填寫資料',name:'您的姓名',email:'您的電郵(完成的評論會發送到這裡)',where:'您透過哪裡預訂?',direct:'直接向我們預訂',cont:'繼續',back:'‹ 返回',how:'{n},您住得怎麼樣?',how0:'您住得怎麼樣?',tapstars:'點擊星星評分',l1:'非常抱歉——請告訴我們哪裡不滿意',l2:'不太滿意——請多告訴我們一些',l3:'不錯',l4:'很好',l5:'棒極了!',care:'誰把您照顧得特別好?',caresub:'可多選——您的好評將直接表彰他們',team:'整個團隊',words:'寫幾句話',wordssub:'您最喜歡什麼?兩三句話就很好——我們會把完成的評論發到您的電郵,直接複製貼上即可',ph:'景色、泳池、早餐、員工……',defmail:'完成的評論將發送到您預訂時使用的電郵',extra:'同時發送一份至(可選)',extraPh:'第二個電郵',send:'送出我的評論',sending:'傳送中…',thanks:'謝謝您!',doneMail:'評論已發送到您的電郵,可直接複製貼上。寫上團隊成員的名字會讓他們非常開心',doneNoMail:'您的評論已儲存——團隊會非常高興,謝謝!',again:'新評論',errTap:'請點擊上方的賓客姓名',errName:'請輸入您的姓名',errWords:'請寫一兩句話——對我們意義重大',errSend:'暫時無法送出——請重試'},
+  fr:{who:'Qui a passé un merveilleux séjour ?',tap:'Touchez votre nom — ou renseignez vos coordonnées ci-dessous.',name:'Votre nom',email:'Votre e-mail (nous y envoyons votre avis terminé)',where:'Où avez-vous réservé ?',direct:'En direct avec nous',cont:'Continuer',back:'‹ Retour',how:'Comment était votre séjour, {n} ?',how0:'Comment était votre séjour ?',tapstars:'Touchez les étoiles',l1:'Nous sommes désolés — dites-nous ce qui n’a pas été',l2:'Pas tout à fait — dites-nous en plus',l3:'Bien',l4:'Très bien',l5:'Merveilleux !',care:'Qui a pris grand soin de vous ?',caresub:'Touchez une ou plusieurs photos — ils sont personnellement félicités.',team:'Toute l’équipe',words:'Quelques mots',wordssub:'Qu’avez-vous préféré ? Deux ou trois phrases suffisent — nous vous envoyons l’avis terminé par e-mail, prêt à copier-coller.',ph:'La vue, la piscine, le petit-déjeuner, l’équipe…',defmail:'Votre avis terminé est envoyé à l’adresse e-mail de votre réservation.',extra:'Envoyer aussi une copie à (facultatif)',extraPh:'seconde adresse e-mail',send:'Envoyer mon avis',sending:'Envoi…',thanks:'Merci !',doneMail:'Votre avis est dans votre boîte mail, prêt à copier-coller. Citer nos équipes leur fait énormément plaisir.',doneNoMail:'Votre avis est enregistré — l’équipe sera ravie. Merci !',again:'Nouvel avis',errTap:'Touchez le nom du client ci-dessus.',errName:'Veuillez saisir votre nom.',errWords:'Une phrase ou deux, s’il vous plaît — cela compte beaucoup.',errSend:'Envoi impossible pour le moment — réessayez.'},
+  es:{who:'¿Quién ha tenido una estancia maravillosa?',tap:'Toque su nombre — o escriba sus datos abajo.',name:'Su nombre',email:'Su email (le enviamos allí su reseña terminada)',where:'¿Dónde reservó?',direct:'Directamente con nosotros',cont:'Continuar',back:'‹ Atrás',how:'¿Qué tal su estancia, {n}?',how0:'¿Qué tal su estancia?',tapstars:'Toque las estrellas',l1:'Lo sentimos — cuéntenos qué falló',l2:'No del todo bien — cuéntenos más',l3:'Bien',l4:'Muy bien',l5:'¡Maravilloso!',care:'¿Quién le cuidó especialmente bien?',caresub:'Toque una o varias fotos — se les reconoce personalmente.',team:'Todo el equipo',words:'Unas palabras',wordssub:'¿Qué fue lo que más le gustó? Dos o tres frases bastan — le enviamos la reseña terminada por email, lista para copiar y pegar.',ph:'Las vistas, la piscina, el desayuno, el equipo…',defmail:'Su reseña terminada se envía al email de su reserva.',extra:'Enviar también una copia a (opcional)',extraPh:'segundo email',send:'Enviar mi reseña',sending:'Enviando…',thanks:'¡Gracias!',doneMail:'Su reseña está en su bandeja de entrada, lista para copiar y pegar. Nombrar a nuestro equipo les alegra el día.',doneNoMail:'Su reseña está guardada — el equipo estará encantado. ¡Gracias!',again:'Nueva reseña',errTap:'Toque el nombre del huésped arriba.',errName:'Escriba su nombre, por favor.',errWords:'Una frase o dos, por favor — significa mucho.',errSend:'No se pudo enviar — inténtelo de nuevo.'},
+  ru:{who:'Кто прекрасно отдохнул?',tap:'Нажмите на своё имя — или заполните поля ниже.',name:'Ваше имя',email:'Ваш email (туда придёт готовый отзыв)',where:'Где вы бронировали?',direct:'Напрямую у нас',cont:'Продолжить',back:'‹ Назад',how:'Как прошло ваше пребывание, {n}?',how0:'Как прошло ваше пребывание?',tapstars:'Нажмите на звёзды',l1:'Нам очень жаль — расскажите, что пошло не так',l2:'Не совсем — расскажите подробнее',l3:'Хорошо',l4:'Очень хорошо',l5:'Великолепно!',care:'Кто особенно хорошо о вас заботился?',caresub:'Выберите одного или нескольких — ваши слова дойдут лично до них.',team:'Вся команда',words:'Пара слов',wordssub:'Что понравилось больше всего? Двух-трёх предложений достаточно — готовый отзыв придёт вам на почту, останется скопировать и вставить.',ph:'Вид, бассейн, завтрак, люди…',defmail:'Готовый отзыв придёт на email из вашего бронирования.',extra:'Также отправить копию на (необязательно)',extraPh:'второй email',send:'Отправить отзыв',sending:'Отправка…',thanks:'Спасибо!',doneMail:'Отзыв уже у вас в почте — скопируйте и вставьте. Имена сотрудников делают их день.',doneNoMail:'Отзыв сохранён — команда будет очень рада. Спасибо!',again:'Новый отзыв',errTap:'Нажмите на имя гостя выше.',errName:'Пожалуйста, введите имя.',errWords:'Хотя бы одно-два предложения — это очень важно для нас.',errSend:'Не удалось отправить — попробуйте ещё раз.'},
+  de:{who:'Wer hatte einen wunderbaren Aufenthalt?',tap:'Tippen Sie auf Ihren Namen — oder tragen Sie Ihre Daten unten ein.',name:'Ihr Name',email:'Ihre E-Mail (dorthin senden wir Ihre fertige Bewertung)',where:'Wo haben Sie gebucht?',direct:'Direkt bei uns',cont:'Weiter',back:'‹ Zurück',how:'Wie war Ihr Aufenthalt, {n}?',how0:'Wie war Ihr Aufenthalt?',tapstars:'Tippen Sie auf die Sterne',l1:'Es tut uns leid — sagen Sie uns, was nicht gepasst hat',l2:'Nicht ganz — erzählen Sie uns mehr',l3:'Gut',l4:'Sehr gut',l5:'Wunderbar!',care:'Wer hat sich besonders gut um Sie gekümmert?',caresub:'Tippen Sie auf eine oder mehrere Personen — sie werden persönlich gewürdigt.',team:'Das ganze Team',words:'Ein paar Worte',wordssub:'Was hat Ihnen am besten gefallen? Zwei, drei Sätze genügen — die fertige Bewertung kommt per E-Mail, bereit zum Kopieren.',ph:'Die Aussicht, der Pool, das Frühstück, die Menschen…',defmail:'Ihre fertige Bewertung geht an die E-Mail-Adresse Ihrer Buchung.',extra:'Zusätzlich eine Kopie an (optional)',extraPh:'zweite E-Mail-Adresse',send:'Bewertung senden',sending:'Senden…',thanks:'Danke!',doneMail:'Ihre Bewertung ist in Ihrem Posteingang, bereit zum Kopieren. Unsere Mitarbeiter beim Namen zu nennen, macht ihnen große Freude.',doneNoMail:'Ihre Bewertung ist gespeichert — das Team wird sich sehr freuen. Danke!',again:'Neue Bewertung',errTap:'Tippen Sie oben auf den Namen des Gastes.',errName:'Bitte geben Sie Ihren Namen ein.',errWords:'Ein, zwei Sätze bitte — es bedeutet uns viel.',errSend:'Senden gerade nicht möglich — bitte erneut versuchen.'},
+  pl:{who:'Kto miał wspaniały pobyt?',tap:'Dotknij swojego imienia — lub wpisz dane poniżej.',name:'Twoje imię',email:'Twój e-mail (tam wyślemy gotową opinię)',where:'Gdzie dokonano rezerwacji?',direct:'Bezpośrednio u nas',cont:'Dalej',back:'‹ Wstecz',how:'Jak minął pobyt, {n}?',how0:'Jak minął Twój pobyt?',tapstars:'Dotknij gwiazdek',l1:'Przykro nam — powiedz, co poszło nie tak',l2:'Nie do końca — opowiedz nam więcej',l3:'Dobrze',l4:'Bardzo dobrze',l5:'Cudownie!',care:'Kto zadbał o Ciebie szczególnie dobrze?',caresub:'Dotknij jednej lub kilku osób — zostaną osobiście docenione.',team:'Cały zespół',words:'Kilka słów',wordssub:'Co podobało Ci się najbardziej? Dwa-trzy zdania wystarczą — gotową opinię wyślemy e-mailem, do skopiowania.',ph:'Widok, basen, śniadanie, ludzie…',defmail:'Gotowa opinia trafi na e-mail z rezerwacji.',extra:'Wyślij też kopię na (opcjonalnie)',extraPh:'drugi adres e-mail',send:'Wyślij moją opinię',sending:'Wysyłanie…',thanks:'Dziękujemy!',doneMail:'Opinia jest w Twojej skrzynce, gotowa do skopiowania. Wymienienie naszego zespołu po imieniu bardzo ich cieszy.',doneNoMail:'Opinia zapisana — zespół będzie zachwycony. Dziękujemy!',again:'Nowa opinia',errTap:'Dotknij imienia gościa powyżej.',errName:'Wpisz swoje imię.',errWords:'Jedno-dwa zdania — to dla nas bardzo ważne.',errSend:'Nie udało się wysłać — spróbuj ponownie.'},
+  he:{who:'מי נהנה מהשהות?',tap:'הקישו על שמכם — או מלאו פרטים למטה.',name:'השם שלכם',email:'האימייל שלכם (לשם נשלח את הביקורת המוכנה)',where:'היכן הזמנתם?',direct:'ישירות אצלנו',cont:'המשך',back:'‹ חזרה',how:'איך הייתה השהות, {n}?',how0:'איך הייתה השהות שלכם?',tapstars:'הקישו על הכוכבים',l1:'אנחנו מצטערים — ספרו לנו מה השתבש',l2:'לא מושלם — ספרו לנו עוד',l3:'טוב',l4:'טוב מאוד',l5:'נפלא!',care:'מי טיפל בכם במיוחד?',caresub:'הקישו על אחד או יותר — הם יקבלו הוקרה אישית.',team:'כל הצוות',words:'כמה מילים',wordssub:'מה הכי אהבתם? שניים-שלושה משפטים מספיקים — נשלח את הביקורת המוכנה באימייל, מוכנה להעתקה.',ph:'הנוף, הבריכה, ארוחת הבוקר, האנשים…',defmail:'הביקורת המוכנה תישלח לאימייל שבהזמנה.',extra:'לשלוח עותק גם אל (לא חובה)',extraPh:'אימייל נוסף',send:'שליחת הביקורת',sending:'שולח…',thanks:'תודה רבה!',doneMail:'הביקורת בתיבת הדואר שלכם, מוכנה להעתקה. ציון שמות הצוות משמח אותם מאוד.',doneNoMail:'הביקורת נשמרה — הצוות ישמח מאוד. תודה!',again:'ביקורת חדשה',errTap:'הקישו על שם האורח למעלה.',errName:'אנא הקלידו את שמכם.',errWords:'משפט או שניים — זה חשוב לנו מאוד.',errSend:'השליחה נכשלה — נסו שוב.'}
+  };
+  var LANG = 'en';
+  try { var sl = localStorage.getItem('uv_rv_lang'); if (sl && T[sl]) LANG = sl; } catch (e) {}
+  function tr(k){ return (T[LANG] && T[LANG][k]) || T.en[k] || ''; }
+  var DONE_KEY = 'doneMail';
+  function applyLang(l){
+    if (T[l]) LANG = l;
+    try { localStorage.setItem('uv_rv_lang', LANG); } catch (e) {}
+    document.documentElement.lang = LANG === 'zh' ? 'zh-Hans' : LANG === 'tw' ? 'zh-Hant' : LANG;
+    document.documentElement.dir = LANG === 'he' ? 'rtl' : 'ltr';
+    var map = {'t-who':'who','t-tap':'tap','l-name':'name','l-email':'email','l-where':'where','b-direct':'direct','n1':'cont','n2':'cont','n3':'cont','starlbl':'tapstars','t-care':'care','t-caresub':'caresub','t-team':'team','t-words':'words','t-wordssub':'wordssub','defmail':'defmail','l-extra':'extra','send':'send','t-thanks':'thanks','donemsg':DONE_KEY,'again':'again'};
+    for (var id in map) { var el = document.getElementById(id); if (el) el.textContent = tr(map[id]); }
+    document.querySelectorAll('.back').forEach(function(b){ b.textContent = tr('back'); });
+    var w = document.getElementById('words'); if (w) w.placeholder = tr('ph');
+    var x = document.getElementById('x-email'); if (x) x.placeholder = tr('extraPh');
+    var rt = document.getElementById('rate-title');
+    if (rt) rt.textContent = R.name ? tr('how').replace('{n}', R.name.split(' ')[0]) : tr('how0');
+    if (R.rating > 0) { var sl2 = document.getElementById('starlbl'); if (sl2) sl2.textContent = tr('l' + R.rating); }
+    document.querySelectorAll('#langbar button').forEach(function(b){ b.classList.toggle('on', b.getAttribute('data-l') === LANG); });
+  }
+  (function(){
+    var bar = document.getElementById('langbar');
+    LANGS.forEach(function(p){
+      var b = document.createElement('button'); b.type = 'button'; b.textContent = p[1]; b.setAttribute('data-l', p[0]);
+      b.addEventListener('click', function(){ applyLang(p[0]); });
+      bar.appendChild(b);
+    });
+  })();
+
   show('s-guest');
 
   /* guest list (iPad kiosk: ?t=<token>): staff tap the guest — their details come
@@ -192,21 +239,20 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
       R.email = $('#m-email').value.trim();
     }
     if (!R.name) {
-      $('#e1').textContent = R.token ? 'Tap the guest’s name above.' : 'Please type your name.';
+      $('#e1').textContent = R.token ? tr('errTap') : tr('errName');
       $('#e1').style.display = 'block'; return;
     }
     $('#e1').style.display = 'none';
-    $('#rate-title').textContent = 'How was your stay, ' + R.name.split(' ')[0] + '?';
+    $('#rate-title').textContent = tr('how').replace('{n}', R.name.split(' ')[0]);
     show('s-rate');
   });
 
   /* stars */
-  var lbl = ['','We are sorry — tell us what went wrong','Not quite right — tell us more','Good','Really good','Wonderful!'];
   document.querySelectorAll('#stars button').forEach(function(b){
     b.addEventListener('click', function(){
       R.rating = +b.getAttribute('data-v');
       document.querySelectorAll('#stars button').forEach(function(x){ x.classList.toggle('on', +x.getAttribute('data-v') <= R.rating); });
-      $('#starlbl').textContent = lbl[R.rating]; $('#n2').disabled = false;
+      $('#starlbl').textContent = tr('l' + R.rating); $('#n2').disabled = false;
     });
   });
 
@@ -219,7 +265,9 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
       img.onerror = function(){ var d = document.createElement('div'); d.className = 'ph'; d.textContent = initials(name); img.replaceWith(d); };
       b.appendChild(img);
     } else { var d = document.createElement('div'); d.className = 'ph'; d.textContent = name === 'The whole team' ? '♥' : initials(name); b.appendChild(d); }
-    var nm = document.createElement('b'); nm.textContent = name; b.appendChild(nm);
+    var nm = document.createElement('b'); nm.textContent = name === 'The whole team' ? tr('team') : name;
+    if (name === 'The whole team') nm.id = 't-team';
+    b.appendChild(nm);
     if (role) { var r = document.createElement('small'); r.textContent = role; b.appendChild(r); }
     b.addEventListener('click', function(){
       b.classList.toggle('sel');
@@ -251,25 +299,27 @@ label{display:block;font-size:11px;letter-spacing:.2em;text-transform:uppercase;
   /* send */
   $('#send').addEventListener('click', function(){
     var text = $('#words').value.trim();
-    if (!text) { $('#e4').textContent = 'A sentence or two, please — it means the world.'; $('#e4').style.display = 'block'; return; }
+    if (!text) { $('#e4').textContent = tr('errWords'); $('#e4').style.display = 'block'; return; }
     $('#e4').style.display = 'none';
-    $('#send').disabled = true; $('#send').textContent = 'SENDING…';
+    $('#send').disabled = true; $('#send').textContent = tr('sending').toUpperCase();
     fetch('../booking/api.php?action=review', { method:'POST', headers:{'Content-Type':'application/json'},
       body: JSON.stringify({ name:R.name, email:R.email, extra_email:$('#x-email').value.trim(),
         rating:R.rating, text:text, source:R.source, ref:R.ref, staff:R.staff }) })
     .then(function(r){ return r.json().then(function(d){ return { ok:r.ok, d:d }; }); })
     .then(function(x){
       if (!x.ok) throw (x.d && x.d.error) || 0;
-      if (!R.email && !$('#x-email').value.trim()) $('#donemsg').textContent = 'Your review is saved — our team will be so pleased. Thank you!';
+      DONE_KEY = (!R.email && !R.hasEmail && !$('#x-email').value.trim()) ? 'doneNoMail' : 'doneMail';
+      $('#donemsg').textContent = tr(DONE_KEY);
       show('s-done');
     })
     .catch(function(why){
-      $('#e4').textContent = (typeof why === 'string' && why) ? why : 'Could not send just now — please try again.';
+      $('#e4').textContent = (typeof why === 'string' && why) ? why : tr('errSend');
       $('#e4').style.display = 'block';
     })
-    .finally(function(){ $('#send').disabled = false; $('#send').textContent = 'SEND MY REVIEW'; });
+    .finally(function(){ $('#send').disabled = false; $('#send').textContent = tr('send'); });
   });
   $('#again').addEventListener('click', function(){ location.reload(); });
+  applyLang(LANG);
 })();
 </script>
 </body>

@@ -384,3 +384,20 @@ us for optimal occupancy).
   and pool availability for Jan 1–4 now match the manual sheet exactly.
 - calendar-feed.php: new Unit column (Villa N) + refreshes the Airbnb feeds
   on every pull, so portal changes reach the sheet on their own.
+
+## v3.8 — 2026-11-12 · Review page rebrand + 10 languages; mirror live end-to-end
+- Review kiosk: real brand logo header (site palette), uppercase Jost
+  headings, and a 10-language selector (EN/TH/简/繁/FR/ES/RU/DE/PL/HE with
+  RTL) covering every guest-facing string; staff/comp panel stays English.
+- Sheet mirror fully live: Apps Script web app deployed ("Anyone" access by
+  Andy), sheet_ping_url stored on BOTH servers, test pings verified; grids +
+  flat tabs rebuild on every booking event and on the 10-minute backstop.
+- Daily sheet-vs-manual verification: identical on everything the manual
+  sheet records, with the mirror AHEAD on a new Airbnb stay (Villa 3,
+  Dec 24–30) — and a lingering "pending" row exposed a small bug, now fixed:
+  abandoned checkout holds (>25 min) are expired in the calendar/feed path
+  too, not only in the availability engine. Suite-naming mismatch flagged to
+  settle with the managers (their Superior 1 / Superior 2 / Deluxe 3 vs our
+  Superior / Deluxe / King).
+- Beds24 verification email drafted (listing links for both brands); Sonata
+  parity check complete — full parity, one documented horizon gap.
