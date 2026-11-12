@@ -429,3 +429,10 @@ us for optimal occupancy).
 - Cloudflare nameserver move EXECUTED for both domains via the Hostinger
   API (adelaide/yoxall.ns.cloudflare.com, propagation pending); proxy
   flip awaits Andy's direct yes in the Sonata session.
+
+## v3.9.1 — 2026-11-12 · Sold-out room types no longer shown
+Nobu's engine (verified live by the Sonata session) omits rooms that are
+unavailable or too small for the party rather than greying them out. Upper
+View now does the same: renderResults drops them (suites for 3+ guests
+included — the Mini Villa card already scales to the party), with an
+"Unavailable — Change dates" note when nothing is left. app.js v=mn4.

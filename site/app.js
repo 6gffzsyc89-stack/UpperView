@@ -578,9 +578,9 @@ function bkRenderResults(q) {
   const gstN = Number($('#uv-gst').value) || 2;
   const roomsNeeded = Math.ceil(gstN / 2);
 
+  let shownCount = 0;
   q.rooms.forEach((roomSrc) => {
     const room = Object.assign({}, roomSrc);
-    let multiNote = null;
     if (roomsNeeded > 1) {
       if (room.type === 'villa') {
         room.available = room.available && room.free >= roomsNeeded;
@@ -589,12 +589,17 @@ function bkRenderResults(q) {
         if (room.gross) room.gross *= roomsNeeded;
         if (room.gross_nightly) room.gross_nightly *= roomsNeeded;
       } else {
+        // One suite sleeps 2; larger parties book neighbouring Mini Villas
+        // (the villa card above scales to the party size).
         room.available = false;
-        multiNote = t('p_sleeps2') || 'Sleeps 2 — for your party, book neighbouring Mini Villas.';
       }
     }
+    // Nobu-style: sold-out room types and rooms that cannot take the party
+    // are not shown at all.
+    if (!room.available) return;
+    shownCount++;
     const card = document.createElement('div');
-    card.className = 'uv-roomcard' + (room.available ? '' : ' uv-rc-soldout');
+    card.className = 'uv-roomcard';
     // identical component to every other gallery on the site: same arrows,
     // same uv-count chip, same 3:2 slides with the next-photo peek, looping
     const imgs = ROOM_IMGS[room.type] || [];
@@ -649,13 +654,6 @@ function bkRenderResults(q) {
       ? (ROOM_SIZE[room.type] || '') + ' · ' + roomsNeeded + ' × 2 ' + (t('p_gst') || 'Guests')
       : (ROOM_SIZE[room.type] || '') + ' · 2 ' + (t('p_gst') || 'Guests');
     body.appendChild(facts);
-    if (multiNote) {
-      const mn = document.createElement('p');
-      mn.className = 'uv-rc-facts';
-      mn.style.color = '#E8B4A8';
-      mn.textContent = multiNote;
-      body.appendChild(mn);
-    }
     const row = document.createElement('div');
     row.className = 'uv-rc-row';
     const price = document.createElement('div');
@@ -719,6 +717,12 @@ function bkRenderResults(q) {
     box.appendChild(card);
     if (card._galId) setupLoop(card._galId); // element must be in the DOM first
   });
+  if (!shownCount) {
+    const none = document.createElement('p');
+    none.style.cssText = 'margin:0;padding:18px 14px;background:rgba(247,240,233,.08);color:#F7F0E9;font-size:13px;letter-spacing:.06em';
+    none.textContent = (t('p_full') || 'Unavailable') + ' — ' + (t('p_back') || 'Change dates');
+    box.appendChild(none);
+  }
 }
 
 function bkTypeKey(type) {
