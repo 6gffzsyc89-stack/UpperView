@@ -41,6 +41,10 @@ was included successfully from the UV webroot. Therefore:
    emails as the shared baseline. Beds24 stays the inventory master; the core
    is the storefront engine on top of it. Stripe + Airwallex both live in the
    core; payment_provider remains a per-site admin choice with per-site keys.
+   Andy 2026-11-12: our own engine code is kept permanently (git history +
+   live repo) in case we ever leave Beds24 — so the core keeps ALL Beds24
+   coupling isolated behind beds24.php + the OTA-feed layer, a seam another
+   channel manager (or none) could replace without touching the engine.
 3. Assemble the superset core in this repo under core/ (merge order smallest-
    first: sheet-ping, ical-export, calendar-feed, network-local, webhooks,
    calendar-image, then lib/api/pay/admin+confirm as a designed unification),
