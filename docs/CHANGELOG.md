@@ -500,3 +500,11 @@ Andy: "Go build and deploy the unified backend system." Done, live, verified:
   have wiped notes. Steps toward retiring the manual workbook; the
   still-empty columns (Date Booked / Rate / Commission for OTA rows) fill
   automatically when the Beds24 trial lifts.
+
+## v4.1.1 — 2026-11-12 · The link now OPENS on the manual view (3rd ask — done)
+The mirror's default tab (what the share link lands on with no gid) is now
+the CURRENT MONTH's manual-style grid (UV NOV 2026 today): month tabs lead,
+raw data tabs (UPPER VIEW / SONATA) and SYNC LOG are pushed to the end as
+bottom tabs. Verified by opening the plain share link in a fresh tab. Web
+app bumped to deployment Version 4 (same URL) so booking pings keep this
+order instead of re-shuffling it.
