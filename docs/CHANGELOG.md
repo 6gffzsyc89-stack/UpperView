@@ -442,3 +442,11 @@ The create/rotate button for cal_image_token (review kiosk + calendar
 pictures) is removed from admin entirely — Andy: key generation is Yomied's
 job via the Beds24 MCP. Admin only DISPLAYS the kiosk link while a key
 exists; with none it says Yomied generates it.
+
+## v3.9.3 — 2026-11-12 · One-backend migration opened
+Andy approved a single shared engine for all sites. Cross-webroot include
+proven live (/home/u357356777/shared-core/ reachable from the UV webroot);
+docs/one-backend-plan.md records the mechanism, steps and rollback; UV's
+21-file engine manifest sent to the Sonata session for the fork diff. Per-site
+admin PAGES stay (Andy's call) — served by the one core, branded via each
+site's data/config.php.
