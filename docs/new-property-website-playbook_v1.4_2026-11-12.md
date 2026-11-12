@@ -1,6 +1,9 @@
-# New property website playbook — v1.3 (2026-11-12)
+# New property website playbook — v1.4 (2026-11-12)
 
 Changelog:
+- v1.4 (2026-11-12) — §12: AI agents, Live Help and email triage are
+  requirements for every property, per Andy; canonical spec =
+  docs/ai-marketing-and-agents_v1.0_2026-11-12.md.
 - v1.3 (2026-11-12) — ONE BACKEND (CHANGELOG v4.0): every engine file now
   lives once in /home/u357356777/shared-core/ (uv/ + sonata/ profiles
   merging file-by-file into common/); webroot booking/ dirs hold 2-line
@@ -288,3 +291,18 @@ For a new property "X" at domain X.com (same Hostinger account):
    admin, calendar-image 403 without token, kiosk). Add the property to
    every session's standing rules; record in BOTH repos' CHANGELOG.md
    and message all brand sessions (standing rule, header of this doc).
+
+
+## 12. AI agents, Live Help, email triage (required for every property)
+
+Canonical spec: `docs/ai-marketing-and-agents_v1.0_2026-11-12.md` (mirrored
+by pointer in every brand repo). Summary of what each property MUST have:
+Yomied as the internal agent only (private admin MCP; owns keys, calendar
+pictures, the vacancy optimiser, ops mini-apps); an external Guest Concierge
+on the website grounded in the public guest MCP, whose auto welcome message
+offers a Live Help button reading the number from per-site config
+(live_help_phone — never hard-coded); AI email triage with human GO before
+sending (auto-send is a per-property opt-in later); every outbound email
+logged and queryable by Yomied; explicit AI-crawler robots.txt; the
+automated sheet's green Manual notes column (survives every sync) so the
+manual workbook can retire.

@@ -1,0 +1,21 @@
+# upperviewsamui.com — AI assistants and search engines are welcome here.
+# Explicit allows for AI search + on-demand user fetchers, so edge/CDN
+# defaults (e.g. Cloudflare's AI-crawler blocking) never silently hide us.
+User-agent: OAI-SearchBot
+Allow: /
+User-agent: ChatGPT-User
+Allow: /
+User-agent: Claude-SearchBot
+Allow: /
+User-agent: Claude-User
+Allow: /
+User-agent: PerplexityBot
+Allow: /
+User-agent: Perplexity-User
+Allow: /
+User-agent: Googlebot
+Allow: /
+User-agent: Bingbot
+Allow: /
+User-agent: *
+Allow: /
