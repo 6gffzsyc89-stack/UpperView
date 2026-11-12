@@ -192,10 +192,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         $ok = !$r['failed'];
         $anchor = 'assign';
     }
-    if ($act === 'calimg_token') {   // kiosk / calendar-image key (Yomied uses the same one; a new key = the old stops working)
-        uv_meta_set('cal_image_token', bin2hex(random_bytes(20)));
-        $msg = 'New kiosk / calendar-image key created (the old one no longer works). Update it in Yomied\'s settings yourself — never paste it in a chat.'; $anchor = 'calendar';
-    }
+    // Key management (cal_image_token: kiosk + calendar pictures) belongs to
+    // Yomied via the Beds24 MCP — no create/rotate action in this admin.
     if ($act === 'stripekey') {
         $sk = trim((string)($_POST['sk'] ?? ''));
         if (preg_match('/^(sk|rk)_(live|test)_[A-Za-z0-9]{10,}$/', $sk)) {
@@ -481,7 +479,7 @@ $rvTok = (string) uv_meta_get('cal_image_token');
 <div style="background:#fff;padding:12px 14px;margin:0 0 14px">
 <p style="margin:0 0 8px"><b>Review kiosk</b> — open this on the iPad (big buttons; staff tap the guest, the guest rates, picks the team members they liked, writes a few words; the finished review is emailed to them ready to paste on the portal they booked through). Guests at home can use <code>upperviewsamui.com/review/</code> (no guest list shown without the key).</p>
 <?php if ($rvTok !== ''): ?><p><input readonly style="width:100%;max-width:700px;font:12px monospace;padding:6px" value="https://upperviewsamui.com/review/?t=<?= htmlspecialchars(rawurlencode($rvTok)) ?>" onclick="this.select()"></p>
-<?php else: ?><form class="inline" method="post"><input type="hidden" name="act" value="calimg_token"><button style="background:#3D4C36">Create the kiosk key</button></form><?php endif; ?>
+<?php else: ?><p style="font-size:13px;color:#666">No kiosk key yet — Yomied generates and manages it.</p><?php endif; ?>
 <form method="post" style="margin:10px 0 0"><input type="hidden" name="act" value="rv_toggles">
 <label style="margin-right:18px"><input type="checkbox" name="staff_on" value="1" <?= $rvStaffOn ? 'checked' : '' ?>> Staff picker step ON</label>
 <label style="margin-right:8px"><input type="checkbox" name="comp_on" value="1" <?= $rvCompOn ? 'checked' : '' ?>> Thank-you comps ON</label>

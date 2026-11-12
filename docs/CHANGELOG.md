@@ -436,3 +436,9 @@ unavailable or too small for the party rather than greying them out. Upper
 View now does the same: renderResults drops them (suites for 3+ guests
 included — the Mini Villa card already scales to the party), with an
 "Unavailable — Change dates" note when nothing is left. app.js v=mn4.
+
+## v3.9.2 — 2026-11-12 · Kiosk-key management out of admin
+The create/rotate button for cal_image_token (review kiosk + calendar
+pictures) is removed from admin entirely — Andy: key generation is Yomied's
+job via the Beds24 MCP. Admin only DISPLAYS the kiosk link while a key
+exists; with none it says Yomied generates it.
