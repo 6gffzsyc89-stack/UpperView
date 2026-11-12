@@ -158,7 +158,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
                 $sz = @getimagesize($_FILES['sphoto']['tmp_name']);
                 $extMap = ['image/jpeg' => 'jpg', 'image/png' => 'png', 'image/webp' => 'webp'];
                 if ($sz && isset($extMap[$sz['mime']]) && $_FILES['sphoto']['size'] <= 4 * 1024 * 1024) {
-                    $dir = __DIR__ . '/../review/staff';
+                    $dir = (defined('UV_SITE_WEBROOT') ? UV_SITE_WEBROOT : dirname(__DIR__)) . '/review/staff';
                     if (!is_dir($dir)) @mkdir($dir, 0755, true);
                     $file = $slug . '.' . $extMap[$sz['mime']];
                     if (@move_uploaded_file($_FILES['sphoto']['tmp_name'], $dir . '/' . $file)) $photo = 'staff/' . $file;

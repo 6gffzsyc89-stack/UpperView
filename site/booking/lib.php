@@ -13,6 +13,8 @@ const UV_DATA_DIR_CANDIDATES = [
 ];
 
 function uv_data_dir(): string {
+    // Shared-core mode: the per-site entry stub names this site's data dir.
+    if (defined('UV_SITE_DATA') && is_dir(UV_SITE_DATA)) return rtrim(UV_SITE_DATA, '/');
     foreach (UV_DATA_DIR_CANDIDATES as $d) {
         if (is_dir($d)) return rtrim($d, '/');
     }

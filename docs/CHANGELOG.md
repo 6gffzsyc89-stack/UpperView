@@ -450,3 +450,32 @@ docs/one-backend-plan.md records the mechanism, steps and rollback; UV's
 21-file engine manifest sent to the Sonata session for the fork diff. Per-site
 admin PAGES stay (Andy's call) — served by the one core, branded via each
 site's data/config.php.
+
+## v4.0 — 2026-11-12 · ONE BACKEND: both sites cut over to the shared core
+Andy: "Go build and deploy the unified backend system." Done, live, verified:
+- /home/u357356777/shared-core/ now holds every line of engine code:
+  uv/ (this repo's engine), sonata/ (Sonata's engine, path-patched the same
+  way), common/ (the merged superset, growing file by file). BOTH webroots'
+  booking/ dirs are now 2-line stubs that define the site's data dir +
+  webroot and require the shared file — zero logic in any webroot.
+- Path seams for shared-core mode: uv_data_dir()/sn_data_dir() honour
+  UV_SITE_DATA / SN_SITE_DATA from the stubs (webroot-relative fallbacks
+  kept); admin staff-photo dir and Sonata's pay.php photo check use
+  *_SITE_WEBROOT. Deployed as a no-op first, then cut over.
+- First merged common modules: network.php (was already byte-identical) and
+  sheet-ping.php (superset: Sonata's once-per-request guard adopted), with
+  2-line profile shims defining the adapter (CORE_META_GET → uv_/sn_meta_get).
+  This shim+adapter pattern is how every further file merges.
+- Verified live on BOTH brands after cutover: real quotes with live pricing
+  (UV ฿4,563/night villa; Sonata rates_confirmed + Stripe active), promos,
+  calendar feeds, admin pages, webhooks answering 400 to garbage (not 500),
+  calendar-image auth intact. Rollback copies: ~/backups/{uv,sonata}-booking-
+  pre-core-20261112 (moved OUT of the webroots).
+- Incident during rollout, caught and fixed within minutes: a malformed
+  server-side stub write briefly broke 5 UV endpoint files (stripe, units,
+  webhook×3); restored from the backup immediately, stubs redeployed via
+  tar (binary-safe), everything re-verified. Payment webhooks were stubs of
+  identical code before any real traffic window.
+- Repo: site/common/ (merged modules) + shims in site/booking/;
+  tools/deploy-core.sh deploys engine → shared-core (webroots get stubs
+  only, never engine files). Sonata profile deploys from the Sonata repo.
