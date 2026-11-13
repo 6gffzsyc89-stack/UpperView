@@ -508,3 +508,17 @@ raw data tabs (UPPER VIEW / SONATA) and SYNC LOG are pushed to the end as
 bottom tabs. Verified by opening the plain share link in a fresh tab. Web
 app bumped to deployment Version 4 (same URL) so booking pings keep this
 order instead of re-shuffling it.
+
+## v4.2 — 2026-11-13 · Yomied tools: vacancy optimiser + outbound-email log (MCP v1.2.0)
+Contract negotiated with the now-online Yomied session ("Yomied 8 Newest",
+assistant Sora). optimize_preview / optimize_apply with planId + stateHash:
+DO IT can never act on a stale picture (apply refuses if any booking changed
+since preview; 24h expiry; idempotent; actor audit-logged + provenance meta
+per booking). Pins are law (Airbnb-locked / in-house / <48h / multi-villa /
+portal entries; respectPins:false refused). Before/after vacancy metrics.
+Outbound email: every engine/notify/MCP send now carries a generated
+Message-ID and lands in the sent_emails table; new list_sent_emails tool
+joins exactly against Yomied's IMAP ingestion of booking@ (email-triage GO
+lives wholly in Yomied; sends route through our send_email so the log stays
+the single record). units.php gains uv_stay_pin_reason / uv_assign_state_hash
+/ uv_assign_metrics. All verified live including refusal + idempotency paths.

@@ -431,3 +431,27 @@ function uv_checkout_create(array $booking): ?array {
     if (!is_array($data) || empty($data['url'])) return null;
     return ['url' => $data['url'], 'session_id' => $data['id'] ?? ''];
 }
+
+/* ---------- outbound email log (spec §A5: Yomied answers "what did we send?") ---------- */
+function uv_email_log_table(): void {
+    uv_db()->exec("CREATE TABLE IF NOT EXISTS sent_emails (
+        id INTEGER PRIMARY KEY AUTOINCREMENT,
+        ts TEXT NOT NULL,
+        message_id TEXT NOT NULL,
+        booking_ref TEXT,
+        recipient TEXT NOT NULL,
+        subject TEXT NOT NULL,
+        body TEXT NOT NULL,
+        via TEXT NOT NULL)");
+}
+function uv_email_mid(): string {
+    return '<uv-' . bin2hex(random_bytes(12)) . '@upperviewsamui.com>';
+}
+/** Record an outbound email. Logging must never break a send. */
+function uv_email_log(string $mid, string $to, string $subject, string $body, string $via, string $bookingRef = ''): void {
+    try {
+        uv_email_log_table();
+        $st = uv_db()->prepare('INSERT INTO sent_emails (ts, message_id, booking_ref, recipient, subject, body, via) VALUES (?,?,?,?,?,?,?)');
+        $st->execute([gmdate('Y-m-d H:i:s'), $mid, $bookingRef, $to, $subject, substr($body, 0, 20000), $via]);
+    } catch (Throwable $e) { /* never block the send */ }
+}

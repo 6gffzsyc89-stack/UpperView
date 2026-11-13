@@ -106,6 +106,52 @@ function uv_unit_grid(array $stays): array {
  * Movable = Beds24 stay, not Airbnb-locked, qty 1, not in-house, arrival > +48h
  * (or still unassigned, which is always worth placing).
  */
+/** Why a stay may not be moved — '' means it is movable. */
+function uv_stay_pin_reason(array $s): string {
+    $today = date('Y-m-d'); $soon = date('Y-m-d', strtotime('+2 days'));
+    if ($s['b24'] <= 0) return 'portal-calendar entry (not a Beds24 booking)';
+    if ($s['locked']) return 'Airbnb guest booked this exact villa';
+    if ($s['qty'] !== 1) return 'multi-villa booking';
+    if ($s['from'] <= $today) return 'in-house or arrived';
+    if ($s['unit'] !== 0 && $s['from'] <= $soon) return 'arrives within 48h';
+    return '';
+}
+
+/** Digest of every assignment the optimiser depends on — a stale-plan guard. */
+function uv_assign_state_hash(array $stays): string {
+    $lines = [];
+    foreach ($stays as $s) {
+        $lines[] = $s['b24'] . '|' . $s['unit'] . '|' . $s['from'] . '|' . $s['to'] . '|' . $s['qty'] . '|' . ($s['locked'] ? 1 : 0);
+    }
+    sort($lines);
+    return sha1(implode("\n", $lines));
+}
+
+/** Vacancy metrics for a stays layout: sellable free unit-nights in range and
+ *  orphan gap segments (shorter than min_nights, unsellable in practice). */
+function uv_assign_metrics(array $stays, string $from, string $to): array {
+    $minN = (int)(uv_config()['min_nights'] ?? 2);
+    $grid = uv_unit_grid($stays);
+    $sellable = 0; $orphans = 0;
+    for ($u = 1; $u <= UV_VILLA_UNITS; $u++) {
+        $run = 0;
+        for ($d = $from; $d < $to; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+            if (isset($grid[$u][$d])) {
+                if ($run > 0 && $run < $minN) $orphans++;
+                $run = 0;
+            } else { $run++; }
+        }
+        // a short run against the horizon end is not counted as an orphan —
+        // it may continue past the range
+        $sellableU = 0;
+        for ($d = $from; $d < $to; $d = date('Y-m-d', strtotime($d . ' +1 day'))) {
+            if (!isset($grid[$u][$d])) $sellableU++;
+        }
+        $sellable += $sellableU;
+    }
+    return ['sellableNights' => $sellable, 'orphanGapSegments' => $orphans];
+}
+
 function uv_assign_units(string $from, string $to): array {
     $minN = (int)(uv_config()['min_nights'] ?? 2);
     $maxFlips = (int)(uv_config()['max_turnovers_per_day'] ?? 4);
@@ -115,10 +161,7 @@ function uv_assign_units(string $from, string $to): array {
 
     $fixed = []; $flex = []; $conflicts = [];
     foreach ($stays as $i => $s) {
-        $movable = $s['b24'] > 0 && !$s['locked'] && $s['qty'] === 1
-                && $s['from'] > $today                      // never move an in-house guest
-                && ($s['unit'] === 0 || $s['from'] > $soon); // assigned + arriving <48h stays put
-        if ($movable) $flex[$i] = $s; else $fixed[$i] = $s;
+        if (uv_stay_pin_reason($s) === '') $flex[$i] = $s; else $fixed[$i] = $s;
     }
     // double-check the fixed layer itself (two locked stays on one villa = real trouble)
     $grid = uv_unit_grid($fixed);

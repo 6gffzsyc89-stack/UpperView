@@ -215,3 +215,31 @@ do they need". The managers' Google Sheets stay a human double-check, not the ma
   explicit human (Andy) instruction per change.
 - Opening date: the hotel opens 2026-12-20; earlier dates are closed.
 - One booking hold per guest conversation; holds expire ~25 minutes.
+
+## 7. v1.2.0 (2026-11-13) — optimiser + outbound-email log
+
+Three tools added for Yomied (contract agreed with the Yomied session):
+
+- `optimize_preview` (read): proposes villa unit moves that minimise
+  vacancies. Returns `planId` + `stateHash` (digest of every assignment the
+  plan depends on), `moves` (bookingId, guest, fromUnitId→toUnitId, why,
+  provenance), `pinned` (unmovable stays with reasons — Airbnb-locked,
+  in-house, <48h, multi-villa, portal-calendar entries), `conflicts`, and
+  before/after `metrics` (sellableNights, orphanGapSegments).
+  `respectPins:false` is refused — pins are law.
+- `optimize_apply` (manage): executes a previewed plan ONLY. Requires
+  planId + stateHash + actor (the authorizing human). Refuses when the plan
+  is unknown, >24h old, or when live bookings changed since the preview
+  ("re-run optimize_preview"). Idempotent per planId. Writes unitIds via
+  POST /bookings, stamps meta assign_src_<bookingId>
+  {provenance:'yomied', actor, ts, planId}, appends
+  data/audit-optimize.log, pings the sheet, echoes the executed moves.
+- `list_sent_emails` (read): the outbound mail log (sent_emails table,
+  started 2026-11-13). Every engine/notify/MCP email now carries a
+  generated `Message-ID: <uv-…@upperviewsamui.com>` and is logged with it +
+  bookingRef where known — Yomied's IMAP ingestion dedupes on messageId.
+  `send_email` gained optional bookingRef and returns messageId.
+
+All verified live 2026-11-13: tools/list = 19, preview plan + metrics real,
+wrong-hash apply refused, zero-move happy-path apply + idempotent re-apply,
+send_email logged and listed.

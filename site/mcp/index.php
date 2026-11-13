@@ -18,6 +18,7 @@ declare(strict_types=1);
 
 require_once __DIR__ . '/../booking/lib.php';
 require_once __DIR__ . '/../booking/beds24.php';
+require_once __DIR__ . '/../booking/units.php';
 
 const MCP_PROTOCOL = '2025-03-26';
 const MCP_MAX_TEXT = 60000;
@@ -93,7 +94,7 @@ if ($rpc === 'initialize') {
     mcp_reply($id, [
         'protocolVersion' => $ver,
         'capabilities' => ['tools' => ['listChanged' => false]],
-        'serverInfo' => ['name' => 'beds24-mcp', 'title' => 'Beds24 (Upper View) property management', 'version' => '1.1.0'],
+        'serverInfo' => ['name' => 'beds24-mcp', 'title' => 'Beds24 (Upper View) property management', 'version' => '1.2.0'],
         'instructions' => 'Beds24 channel-manager access for all properties on this account ('
             . $member['name'] . ', role: ' . $member['role'] . '). Beds24 is the MASTER system: '
             . 'prices and blocks written here sync to Booking.com, Airbnb, Agoda and the website. '
@@ -175,6 +176,22 @@ $READ_TOOLS = [
     ['name' => 'get_notify_emails',
      'description' => 'The list of email addresses that receive ALL website booking notifications.',
      'inputSchema' => ['type' => 'object', 'properties' => (object)[], 'additionalProperties' => false]],
+    ['name' => 'list_sent_emails',
+     'description' => 'The outbound email log: every email this system sent (guest confirmations, notifications, MCP sends), with Message-ID and booking reference for exact joins against a mailbox. Newest first.',
+     'inputSchema' => ['type' => 'object', 'properties' => [
+         'to' => ['type' => 'string', 'description' => 'filter: recipient address'],
+         'bookingRef' => ['type' => 'string', 'description' => 'filter: booking code (e.g. UV1A2B3C)'],
+         'since' => ['type' => 'string', 'description' => 'filter: YYYY-MM-DD (UTC)'],
+         'q' => ['type' => 'string', 'description' => 'filter: substring of subject or body'],
+         'limit' => ['type' => 'integer', 'description' => 'max rows, default 25, cap 100'],
+     ], 'additionalProperties' => false]],
+    ['name' => 'optimize_preview',
+     'description' => 'Villa-assignment optimiser PREVIEW (read-only): proposes unit moves that minimise vacancies (back-to-back stays, no orphan gaps shorter than the minimum stay). Returns planId + stateHash for optimize_apply, the proposed moves, the pinned (unmovable) stays with reasons, and before/after vacancy metrics. Manual/owner/locked placements are always pinned; the plan expires in 24h.',
+     'inputSchema' => ['type' => 'object', 'properties' => [
+         'from' => ['type' => 'string', 'description' => 'YYYY-MM-DD, default today'],
+         'to' => ['type' => 'string', 'description' => 'YYYY-MM-DD, default +180 days'],
+         'respectPins' => ['type' => 'boolean', 'description' => 'must be true (default); false is not supported'],
+     ], 'additionalProperties' => false]],
     ['name' => 'beds24_get',
      'description' => 'Full READ mirror of the Beds24 API v2: call ANY GET endpoint. Paths: /properties, /bookings, /bookings/messages, /bookings/invoices, /channels/settings, /channels/airbnb/users, /channels/airbnb/listings, /channels/airbnb/reviews, /channels/booking/reviews, /channels/stripe/paymentMethods, /channels/stripe/charges, /inventory/rooms/calendar, /inventory/rooms/availability, /inventory/rooms/offers, /inventory/rooms/unitBookings, /inventory/fixedPrices, /accounts, /authentication/details. query = raw query string without the leading ?.',
      'inputSchema' => ['type' => 'object', 'properties' => [
@@ -218,6 +235,13 @@ $MANAGE_TOOLS = [
      'inputSchema' => ['type' => 'object', 'properties' => [
          'emails' => ['type' => 'array', 'items' => ['type' => 'string']],
      ], 'required' => ['emails'], 'additionalProperties' => false]],
+    ['name' => 'optimize_apply',
+     'description' => 'Execute a previewed optimiser plan: writes the proposed unitId moves to Beds24. Takes the planId + stateHash from optimize_preview and REFUSES if any booking changed since the preview (re-run optimize_preview then). Idempotent per planId. actor = the human who authorised it (audit-logged). REAL write — needs explicit human instruction.',
+     'inputSchema' => ['type' => 'object', 'properties' => [
+         'planId' => ['type' => 'string'],
+         'stateHash' => ['type' => 'string'],
+         'actor' => ['type' => 'string', 'description' => 'authorizing human (name/identity), not the assistant'],
+     ], 'required' => ['planId', 'stateHash', 'actor'], 'additionalProperties' => false]],
     ['name' => 'beds24_write',
      'description' => 'Full WRITE mirror of the Beds24 API v2: POST/PATCH/DELETE any endpoint. body is the JSON payload Beds24 expects (usually an ARRAY of objects). Examples: modify a booking: path=/bookings body=[{"id":123,"status":"cancelled"}]; mark message read: path=/bookings/messages body=[{"id":456,"read":true}]. REAL writes that sync to OTAs — only on explicit human instruction.',
      'inputSchema' => ['type' => 'object', 'properties' => [
@@ -349,11 +373,112 @@ switch ($tool) {
         $subject = trim((string)($a['subject'] ?? '')); $body = (string)($a['body'] ?? '');
         if (!filter_var($to, FILTER_VALIDATE_EMAIL)) mcp_text($id, 'invalid to address', true);
         if ($subject === '' || $body === '') mcp_text($id, 'subject and body required', true);
+        $mid = uv_email_mid();
         $headers = !empty($a['html'])
-            ? "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\nFrom: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com"
-            : "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com";
+            ? "MIME-Version: 1.0\r\nContent-Type: text/html; charset=UTF-8\r\nMessage-ID: $mid\r\nFrom: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com"
+            : "Message-ID: $mid\r\nFrom: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com";
         $ok = @mail($to, $subject, $body, $headers, '-f booking@upperviewsamui.com');
-        mcp_text($id, ['sent' => (bool)$ok, 'to' => $to, 'from' => 'booking@upperviewsamui.com'], !$ok);
+        if ($ok) uv_email_log($mid, $to, $subject, $body, 'mcp', trim((string)($a['bookingRef'] ?? '')));
+        mcp_text($id, ['sent' => (bool)$ok, 'to' => $to, 'from' => 'booking@upperviewsamui.com', 'messageId' => $mid], !$ok);
+    }
+    case 'list_sent_emails': {
+        uv_email_log_table();
+        $w = []; $p = [];
+        if (!empty($a['to'])) { $w[] = 'recipient = ?'; $p[] = trim((string)$a['to']); }
+        if (!empty($a['bookingRef'])) { $w[] = 'booking_ref = ?'; $p[] = trim((string)$a['bookingRef']); }
+        if (!empty($a['since'])) {
+            if (!mcp_date((string)$a['since'])) mcp_text($id, 'since must be YYYY-MM-DD', true);
+            $w[] = 'ts >= ?'; $p[] = $a['since'] . ' 00:00:00';
+        }
+        if (!empty($a['q'])) { $w[] = '(subject LIKE ? OR body LIKE ?)'; $q = '%' . (string)$a['q'] . '%'; $p[] = $q; $p[] = $q; }
+        $limit = max(1, min(100, (int)($a['limit'] ?? 25)));
+        $sql = 'SELECT id, ts, message_id, booking_ref, recipient, subject, via, substr(body, 1, 2000) AS body FROM sent_emails'
+             . ($w ? ' WHERE ' . implode(' AND ', $w) : '') . ' ORDER BY id DESC LIMIT ' . $limit;
+        $st = uv_db()->prepare($sql); $st->execute($p);
+        $rows = [];
+        foreach ($st as $r) {
+            $rows[] = ['id' => (int)$r['id'], 'ts' => $r['ts'] . ' UTC', 'messageId' => $r['message_id'],
+                       'bookingRef' => $r['booking_ref'], 'to' => $r['recipient'], 'subject' => $r['subject'],
+                       'via' => $r['via'], 'body' => $r['body']];
+        }
+        mcp_text($id, ['emails' => $rows, 'note' => 'body truncated at 2000 chars; via = engine (booking flow) | notify (internal copies) | mcp (assistant sends). Log starts 2026-11-13.']);
+    }
+    case 'optimize_preview': {
+        if (array_key_exists('respectPins', $a) && !$a['respectPins'])
+            mcp_text($id, 'respectPins:false is not supported — manual, owner and Airbnb-locked placements are always pinned.', true);
+        $from = (string)($a['from'] ?? date('Y-m-d'));
+        $to   = (string)($a['to'] ?? date('Y-m-d', strtotime('+180 days')));
+        if (!mcp_date($from) || !mcp_date($to) || $to <= $from) mcp_text($id, 'from/to must be YYYY-MM-DD with to after from', true);
+        $stays = uv_unit_stays($from, $to);
+        $stateHash = uv_assign_state_hash($stays);
+        $plan = uv_assign_units($from, $to);
+        $pinned = [];
+        foreach ($stays as $s) {
+            $why = uv_stay_pin_reason($s);
+            if ($why !== '') $pinned[] = ['bookingId' => $s['b24'], 'guestName' => $s['label'],
+                'unitId' => $s['unit'], 'checkIn' => $s['from'], 'checkOut' => $s['to'], 'reason' => $why];
+        }
+        $moves = [];
+        foreach ($plan['moves'] as $m) {
+            $srcMeta = uv_meta_get('assign_src_' . (int)$m['b24']);
+            $prov = 'engine';
+            if ($srcMeta !== null) { $j = json_decode($srcMeta, true); $prov = is_array($j) ? (string)($j['provenance'] ?? 'manual') : 'manual'; }
+            $moves[] = ['bookingId' => (int)$m['b24'], 'guestName' => $m['label'],
+                'fromUnitId' => (int)$m['cur'], 'toUnitId' => (int)$m['unit'],
+                'checkIn' => $m['from'], 'checkOut' => $m['to'], 'why' => $m['why'], 'provenance' => $prov];
+        }
+        // after-metrics: same stays with the proposed units applied
+        $after = [];
+        $byId = [];
+        foreach ($plan['moves'] as $m) $byId[(int)$m['b24']] = (int)$m['unit'];
+        foreach ($stays as $s) {
+            if ($s['b24'] > 0 && isset($byId[$s['b24']])) $s['unit'] = $byId[$s['b24']];
+            $after[] = $s;
+        }
+        $metrics = ['before' => uv_assign_metrics($stays, $from, $to),
+                    'after' => uv_assign_metrics($after, $from, $to)];
+        $planId = 'PL' . substr(bin2hex(random_bytes(6)), 0, 10);
+        uv_meta_set('optplan_' . $planId, json_encode([
+            'stateHash' => $stateHash, 'from' => $from, 'to' => $to,
+            'created' => time(), 'moves' => $plan['moves']]));
+        mcp_text($id, ['planId' => $planId, 'stateHash' => $stateHash, 'from' => $from, 'to' => $to,
+            'moves' => $moves, 'pinned' => $pinned, 'conflicts' => $plan['conflicts'], 'metrics' => $metrics,
+            'note' => 'Apply with optimize_apply(planId, stateHash, actor). The plan expires after 24h or whenever any booking changes.']);
+    }
+    case 'optimize_apply': {
+        $planId = (string)($a['planId'] ?? ''); $inHash = (string)($a['stateHash'] ?? '');
+        $actor = trim((string)($a['actor'] ?? ''));
+        if ($planId === '' || $inHash === '' || $actor === '') mcp_text($id, 'planId, stateHash and actor are all required', true);
+        $doneRaw = uv_meta_get('optplan_' . $planId . '_done');
+        if ($doneRaw !== null) {
+            $done = json_decode($doneRaw, true);
+            mcp_text($id, ['applied' => false, 'alreadyApplied' => true, 'planId' => $planId,
+                'originalResult' => $done, 'note' => 'This plan was already executed — no-op.']);
+        }
+        $raw = uv_meta_get('optplan_' . $planId);
+        if ($raw === null) mcp_text($id, 'Unknown planId — run optimize_preview first.', true);
+        $plan = json_decode($raw, true);
+        if (!is_array($plan)) mcp_text($id, 'Stored plan unreadable — re-run optimize_preview.', true);
+        if (time() - (int)$plan['created'] > 86400) mcp_text($id, 'Plan is older than 24h — re-run optimize_preview.', true);
+        if (!hash_equals((string)$plan['stateHash'], $inHash)) mcp_text($id, 'stateHash does not match this plan — pass the hash optimize_preview returned.', true);
+        $live = uv_assign_state_hash(uv_unit_stays((string)$plan['from'], (string)$plan['to']));
+        if (!hash_equals($live, $inHash)) mcp_text($id, 'REFUSED: bookings changed since the preview — re-run optimize_preview and review the new plan.', true);
+        $res = uv_assign_apply($plan['moves']);
+        $executed = [];
+        foreach ($plan['moves'] as $m) {
+            $executed[] = ['bookingId' => (int)$m['b24'], 'guestName' => $m['label'],
+                'fromUnitId' => (int)$m['cur'], 'toUnitId' => (int)$m['unit'],
+                'checkIn' => $m['from'], 'checkOut' => $m['to']];
+            uv_meta_set('assign_src_' . (int)$m['b24'],
+                json_encode(['provenance' => 'yomied', 'actor' => $actor, 'ts' => gmdate('c'), 'planId' => $planId]));
+        }
+        $summary = ['planId' => $planId, 'actor' => $actor, 'executed' => $executed, 'result' => $res, 'ts' => gmdate('c')];
+        uv_meta_set('optplan_' . $planId . '_done', json_encode($summary));
+        @file_put_contents(uv_data_dir() . '/audit-optimize.log', json_encode($summary) . "\n", FILE_APPEND);
+        if (function_exists('uv_sheet_ping')) uv_sheet_ping();
+        mcp_text($id, ['applied' => true] + $summary + [
+            'note' => 'Moves written to Beds24 (unitId per booking). Restate the executed moves to the human verbatim.'],
+            !empty($res['failed']));
     }
     case 'set_notify_emails': {
         $emails = $a['emails'] ?? null;

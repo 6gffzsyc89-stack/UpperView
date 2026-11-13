@@ -14,20 +14,25 @@ function uv_notify_emails(): array {
         : array('management@ableab.com', 'booking@upperviewsamui.com', 'upperviewsamui@gmail.com');
 }
 
-function uv_mail_html(string $to, string $subject, string $html): void {
+function uv_mail_html(string $to, string $subject, string $html, string $bookingRef = ''): void {
     if ($to === '' || !filter_var($to, FILTER_VALIDATE_EMAIL)) return;
+    $mid = uv_email_mid();
     $headers = "MIME-Version: 1.0\r\n"
              . "Content-Type: text/html; charset=UTF-8\r\n"
+             . "Message-ID: " . $mid . "\r\n"
              . "From: Upper View Samui <booking@upperviewsamui.com>\r\n"
              . "Reply-To: booking@upperviewsamui.com";
     @mail($to, $subject, $html, $headers, '-f booking@upperviewsamui.com');
+    uv_email_log($mid, $to, $subject, $html, 'engine', $bookingRef);
 }
 
 function uv_notify_all(string $subject, string $body): void {
     foreach (uv_notify_emails() as $to) {
+        $mid = uv_email_mid();
         @mail($to, $subject, $body,
-              "From: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
+              "Message-ID: " . $mid . "\r\nFrom: Upper View Samui <booking@upperviewsamui.com>\r\nReply-To: booking@upperviewsamui.com",
               '-f booking@upperviewsamui.com');
+        uv_email_log($mid, $to, $subject, $body, 'notify');
     }
 }
 
@@ -160,7 +165,7 @@ function uv_confirmation_email_html(array $b): string {
 function uv_send_confirmation(array $b, string $provider = 'card'): void {
     $html = uv_confirmation_email_html($b);
     uv_mail_html((string) $b['email'],
-        'Upper View Samui — reservation confirmed (' . $b['code'] . ')', $html);
+        'Upper View Samui — reservation confirmed (' . $b['code'] . ')', $html, (string) $b['code']);
     $nights = (int)((strtotime($b['checkout']) - strtotime($b['checkin'])) / 86400);
     uv_notify_all('Upper View: PAID booking ' . $b['code'],
         ((int)($b['rooms'] ?? 1) > 1 ? (int)$b['rooms'] . ' × ' : '') . uv_type_name($b['type']) . " | {$b['checkin']} -> {$b['checkout']} ($nights nights)"
