@@ -522,3 +522,17 @@ joins exactly against Yomied's IMAP ingestion of booking@ (email-triage GO
 lives wholly in Yomied; sends route through our send_email so the log stays
 the single record). units.php gains uv_stay_pin_reason / uv_assign_state_hash
 / uv_assign_metrics. All verified live including refusal + idempotency paths.
+
+## v4.3 — 2026-11-13 · Email inbox mini-app spec'd; add_guest_note live (MCP v1.3.0)
+Andy's inbox spec recorded as §F of the agents spec (v1.4): an inbox-like
+mini-app (Yomied builds) drafting replies from 100%-certain facts only, in
+the mailbox author's own voice, footer disclosure with live-help link
+(standard practice; config switch), natural reply-from address, drafts
+retire when a manual reply handled the thread, owner approval from
+WhatsApp, edit-distance trust ladder toward per-category auto-send —
+baanbophut.com's 10-year corpus is the first mailbox, and that site later
+moves onto this unified backend. My side shipped the fact pipe:
+add_guest_note (MCP v1.3.0) writes ALLERGY/OCCASION/REQUEST/PICKUP/TASK/
+NOTE to the booking as Beds24 info items with sourceRef + actor, audit-
+logged — verified live on the mock booking with an email Message-ID as the
+source link.

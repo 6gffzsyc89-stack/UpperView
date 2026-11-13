@@ -115,6 +115,50 @@ URL; card never touches the chat). Rate-limited; no guest PII beyond the
 booking itself; bookings auto-expire unpaid exactly like website holds so
 abandoned chats never block portal inventory.
 
+## F. The email inbox mini-app (Andy's spec, 2026-11-13 — Yomied builds)
+
+Context: Yomied holds a 10-year email corpus for baanbophut.com (mailbox
+actively monitored; Andy will later replace that site with one on THIS
+unified backend + checkout). The mini-app is the email twin of the
+sheet-retirement ladder: drafts earn trust, then autonomy.
+
+1. **Looks and works like an email inbox.** Every inbound guest request
+   shows with a PRE-WRITTEN DRAFT reply underneath, composed ONLY from
+   facts Yomied understands at 100% confidence; anything uncertain is left
+   as a visible gap for the human, never guessed.
+2. **Tone matching.** The draft is written in the mailbox author's own
+   voice — tone, wording, language — learned from their historical sent
+   mail.
+3. **Disclosure line (standard practice = FOOTER).** Human-sounding,
+   human-approved replies carry the disclosure under the signature, not
+   above the answer: a header banner is the convention for instant
+   auto-acknowledgements; assisted replies disclose in the footer.
+   Template: "This is an automated response. If the answers above do not
+   fully answer your question, click here for additional or live help:
+   <live_help link from site config>." Placement is a config switch
+   (footer default) so Andy can flip per mailbox.
+4. **Reply flow.** Draft → human edits or approves → SEND, always from the
+   address the request arrived at (natural reply-from). Owner/role-gated
+   approval also works from WhatsApp: Sora shows pending drafts, the human
+   says approve, it sends. Every send goes through the engine send path so
+   the outbound log stays the single record.
+5. **Draft lifecycle.** If a manual reply already went out on the thread,
+   the draft retires automatically — the chain shows one handled
+   conversation, never a stale draft next to a sent answer.
+6. **Fact extraction with source links.** Facts found in email or WhatsApp
+   (allergies, occasions, special requests, pickups) are written to the
+   booking via the MCP add_guest_note tool (v1.3.0, live): kind ALLERGY /
+   OCCASION / REQUEST / PICKUP / TASK / NOTE + sourceRef (email
+   Message-ID, whatsapp:<number>) + actor. They land as Beds24 info items
+   on the booking — visible in Beds24, the admin, the WhatsApp assistant,
+   and audit-logged — so "where did they say gluten allergy?" is one
+   lookup, cross-channel in both directions.
+7. **Trust ladder.** Phase 1: every send human-approved. The app tracks
+   edit-distance between draft and sent. When a category's drafts ship
+   unedited consistently, Andy can flip that category to auto-send
+   (config, default OFF) — same justification path as retiring the manual
+   sheet.
+
 ## D. Division of labour
 
 - UpperView session: UV site work, shared-core, this spec, guest-MCP build.

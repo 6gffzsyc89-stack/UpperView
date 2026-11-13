@@ -250,3 +250,9 @@ Actor contract (agreed with Yomied 2026-11-13): optimize_apply's `actor` is
 and assign_src_* meta; a stable "user:<id>" form exists if a join is ever
 needed. Yomied classes preview/list tools as staff-level reads and
 optimize_apply as manager+ writes, with its own role filtering enforced.
+
+v1.3.0 (2026-11-13): add_guest_note — structured guest-care facts
+(ALLERGY/OCCASION/REQUEST/PICKUP/TASK/NOTE) written to a booking as Beds24
+info items with a sourceRef back to the message where the guest said it
+(email Message-ID / whatsapp:<number> / phone) + actor; audit-notes.log;
+verified live on the mock booking (info item 203566046).
