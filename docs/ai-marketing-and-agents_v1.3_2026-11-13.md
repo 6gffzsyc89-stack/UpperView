@@ -9,7 +9,7 @@ drafts earn autonomy; staff and owners instruct the system by messaging the
 assistant scoped to them (§E). When choosing what to build next, prefer the
 thing that removes a manual step.
 
-(v1.2: North Star instituted. v1.1: §E user-level controls & nested scopes added — Yomied to design; §D Yomied mini-app list expanded.)
+(v1.3, 2026-11-13: §E DELIVERED by Yomied — canon moves to the Yomied repo docs/user-controls-spec_v1.0_2026-11-13.md (engine v4.4): identities are "platform:address" lowercase, unique per user; roles owner/clientAdmin/manager/staff/readOnly; scopes nest by parentId, grants flow down subtrees only; every chat-ordered write audit-logged. Actor strings passed to our MCP tools: "<userName> (<identity>)" — opaque attribution, stored verbatim; "user:<id>" available for joins. Tool classing on Yomied's side: optimize_preview + list_sent_emails = staff-level reads, optimize_apply = manager+ write. v1.2: North Star instituted. v1.1: §E user-level controls & nested scopes added — Yomied to design; §D Yomied mini-app list expanded.)
 
 Scope: every property (Upper View, Sonata, and any added later). This file is
 the canonical spec for AI discovery/booking marketing AND the agent

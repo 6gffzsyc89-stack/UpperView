@@ -243,3 +243,10 @@ Three tools added for Yomied (contract agreed with the Yomied session):
 All verified live 2026-11-13: tools/list = 19, preview plan + metrics real,
 wrong-hash apply refused, zero-move happy-path apply + idempotent re-apply,
 send_email logged and listed.
+
+Actor contract (agreed with Yomied 2026-11-13): optimize_apply's `actor` is
+"<userName> (<identity>)" from Yomied's identity map (e.g. a user name plus
+"whatsapp:<number>"), treated as opaque and stored verbatim in the audit log
+and assign_src_* meta; a stable "user:<id>" form exists if a join is ever
+needed. Yomied classes preview/list tools as staff-level reads and
+optimize_apply as manager+ writes, with its own role filtering enforced.
