@@ -153,7 +153,15 @@ sheet-retirement ladder: drafts earn trust, then autonomy.
    on the booking — visible in Beds24, the admin, the WhatsApp assistant,
    and audit-logged — so "where did they say gluten allergy?" is one
    lookup, cross-channel in both directions.
-7. **Trust ladder.** Phase 1: every send human-approved. The app tracks
+7. **Every property, one app (Andy, 2026-11-13).** Upper View and Sonata
+   get the same inbox treatment as Baan Bophut. In §E terms each WEBSITE is
+   a client-of-the-client: its own scope, its own mailbox(es) bound to that
+   scope. The mini-app is ONE inbox across all of them with per-property
+   select/unselect filtering (recommended over separate apps — one codebase,
+   scope grants decide which properties a user even sees); per mailbox it
+   keeps its own author tone, its own natural reply-from address, and its
+   own live-help link from that property's config.
+8. **Trust ladder.** Phase 1: every send human-approved. The app tracks
    edit-distance between draft and sent. When a category's drafts ship
    unedited consistently, Andy can flip that category to auto-send
    (config, default OFF) — same justification path as retiring the manual
