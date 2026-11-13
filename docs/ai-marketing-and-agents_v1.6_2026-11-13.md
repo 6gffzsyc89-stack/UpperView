@@ -140,8 +140,13 @@ sheet-retirement ladder: drafts earn trust, then autonomy.
 4. **Reply flow.** Draft → human edits or approves → SEND, always from the
    address the request arrived at (natural reply-from). Owner/role-gated
    approval also works from WhatsApp: Sora shows pending drafts, the human
-   says approve, it sends. Every send goes through the engine send path so
-   the outbound log stays the single record.
+   says approve, it sends. Outbound logging is the single record PER
+   MAILBOX (agreed with Yomied 2026-11-13): upperviewsamui.com mail goes
+   through the engine send path and its sent_emails log; every other
+   watched mailbox (baanbophut first) sends through Yomied's SMTP with the
+   natural reply-from and lands in Yomied's log, same row shape.
+   Reconciliation is by from-address; Sora merges both logs by messageId
+   when answering "what did we tell this guest?".
 5. **Draft lifecycle.** If a manual reply already went out on the thread,
    the draft retires automatically — the chain shows one handled
    conversation, never a stale draft next to a sent answer.
@@ -160,7 +165,13 @@ sheet-retirement ladder: drafts earn trust, then autonomy.
    select/unselect filtering (recommended over separate apps — one codebase,
    scope grants decide which properties a user even sees); per mailbox it
    keeps its own author tone, its own natural reply-from address, and its
-   own live-help link from that property's config.
+   own live-help link from that property's config. The mini-app lives
+   INSIDE the Yomied app (Andy, 2026-11-13) — it is a Yomied surface, not
+   a website-admin page; the property admins link to it at most.
+   Extraction governance (Yomied): automatic fact-filing runs as actor
+   "Sora (extraction)" and starts review-first — the trust ladder (§F.8)
+   applies to fact-filing exactly as to sends; day-one auto-filing only on
+   Andy's direct word to Yomied.
 8. **Trust ladder.** Phase 1: every send human-approved. The app tracks
    edit-distance between draft and sent. When a category's drafts ship
    unedited consistently, Andy can flip that category to auto-send
